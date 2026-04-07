@@ -9,6 +9,8 @@ import { AppRouter } from "./router";
 
 import "./index.css";
 
+export const COLOR_SCHEME_STORAGE_KEY = "tauri-app-color-scheme";
+
 const theme = createTheme({
   primaryColor: "orange",
   defaultRadius: "md",
@@ -16,7 +18,7 @@ const theme = createTheme({
 
 function useAppProviderValue(defaultColorScheme = "auto") {
   const colorSchemeManager = localStorageColorSchemeManager({
-    key: "tauri-app-color-scheme",
+    key: COLOR_SCHEME_STORAGE_KEY,
   });
 
   return {
