@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsr generate && tsc && vite build",
     "dev:app": "tauri dev",
     "build:app": "tauri build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "routes:gen": "tsr generate"
   },
   "dependencies": {
     "@mantine/core": "^9.0.1",
@@ -21,6 +22,8 @@
     "react-easy-provider": "^0.2.1"
   },
   "devDependencies": {
+    "@tanstack/router-cli": "^1.166.25",
+    "@tanstack/router-plugin": "^1.167.12",
     "@tauri-apps/cli": "^2",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",

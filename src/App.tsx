@@ -15,6 +15,11 @@ function App() {
               <Button component={Link} size="compact-sm" to="/about" variant="light">
                 About
               </Button>
+              <Link params={{ exampleId: "tauri" }} to="/examples/$exampleId">
+                <Button size="compact-sm" variant="default">
+                  Example
+                </Button>
+              </Link>
             </Group>
           </Group>
         </Container>
