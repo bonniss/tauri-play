@@ -2,7 +2,7 @@
 
 ## Mục tiêu
 
-Tài liệu này mô tả cách làm việc với SQLite trong app Tauri hiện tại.
+Tài liệu này mô tả cách làm việc với SQLite trong starter Tauri hiện tại.
 
 Repo này đang dùng:
 
@@ -36,7 +36,10 @@ Các file quan trọng:
 - `src-tauri/capabilities/default.json`
   Quyền truy cập SQL của app.
 
-- `src/lib/todo-db.ts`
+- `src/lib/db/client.ts`
+  Chỗ load SQLite connection.
+
+- `src/lib/db/todos.ts`
   Data layer mẫu cho bảng `todos`.
 
 - `src/routes/todos.tsx`
@@ -53,8 +56,6 @@ sqlite:todo.db
 ---
 
 ## File DB tạo ra nằm ở đâu
-
-Đây là phần quan trọng nhất để tránh nhầm.
 
 Với connection string:
 
@@ -82,21 +83,21 @@ Trên Windows, thường nó sẽ nằm theo hướng:
 %APPDATA%/<identifier hoặc product name>/todo.db
 ```
 
-Với repo hiện tại, giá trị liên quan là:
+Với starter hiện tại, giá trị liên quan là:
 
-- `productName`: `tauri-app`
-- `identifier`: `com.user.tauri-app`
+- `productName`: `Tauri Starter`
+- `identifier`: `com.example.tauri-starter`
 
 Nên khi dev trên Windows, mày nên expect file DB nằm quanh khu vực:
 
 ```text
-C:\Users\<user>\AppData\Roaming\com.user.tauri-app\todo.db
+C:\Users\<user>\AppData\Roaming\com.example.tauri-starter\todo.db
 ```
 
 hoặc:
 
 ```text
-C:\Users\<user>\AppData\Roaming\tauri-app\todo.db
+C:\Users\<user>\AppData\Roaming\Tauri Starter\todo.db
 ```
 
 Đường dẫn cụ thể có thể khác nhau tùy cách Tauri resolve tên app trên từng nền tảng, nhưng nguyên tắc là:
@@ -109,14 +110,12 @@ C:\Users\<user>\AppData\Roaming\tauri-app\todo.db
 Khi build và cài app, file DB cũng sẽ nằm trong app config directory của ứng dụng đã cài trên máy người dùng.
 
 Nó vẫn không nằm trong thư mục cài đặt executable.
-
 Nó vẫn không nằm cạnh file `.exe`.
-
 Nó vẫn không nằm trong `dist`.
 
 Lý do:
 
-- thư mục cài đặt thường được xem là read-only hoặc không phù hợp để ghi dữ liệu app
+- thư mục cài đặt thường không phù hợp để ghi dữ liệu app
 - dữ liệu local cần tách khỏi binaries
 - update app không nên đè lên data file
 
@@ -127,8 +126,6 @@ Tóm lại:
 - Cả hai trường hợp: DB không nằm trong repo, không nằm trong `src-tauri`, không nằm trong `dist`
 
 ### Cách tự check vị trí DB trên máy
-
-Cách thực dụng nhất:
 
 1. Chạy app
 2. Tạo 1 todo trong `/todos`
@@ -249,19 +246,19 @@ Flow kiểm tra nhanh:
 
 ---
 
-## Cách viết query đúng trong app này
+## Cách viết query đúng trong starter này
 
 ### Nguyên tắc
 
 - Không viết SQL trực tiếp trong route/component
-- Tạo một data module riêng trong `src/lib/`
+- Tạo data module riêng trong `src/lib/db/`
 - Route chỉ gọi các hàm như `listTodos()`, `createTodo()`, `toggleTodo()`
 - Query phải dùng placeholder params, không nối string thủ công
 - Tách `row type` và `domain type` nếu dữ liệu DB khác dữ liệu UI
 
 ### Mẫu đang dùng
 
-Trong `src/lib/todo-db.ts`:
+Trong `src/lib/db/client.ts`:
 
 ```ts
 import Database from "@tauri-apps/plugin-sql";
@@ -270,7 +267,7 @@ const TODO_DATABASE = "sqlite:todo.db";
 
 let databasePromise: Promise<Database> | null = null;
 
-function getDatabase() {
+export function getDatabase() {
   if (!databasePromise) {
     databasePromise = Database.load(TODO_DATABASE);
   }
@@ -307,19 +304,6 @@ Best practices:
 - Tạo `Row` type theo schema thật của DB
 - Map từ row sang kiểu dùng trong UI
 
-Ví dụ mapping:
-
-```ts
-function mapTodo(row: TodoRow) {
-  return {
-    id: row.id,
-    title: row.title,
-    completed: row.completed === 1,
-    createdAt: row.created_at,
-  };
-}
-```
-
 ### Viết query ghi
 
 Ví dụ:
@@ -339,20 +323,15 @@ Best practices:
 `DELETE FROM todos WHERE id = ${id}`
 ```
 
-- Validate dữ liệu trước khi query, ví dụ `trim()`, kiểm tra empty string
+- Validate dữ liệu trước khi query
 
 ### Nên tổ chức data layer thế nào
-
-Với mỗi feature:
-
-- 1 file DB module cho feature nhỏ
-- Hoặc 1 thư mục `src/lib/db/` nếu bắt đầu lớn
 
 Ví dụ mở rộng:
 
 ```text
 src/lib/db/
-  database.ts
+  client.ts
   todos.ts
   projects.ts
   tags.ts
@@ -360,19 +339,13 @@ src/lib/db/
 
 Trong đó:
 
-- `database.ts`: giữ `Database.load(...)`
+- `client.ts`: giữ `Database.load(...)`
 - `todos.ts`: query cho bảng todos
 - `projects.ts`: query cho bảng projects
 
 ---
 
 ## Cách viết migration đúng
-
-### Migration là gì
-
-Migration là cách thay đổi schema DB có version rõ ràng theo thời gian.
-
-Không sửa schema bằng tay trên máy local rồi hy vọng người khác giống mình.
 
 ### Cách repo này đang làm
 
@@ -397,23 +370,19 @@ let migrations = vec![Migration {
 
 Ví dụ muốn thêm cột `notes` vào bảng `todos`.
 
-#### Bước 1: tạo file SQL mới
-
-Tạo file:
+1. Tạo file:
 
 ```text
 src-tauri/migrations/0002_add_todo_notes.sql
 ```
 
-Nội dung ví dụ:
+2. Thêm SQL:
 
 ```sql
 ALTER TABLE todos ADD COLUMN notes TEXT;
 ```
 
-#### Bước 2: đăng ký migration trong Rust
-
-Thêm phần tử mới vào `migrations`:
+3. Đăng ký trong `src-tauri/src/lib.rs`:
 
 ```rust
 Migration {
@@ -424,14 +393,7 @@ Migration {
 }
 ```
 
-#### Bước 3: cập nhật TypeScript types và query
-
-Ví dụ:
-
-- thêm `notes` vào `TodoRow`
-- thêm `notes` vào domain model
-- update query `SELECT`
-- update form nếu cần
+4. Cập nhật TypeScript types và query.
 
 ### Rule bắt buộc cho migration
 
@@ -439,201 +401,6 @@ Ví dụ:
 - `description` phải ngắn, rõ nghĩa
 - Không sửa nội dung migration cũ đã phát hành
 - Muốn thay đổi schema tiếp thì tạo migration mới
-- SQL phải an toàn để chạy trong môi trường app thật
-
-### Không nên làm
-
-- Không sửa file `0001_...sql` sau khi đã có người dùng chạy app
-- Không đổi version migration cũ
-- Không rename connection string mà quên cập nhật preload và builder
-
----
-
-## Quy trình thêm một bảng mới
-
-Ví dụ muốn thêm bảng `projects`.
-
-### 1. Viết migration
-
-```sql
-CREATE TABLE IF NOT EXISTS projects (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-### 2. Đăng ký migration ở Rust
-
-Thêm `Migration { version: ..., ... }` vào `migrations`.
-
-### 3. Tạo data module mới
-
-Ví dụ:
-
-```text
-src/lib/projects-db.ts
-```
-
-### 4. Định nghĩa row type và domain type
-
-Ví dụ:
-
-```ts
-type ProjectRow = {
-  id: number;
-  name: string;
-  created_at: string;
-};
-
-type Project = {
-  id: number;
-  name: string;
-  createdAt: string;
-};
-```
-
-### 5. Viết hàm CRUD
-
-Ví dụ:
-
-```ts
-export async function listProjects() {}
-export async function createProject(name: string) {}
-export async function deleteProject(id: number) {}
-```
-
-### 6. Gọi từ route/page
-
-Không gọi SQL trực tiếp ở route. Route chỉ dùng các hàm trên.
-
----
-
-## Practice khuyến nghị trong repo này
-
-### 1. Giữ DB access ở `src/lib`
-
-Không viết SQL trong:
-
-- `src/routes/*`
-- component UI
-- provider
-
-### 2. Tách DB row và UI model
-
-SQLite thường trả:
-
-- `INTEGER` cho boolean
-- `snake_case` từ schema SQL
-
-UI thường muốn:
-
-- `boolean`
-- `camelCase`
-
-Đừng ép UI hiểu trực tiếp kiểu DB.
-
-### 3. Chỉ dùng một chỗ load database
-
-Giữ `getDatabase()` trong module dùng chung hoặc feature module.
-
-Lợi ích:
-
-- ít boilerplate
-- không load nhiều connection không cần thiết
-- dễ đổi connection string về sau
-
-### 4. Validate trước khi ghi
-
-Ví dụ:
-
-- title không rỗng
-- number/id hợp lệ
-- trim chuỗi đầu vào
-
-### 5. Query rõ ràng
-
-Ưu tiên:
-
-- `SELECT id, name, created_at`
-
-Thay vì:
-
-- `SELECT *`
-
-### 6. Schema thực dụng cho desktop app
-
-Nên có sớm:
-
-- `id`
-- `created_at`
-- `updated_at` nếu record có chỉnh sửa
-- flag như `completed`, `archived`, `deleted_at` nếu có workflow rõ
-
-### 7. Không để route biết schema quá sâu
-
-Route nên biết:
-
-- danh sách hàm data layer
-- shape domain model
-
-Route không nên biết:
-
-- tên cột DB
-- kiểu integer/boolean của SQLite
-- connection string
-
----
-
-## Những lỗi thường gặp
-
-### 1. `no such table`
-
-Nguyên nhân thường là:
-
-- migration chưa đăng ký trong Rust
-- connection string giữa Rust và TS không khớp
-- preload/config sai
-
-Checklist:
-
-- kiểm tra `src-tauri/src/lib.rs`
-- kiểm tra `src-tauri/tauri.conf.json`
-- kiểm tra `Database.load("sqlite:todo.db")`
-
-### 2. Permission denied / capability error
-
-Nguyên nhân:
-
-- thiếu `sql:default`
-- thiếu `sql:allow-execute`
-
-Kiểm tra `src-tauri/capabilities/default.json`.
-
-### 3. Query chạy nhưng dữ liệu UI sai kiểu
-
-Ví dụ:
-
-- `completed` từ DB là `0/1`, nhưng UI lại mong `boolean`
-
-Cách xử lý:
-
-- map ở data layer
-- không đẩy raw row lên component
-
-### 4. Migration mới không có hiệu lực
-
-Nguyên nhân:
-
-- quên thêm migration vào vector `migrations`
-- `version` bị trùng
-- SQL lỗi cú pháp
-
-### 5. `Cargo.toml` bị duplicate dependency
-
-Nếu thêm plugin bằng tay và bằng `cargo add`, manifest có thể bị lặp key.
-
-Hãy giữ mỗi dependency đúng một dòng.
 
 ---
 
@@ -641,7 +408,7 @@ Hãy giữ mỗi dependency đúng một dòng.
 
 1. Viết migration SQL mới trong `src-tauri/migrations/`
 2. Đăng ký migration trong `src-tauri/src/lib.rs`
-3. Tạo hoặc cập nhật data module trong `src/lib/`
+3. Tạo hoặc cập nhật data module trong `src/lib/db/`
 4. Định nghĩa row type và domain type
 5. Viết query bằng placeholder params
 6. Map dữ liệu DB sang shape dùng trong UI
@@ -658,11 +425,11 @@ cargo check
 
 ## Kết luận
 
-Cách làm ổn nhất cho repo này là:
+Cách làm ổn nhất cho starter này là:
 
 - SQLite làm local persistence
 - migration quản lý schema
 - query gom trong data layer
 - route/UI chỉ tiêu thụ hàm data layer
 
-Baseline hiện tại của repo đã có đầy đủ ví dụ thật ở route `/todos`. Khi cần thêm feature mới, hãy copy đúng pattern đó trước rồi mới tinh chỉnh tiếp.
+Baseline hiện tại của repo đã có ví dụ thật ở route `/todos`. Khi cần thêm feature mới, hãy copy đúng pattern đó trước rồi mới tinh chỉnh tiếp.
