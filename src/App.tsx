@@ -1,3 +1,4 @@
+import { Button, TextInput } from "@mantine/core"
 import { invoke } from "@tauri-apps/api/core"
 import { useState } from "react"
 
@@ -14,18 +15,17 @@ function App() {
     <main className="container">
       <h1>Working on greatness...</h1>
       <form
-        className="border p-2"
         onSubmit={(e) => {
           e.preventDefault()
           greet()
         }}
       >
-        <input
+        <TextInput
           id="greet-input"
           onChange={(e) => setName(e.currentTarget.value)}
           placeholder="Enter a name..."
         />
-        <button type="submit">Greet</button>
+        <Button type="submit">Greet</Button>
       </form>
       <p>{greetMsg}</p>
     </main>
