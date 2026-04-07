@@ -20,7 +20,7 @@ import {
   listTodos,
   toggleTodo,
   type Todo,
-} from "../lib/todo-db";
+} from "../lib/db/todos";
 
 export const Route = createFileRoute("/todos")({
   component: TodosPage,

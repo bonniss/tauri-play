@@ -1,69 +1,66 @@
-import { Anchor, Button, Card, Group, Stack, Text, TextInput, Title } from "@mantine/core";
-import { invoke } from "@tauri-apps/api/core";
-import { Link, createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { Box, Card, Code, Group, Stack, Text, Title } from "@mantine/core";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
 function HomePage() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
-
-  async function greet() {
-    setGreetMsg(await invoke<string>("greet", { name }));
-  }
-
   return (
-    <Card padding="lg" radius="lg" shadow="sm" withBorder>
-      <Stack gap="md">
-        <div>
-          <Title order={2}>Home</Title>
-          <Text c="dimmed" size="sm">
-            This route proves SPA navigation works normally inside Tauri.
-          </Text>
-        </div>
+    <Stack gap="lg">
+      <Card padding="lg" radius="lg" shadow="sm" withBorder>
+        <Stack gap="md">
+          <div>
+            <Title order={2}>Starter Overview</Title>
+            <Text c="dimmed" size="sm">
+              This repo is shaped to become a reusable Tauri starter, not a product
+              demo.
+            </Text>
+          </div>
 
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            void greet();
-          }}
-        >
-          <Stack gap="sm">
-            <TextInput
-              id="greet-input"
-              label="Name"
-              onChange={(event) => setName(event.currentTarget.value)}
-              placeholder="Enter a name..."
-              value={name}
-            />
-            <Group justify="flex-start">
-              <Button type="submit">Greet via Rust</Button>
-            </Group>
-          </Stack>
-        </form>
+          <Group align="flex-start" grow>
+            <Stack gap={6}>
+              <Text fw={600}>What is already wired</Text>
+              <Box c="dimmed">Tauri desktop shell</Box>
+              <Box c="dimmed">React + TypeScript + Vite</Box>
+              <Box c="dimmed">Mantine theme and settings modal</Box>
+              <Box c="dimmed">Tailwind for layout and basic text styling</Box>
+              <Box c="dimmed">TanStack Router with file-based routing</Box>
+              <Box c="dimmed">SQLite sample with migrations</Box>
+            </Stack>
 
-        <Text>{greetMsg || "Waiting for a Rust command..."}</Text>
-
-        <Stack gap={4}>
-          <Text c="dimmed" size="sm">
-            File-based routing examples:
-          </Text>
-          <Group gap="md">
-            <Link params={{ exampleId: "tauri" }} to="/examples/$exampleId">
-              <Anchor component="span">/examples/tauri</Anchor>
-            </Link>
-            <Link params={{ exampleId: "mantine" }} to="/examples/$exampleId">
-              <Anchor component="span">/examples/mantine</Anchor>
-            </Link>
-            <Link params={{ exampleId: "router" }} to="/examples/$exampleId">
-              <Anchor component="span">/examples/router</Anchor>
-            </Link>
+            <Stack gap={6}>
+              <Text fw={600}>Useful starting points</Text>
+              <Box c="dimmed">
+                Routes live in <Code>src/routes</Code>
+              </Box>
+              <Box c="dimmed">
+                Providers live in <Code>src/AppProvider.tsx</Code>
+              </Box>
+              <Box c="dimmed">
+                SQLite sample lives in <Code>src/routes/todos.tsx</Code>
+              </Box>
+              <Box c="dimmed">
+                Native setup lives in <Code>src-tauri</Code>
+              </Box>
+            </Stack>
           </Group>
         </Stack>
-      </Stack>
-    </Card>
+      </Card>
+
+      <Card padding="lg" radius="lg" shadow="sm" withBorder>
+        <Stack gap="sm">
+          <Title order={3}>Template Direction</Title>
+          <Text c="dimmed" size="sm">
+            Keep this starter opinionated enough to move fast, but small enough that
+            a new app can replace pieces without fighting boilerplate.
+          </Text>
+          <Box c="dimmed">
+            Suggested next step after cloning: rename app metadata, keep the shell,
+            keep settings/theme, then either extend or remove the SQLite sample.
+          </Box>
+        </Stack>
+      </Card>
+    </Stack>
   );
 }

@@ -1,20 +1,14 @@
 import {
   MantineProvider,
-  createTheme,
   localStorageColorSchemeManager,
 } from "@mantine/core";
 import type { ReactNode } from "react";
 import { createProvider } from "react-easy-provider";
-import { AppRouter } from "./router";
+import { COLOR_SCHEME_STORAGE_KEY } from "../constants/storage";
+import { AppRouter } from "../router";
+import { appTheme } from "../theme";
 
-import "./index.css";
-
-export const COLOR_SCHEME_STORAGE_KEY = "tauri-app-color-scheme";
-
-const theme = createTheme({
-  primaryColor: "orange",
-  defaultRadius: "md",
-});
+import "../index.css";
 
 function useAppProviderValue(defaultColorScheme = "auto") {
   const colorSchemeManager = localStorageColorSchemeManager({
@@ -24,7 +18,7 @@ function useAppProviderValue(defaultColorScheme = "auto") {
   return {
     colorSchemeManager,
     defaultColorScheme,
-    theme,
+    theme: appTheme,
   };
 }
 
@@ -55,7 +49,7 @@ function AppProviderTheme({ children }: AppProviderProps) {
     <MantineProvider
       colorSchemeManager={colorSchemeManager}
       defaultColorScheme="auto"
-      theme={theme}
+      theme={appTheme}
     >
       {children}
     </MantineProvider>

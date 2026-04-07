@@ -10,18 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TodosRouteImport } from './routes/todos'
-import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ExamplesExampleIdRouteImport } from './routes/examples.$exampleId'
 
 const TodosRoute = TodosRouteImport.update({
   id: '/todos',
   path: '/todos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -29,44 +22,31 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ExamplesExampleIdRoute = ExamplesExampleIdRouteImport.update({
-  id: '/examples/$exampleId',
-  path: '/examples/$exampleId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
   '/todos': typeof TodosRoute
-  '/examples/$exampleId': typeof ExamplesExampleIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
   '/todos': typeof TodosRoute
-  '/examples/$exampleId': typeof ExamplesExampleIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
   '/todos': typeof TodosRoute
-  '/examples/$exampleId': typeof ExamplesExampleIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/todos' | '/examples/$exampleId'
+  fullPaths: '/' | '/todos'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/todos' | '/examples/$exampleId'
-  id: '__root__' | '/' | '/about' | '/todos' | '/examples/$exampleId'
+  to: '/' | '/todos'
+  id: '__root__' | '/' | '/todos'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
   TodosRoute: typeof TodosRoute
-  ExamplesExampleIdRoute: typeof ExamplesExampleIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -78,13 +58,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TodosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -92,21 +65,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/examples/$exampleId': {
-      id: '/examples/$exampleId'
-      path: '/examples/$exampleId'
-      fullPath: '/examples/$exampleId'
-      preLoaderRoute: typeof ExamplesExampleIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
   TodosRoute: TodosRoute,
-  ExamplesExampleIdRoute: ExamplesExampleIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,6 +1,4 @@
-import Database from "@tauri-apps/plugin-sql";
-
-const TODO_DATABASE = "sqlite:todo.db";
+import { getDatabase } from "./client";
 
 type TodoRow = {
   id: number;
@@ -15,16 +13,6 @@ export type Todo = {
   completed: boolean;
   createdAt: string;
 };
-
-let databasePromise: Promise<Database> | null = null;
-
-function getDatabase() {
-  if (!databasePromise) {
-    databasePromise = Database.load(TODO_DATABASE);
-  }
-
-  return databasePromise;
-}
 
 function mapTodo(row: TodoRow): Todo {
   return {

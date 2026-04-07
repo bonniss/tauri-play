@@ -20,12 +20,12 @@ import { Link, Outlet } from "@tanstack/react-router";
 import { platform } from "@tauri-apps/plugin-os";
 import { setupForm } from "react-headless-form";
 import { useMemo, useState } from "react";
-import { COLOR_SCHEME_STORAGE_KEY } from "./AppProvider";
+import { COLOR_SCHEME_STORAGE_KEY } from "./constants/storage";
 
-const currentPlatform = platform();
 const [SettingsForm] = setupForm();
 
 function App() {
+  const currentPlatform = platform();
   const [opened, setOpened] = useState(false);
   const { setColorScheme } = useMantineColorScheme();
 
@@ -44,7 +44,7 @@ function App() {
       <AppShell.Header>
         <Container className="flex h-full items-center" size="lg">
           <Group justify="space-between" w="100%">
-            <Title order={3}>Tauri Play - {currentPlatform}</Title>
+            <Title order={3}>Tauri Starter - {currentPlatform}</Title>
             <Group gap="sm">
               <Button
                 component={Link}
@@ -57,29 +57,16 @@ function App() {
               <Button
                 component={Link}
                 size="compact-sm"
-                to="/about"
-                variant="light"
-              >
-                About
-              </Button>
-              <Button
-                component={Link}
-                size="compact-sm"
                 to="/todos"
                 variant="light"
               >
-                Todos
+                Todo Sample
               </Button>
-              <Link params={{ exampleId: "tauri" }} to="/examples/$exampleId">
-                <Button size="compact-sm" variant="default">
-                  Example
-                </Button>
-              </Link>
               <Button
                 leftSection={<IconDeviceDesktopCog size={16} />}
                 onClick={() => setOpened(true)}
                 size="compact-sm"
-                variant="filled"
+                variant="default"
               >
                 Settings
               </Button>
@@ -93,8 +80,8 @@ function App() {
           <Stack gap="lg">
             <Stack gap={4}>
               <Text c="dimmed" size="sm">
-                TanStack Router is running with browser history inside the Tauri
-                webview.
+                Starter shell with Tauri, Mantine, Tailwind, TanStack Router, theme
+                persistence, and SQLite wiring.
               </Text>
             </Stack>
             <Outlet />
