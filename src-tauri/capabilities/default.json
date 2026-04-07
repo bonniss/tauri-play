@@ -10,6 +10,14 @@
     "opener:default",
     "os:default",
     "sql:default",
-    "sql:allow-execute"
+    "sql:allow-execute",
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [
+        {
+          "path": "$APPDATA"
+        }
+      ]
+    }
   ]
 }

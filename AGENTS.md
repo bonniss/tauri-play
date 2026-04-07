@@ -11,7 +11,6 @@ This repository is a reusable desktop app starter built with:
 - Mantine 9 for functional UI components and theme
 - Tailwind CSS v3 for layout and basic text styling
 - `react-easy-provider` for app-level provider composition
-- `react-headless-form` for lightweight config-driven forms
 
 Current frontend structure:
 
