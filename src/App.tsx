@@ -1,35 +1,39 @@
-import { Button, TextInput } from "@mantine/core"
-import { invoke } from "@tauri-apps/api/core"
-import { useState } from "react"
+import { AppShell, Button, Container, Group, Stack, Text, Title } from "@mantine/core";
+import { Link, Outlet } from "@tanstack/react-router";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("")
-  const [name, setName] = useState("")
-
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }))
-  }
-
   return (
-    <main className="container">
-      <h1>Working on greatness...</h1>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault()
-          greet()
-        }}
-      >
-        <TextInput
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <Button type="submit">Greet</Button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
-  )
+    <AppShell padding="lg">
+      <AppShell.Header>
+        <Container className="flex h-full items-center" size="lg">
+          <Group justify="space-between" w="100%">
+            <Title order={3}>Tauri Play</Title>
+            <Group gap="sm">
+              <Button component={Link} size="compact-sm" to="/" variant="subtle">
+                Home
+              </Button>
+              <Button component={Link} size="compact-sm" to="/about" variant="light">
+                About
+              </Button>
+            </Group>
+          </Group>
+        </Container>
+      </AppShell.Header>
+
+      <AppShell.Main>
+        <Container py="xl" size="lg">
+          <Stack gap="lg">
+            <Stack gap={4}>
+              <Text c="dimmed" size="sm">
+                TanStack Router is running with browser history inside the Tauri webview.
+              </Text>
+            </Stack>
+            <Outlet />
+          </Stack>
+        </Container>
+      </AppShell.Main>
+    </AppShell>
+  );
 }
 
-export default App
+export default App;

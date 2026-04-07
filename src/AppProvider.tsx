@@ -5,6 +5,7 @@ import {
 } from "@mantine/core";
 import type { ReactNode } from "react";
 import { createProvider } from "react-easy-provider";
+import { AppRouter } from "./router";
 
 import "./index.css";
 
@@ -31,13 +32,16 @@ const [useAppContext, InternalAppProvider] = createProvider(
 );
 
 type AppProviderProps = {
-  children: ReactNode;
+  children?: ReactNode;
 };
 
 export function AppProvider({ children }: AppProviderProps) {
   return (
     <InternalAppProvider>
-      <AppProviderTheme>{children}</AppProviderTheme>
+      <AppProviderTheme>
+        {children}
+        <AppRouter />
+      </AppProviderTheme>
     </InternalAppProvider>
   );
 }
