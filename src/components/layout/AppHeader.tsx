@@ -15,6 +15,14 @@ const AppHeader: FunctionComponent<AppHeaderProps> = () => {
         <Button
           component={Link}
           size="compact-sm"
+          to="/camera"
+          variant="subtle"
+        >
+          Camera
+        </Button>
+        <Button
+          component={Link}
+          size="compact-sm"
           to="/todos"
           variant="outline"
         >
