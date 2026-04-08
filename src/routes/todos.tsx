@@ -2,105 +2,90 @@ import {
   ActionIcon,
   Box,
   Button,
-  Card,
   Checkbox,
   Group,
   Loader,
-  Stack,
+  Paper,
   Text,
   TextInput,
-  Title,
-} from "@mantine/core";
-import { createFileRoute } from "@tanstack/react-router";
-import { IconTrash } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+} from "@mantine/core"
+import { IconTrash } from "@tabler/icons-react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { createFileRoute } from "@tanstack/react-router"
+import { useState } from "react"
 import {
   createTodo,
   deleteTodo,
   listTodos,
   toggleTodo,
   type Todo,
-} from "~/lib/db/todos";
+} from "~/lib/db/todos"
 
 export const Route = createFileRoute("/todos")({
   component: TodosPage,
-});
+})
+
+const todosQueryKey = ["todos"]
 
 function TodosPage() {
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [title, setTitle] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient()
+  const [title, setTitle] = useState("")
 
-  async function refreshTodos() {
-    try {
-      setError(null);
-      setTodos(await listTodos());
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Failed to load todos.");
-    } finally {
-      setIsLoading(false);
-      setIsSaving(false);
-    }
-  }
+  const todosQuery = useQuery({
+    queryKey: todosQueryKey,
+    queryFn: listTodos,
+  })
 
-  useEffect(() => {
-    void refreshTodos();
-  }, []);
+  const createTodoMutation = useMutation({
+    mutationFn: createTodo,
+    onSuccess: async () => {
+      setTitle("")
+      await queryClient.invalidateQueries({ queryKey: todosQueryKey })
+    },
+  })
 
-  async function handleCreateTodo(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const toggleTodoMutation = useMutation({
+    mutationFn: ({ completed, id }: Pick<Todo, "id" | "completed">) =>
+      toggleTodo(id, completed),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: todosQueryKey })
+    },
+  })
 
-    const nextTitle = title.trim();
+  const deleteTodoMutation = useMutation({
+    mutationFn: deleteTodo,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: todosQueryKey })
+    },
+  })
+
+  const error =
+    todosQuery.error ??
+    createTodoMutation.error ??
+    toggleTodoMutation.error ??
+    deleteTodoMutation.error
+
+  function handleCreateTodo(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    const nextTitle = title.trim()
     if (!nextTitle) {
-      return;
+      return
     }
 
-    try {
-      setIsSaving(true);
-      await createTodo(nextTitle);
-      setTitle("");
-      await refreshTodos();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Failed to create todo.");
-      setIsSaving(false);
-    }
-  }
-
-  async function handleToggleTodo(todo: Todo) {
-    try {
-      setIsSaving(true);
-      await toggleTodo(todo.id, !todo.completed);
-      await refreshTodos();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Failed to update todo.");
-      setIsSaving(false);
-    }
-  }
-
-  async function handleDeleteTodo(id: number) {
-    try {
-      setIsSaving(true);
-      await deleteTodo(id);
-      await refreshTodos();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Failed to delete todo.");
-      setIsSaving(false);
-    }
+    createTodoMutation.mutate(nextTitle)
   }
 
   return (
-    <Card padding="lg" radius="lg" shadow="sm" withBorder>
-      <Stack gap="lg">
-        <Stack gap={4}>
-          <Title order={2}>SQLite Todo Demo</Title>
-          <Box c="dimmed">
-            This page stores todos in a real SQLite database through the official
-            Tauri SQL plugin.
-          </Box>
-        </Stack>
+    <section className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+      <div className="space-y-2">
+        <h1 className="text-2xl font-semibold tracking-tight">Todo Sample</h1>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          Minimal SQLite CRUD example powered by TanStack Query.
+        </p>
+      </div>
 
+      <Paper className="p-4 sm:p-5" radius="lg" withBorder>
         <form onSubmit={handleCreateTodo}>
           <Group align="flex-end" grow>
             <TextInput
@@ -109,59 +94,71 @@ function TodosPage() {
               placeholder="Ship the desktop app"
               value={title}
             />
-            <Button loading={isSaving} type="submit">
+            <Button loading={createTodoMutation.isPending} type="submit">
               Add
             </Button>
           </Group>
         </form>
+      </Paper>
 
-        {error ? <Box c="red.6">{error}</Box> : null}
+      {error ? (
+        <Box c="red.6">
+          {error instanceof Error ? error.message : "Todo operation failed."}
+        </Box>
+      ) : null}
 
-        {isLoading ? (
+      <Paper className="p-3 sm:p-4" radius="lg" withBorder>
+        {todosQuery.isLoading ? (
           <Group justify="center" py="xl">
             <Loader size="sm" />
           </Group>
+        ) : todosQuery.data?.length ? (
+          <div className="space-y-2">
+            {todosQuery.data.map((todo) => (
+              <div
+                className="flex items-center justify-between gap-3 rounded-xl border border-black/5 px-3 py-3 dark:border-white/10"
+                key={todo.id}
+              >
+                <Checkbox
+                  checked={todo.completed}
+                  disabled={toggleTodoMutation.isPending}
+                  label={
+                    <div className="space-y-1">
+                      <Text td={todo.completed ? "line-through" : undefined}>
+                        {todo.title}
+                      </Text>
+                      <Box c="dimmed">
+                        Created at {new Date(todo.createdAt).toLocaleString()}
+                      </Box>
+                    </div>
+                  }
+                  onChange={() => {
+                    toggleTodoMutation.mutate({
+                      id: todo.id,
+                      completed: !todo.completed,
+                    })
+                  }}
+                />
+                <ActionIcon
+                  aria-label={`Delete ${todo.title}`}
+                  color="red"
+                  disabled={deleteTodoMutation.isPending}
+                  onClick={() => {
+                    deleteTodoMutation.mutate(todo.id)
+                  }}
+                  variant="light"
+                >
+                  <IconTrash size={16} />
+                </ActionIcon>
+              </div>
+            ))}
+          </div>
         ) : (
-          <Stack gap="sm">
-            {todos.length === 0 ? (
-              <Box c="dimmed">No todos yet. Add the first one above.</Box>
-            ) : (
-              todos.map((todo) => (
-                <Card key={todo.id} padding="md" radius="md" withBorder>
-                  <Group justify="space-between" wrap="nowrap">
-                    <Checkbox
-                      checked={todo.completed}
-                      label={
-                        <Stack gap={2}>
-                          <Text td={todo.completed ? "line-through" : undefined}>
-                            {todo.title}
-                          </Text>
-                          <Box c="dimmed">
-                            Created at {new Date(todo.createdAt).toLocaleString()}
-                          </Box>
-                        </Stack>
-                      }
-                      onChange={() => {
-                        void handleToggleTodo(todo);
-                      }}
-                    />
-                    <ActionIcon
-                      aria-label={`Delete ${todo.title}`}
-                      color="red"
-                      onClick={() => {
-                        void handleDeleteTodo(todo.id);
-                      }}
-                      variant="light"
-                    >
-                      <IconTrash size={16} />
-                    </ActionIcon>
-                  </Group>
-                </Card>
-              ))
-            )}
-          </Stack>
+          <div className="py-6 text-sm text-zinc-500 dark:text-zinc-500">
+            No todos yet. Add the first one above.
+          </div>
         )}
-      </Stack>
-    </Card>
-  );
+      </Paper>
+    </section>
+  )
 }

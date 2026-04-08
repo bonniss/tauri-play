@@ -7,7 +7,7 @@ interface AppHeaderProps {}
 
 const AppHeader: FunctionComponent<AppHeaderProps> = () => {
   return (
-    <header className="flex items-center justify-between gap-4">
+    <header className="py-4 flex items-center justify-between gap-4">
       <div className="left-section flex items-center gap-2">
         <Button component={Link} size="compact-sm" to="/" variant="subtle">
           Home
