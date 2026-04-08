@@ -1,6 +1,8 @@
 import { Alert, Button, Group, Paper, Text } from "@mantine/core"
 import { IconCamera, IconCameraOff, IconPhoto } from "@tabler/icons-react"
 import { FunctionComponent, useEffect, useRef, useState } from "react"
+import { getOrCreateWorkingProjectId } from "~/lib/camera/session"
+import { saveCapturedImage } from "~/lib/camera/storage"
 
 interface CameraCaptureProps {}
 
@@ -13,6 +15,8 @@ const CameraCapture: FunctionComponent<CameraCaptureProps> = () => {
   >("idle")
   const [captureUrl, setCaptureUrl] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [lastSavedPath, setLastSavedPath] = useState<string | null>(null)
 
   useEffect(() => {
     return () => {
@@ -81,6 +85,31 @@ const CameraCapture: FunctionComponent<CameraCaptureProps> = () => {
 
     context.drawImage(video, 0, 0, canvas.width, canvas.height)
     setCaptureUrl(canvas.toDataURL("image/jpeg", 0.92))
+  }
+
+  async function saveSingleShot() {
+    if (!captureUrl) {
+      return
+    }
+
+    try {
+      setIsSaving(true)
+      setErrorMessage(null)
+
+      const projectId = getOrCreateWorkingProjectId()
+      const result = await saveCapturedImage({
+        dataUrl: captureUrl,
+        projectId,
+      })
+
+      setLastSavedPath(result.filePath)
+    } catch (cause) {
+      setErrorMessage(
+        cause instanceof Error ? cause.message : "Failed to save the captured image.",
+      )
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -157,6 +186,17 @@ const CameraCapture: FunctionComponent<CameraCaptureProps> = () => {
             Take Photo
           </Button>
 
+          <Button
+            disabled={!captureUrl}
+            loading={isSaving}
+            onClick={() => {
+              void saveSingleShot()
+            }}
+            variant="default"
+          >
+            Save Photo
+          </Button>
+
           <div className="space-y-2">
             <Text fw={600}>Latest Shot</Text>
             <div className="overflow-hidden rounded-xl border border-black/5 bg-zinc-50 dark:border-white/10 dark:bg-white/5">
@@ -172,6 +212,11 @@ const CameraCapture: FunctionComponent<CameraCaptureProps> = () => {
                 </div>
               )}
             </div>
+            {lastSavedPath ? (
+              <Text c="dimmed" size="sm">
+                Saved to `AppData/{lastSavedPath}`
+              </Text>
+            ) : null}
           </div>
         </Paper>
       </div>
