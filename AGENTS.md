@@ -97,6 +97,8 @@ corepack pnpm build:app
 - Prefer small, composable components and route files over large page components.
 - Keep one primary component per file and default-export it. Use named exports only for secondary helpers.
 - For route components, prefer function declarations over arrow functions.
+- Treat the current frontend structure outside `src/routes/todos.tsx` as the active baseline.
+- Treat `src/routes/todos.tsx` mainly as a SQLite sample. Do not use it as the standard for newer frontend code.
 
 Preferred component shape:
 
@@ -112,15 +114,6 @@ const Component: FunctionComponent<ComponentProps> = () => {
 export default Component
 ```
 
-### UI
-
-Use the tools by responsibility, not by preference:
-
-- Use Tailwind for layout, spacing, flex/grid, sizing, positioning, and basic text styling.
-- Use Mantine for functional UI components: forms, buttons, overlays, cards, navigation, inputs, app shell, and feedback states.
-- For quick text color that needs to work across light and dark themes, prefer Mantine props like `c`, for example `Box c="dimmed"` or `Text c="orange.4"`.
-- Keep theme concerns in the layout provider and theme module, not scattered across route files.
-
 ### Routing
 
 - Keep routes file-based under `src/routes`.
@@ -128,6 +121,14 @@ Use the tools by responsibility, not by preference:
 - Do not edit `src/routeTree.gen.ts` manually.
 - Prefer route params and nested routes over ad-hoc URL parsing.
 - If routing types look stale, run `corepack pnpm routes:gen`.
+
+### UI
+
+- Use Tailwind for layout, spacing, flex/grid, sizing, positioning, and basic text styling.
+- Use Mantine for functional UI components: forms, buttons, overlays, cards, navigation, inputs, app shell, and feedback states.
+- For quick text color that needs to work across light and dark themes, prefer Mantine props like `c`, for example `Box c="dimmed"` or `Text c="orange.4"`.
+- For quick animation and transition, prefer utility classes from `tailwindcss-motion`.
+- Keep theme concerns in the layout provider and theme module, not scattered across route files.
 
 ## Database
 
@@ -156,3 +157,14 @@ corepack pnpm -v
 rustc -V
 cargo -V
 ```
+
+## Editing Rules
+
+- Keep files ASCII unless there is a real need for Unicode.
+- Avoid unnecessary comments.
+- Prefer clear file names and predictable route names.
+- When cloning this repo into a new app, update package name, product name, Tauri identifier, and app title before shipping.
+- When adding a new screen, prefer:
+  1. a new file in `src/routes`
+  2. route-local UI in that file first
+  3. extraction only after a real second use case appears

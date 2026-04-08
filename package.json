@@ -36,6 +36,7 @@
     "autoprefixer": "^10.4.27",
     "postcss": "^8.5.8",
     "tailwindcss": "^3.4.19",
+    "tailwindcss-motion": "^1.1.1",
     "typescript": "~5.8.3",
     "vite": "^7.0.4"
   }

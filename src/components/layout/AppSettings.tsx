@@ -13,7 +13,7 @@ const AppSettings: FunctionComponent<AppSettingsProps> = () => {
   return (
     <>
       <ActionIcon variant="light" onClick={toggleAppSettings}>
-        <IconSettings className="size-5" />
+        <IconSettings className="size-5 motion-rotate-loop-180 motion-duration-[5s]" />
       </ActionIcon>
       <Modal
         onClose={closeAppSettings}
