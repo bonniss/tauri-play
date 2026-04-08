@@ -8,7 +8,7 @@ import {
   IconThemeAuto,
   IconThemeDark,
   IconThemeLight,
-} from "../../icon/semantic"
+} from "~/components/icon/semantic"
 
 interface ColorSchemerProps extends Omit<
   SegmentedControlProps,

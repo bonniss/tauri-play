@@ -6,7 +6,7 @@ import { appTheme } from "./theme"
 
 import { useDisclosure } from "@mantine/hooks"
 import { createProvider } from "react-easy-provider"
-import "../../assets/styles/index.css"
+import "~/assets/styles/index.css"
 
 const COLOR_SCHEME_STORAGE_KEY = "$colorScheme"
 const queryClient = new QueryClient({
