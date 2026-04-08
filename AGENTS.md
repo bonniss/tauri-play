@@ -6,21 +6,27 @@ This repository is a reusable desktop app starter built with:
 
 - Tauri 2 for the native shell and Rust backend
 - React 19 + TypeScript for the frontend
-- Vite 7 for frontend bundling and dev server
+- Vite 7 for bundling and dev server
 - TanStack Router with file-based routing
+- TanStack Query for async state and server-style caching
 - Mantine 9 for functional UI components and theme
 - Tailwind CSS v3 for layout and basic text styling
 - `react-easy-provider` for app-level provider composition
 
 Current frontend structure:
 
-- `src/providers/AppProvider.tsx`: app-wide providers and Mantine theme
-- `src/router/index.tsx`: router setup
+- `src/main.tsx`: app entry
+- `src/router.tsx`: router setup
 - `src/routes/`: file-based routes
-- `src/theme/`: Mantine theme setup
-- `src/constants/`: shared app constants
+- `src/components/layout/AppProvider.tsx`: app-wide providers and app UI state
+- `src/components/layout/DefaultLayout.tsx`: shared shell layout
+- `src/components/layout/AppHeader.tsx`: top-level navigation
+- `src/components/layout/AppSettings.tsx`: settings modal entry
+- `src/components/layout/settings/`: settings-related UI
+- `src/components/layout/theme.ts`: Mantine theme setup
+- `src/components/icon/semantic.tsx`: semantic icon aliases
 - `src/lib/db/`: SQLite access layer
-- `src/App.tsx`: root layout shell
+- `src/assets/styles/index.css`: global styles
 
 Current native structure:
 
@@ -78,32 +84,52 @@ Desktop bundle:
 corepack pnpm build:app
 ```
 
-## UI Practices
+## Frontend
+
+### General Practices
+
+- Prefer the `~` alias for `src` over deep relative imports.
+- Prefer semantic icon names from `src/components/icon/semantic.tsx` over raw vendor icon names when the icon has app meaning.
+- Put reusable internal helpers and integrations under `src/lib`.
+- Put app-level business state in a dedicated provider created with `createProvider` from `react-easy-provider`.
+- If a provider is internal-only, export the hook and keep the internal provider private to the module.
+- Use TanStack Query for async work in components and follow normal query best practices: stable keys, clear loading and error states, and avoid ad-hoc effect-based fetching.
+- Prefer small, composable components and route files over large page components.
+- Keep one primary component per file and default-export it. Use named exports only for secondary helpers.
+- For route components, prefer function declarations over arrow functions.
+
+Preferred component shape:
+
+```tsx
+import { FunctionComponent } from "react"
+
+interface ComponentProps {}
+
+const Component: FunctionComponent<ComponentProps> = () => {
+  return null
+}
+
+export default Component
+```
+
+### UI
 
 Use the tools by responsibility, not by preference:
 
 - Use Tailwind for layout, spacing, flex/grid, sizing, positioning, and basic text styling.
-- Use Mantine for functional UI components: forms, buttons, overlays, cards, navigation, inputs, app shell, feedback states.
+- Use Mantine for functional UI components: forms, buttons, overlays, cards, navigation, inputs, app shell, and feedback states.
 - For quick text color that needs to work across light and dark themes, prefer Mantine props like `c`, for example `Box c="dimmed"` or `Text c="orange.4"`.
-- Keep Mantine theme concerns centralized in `src/providers/AppProvider.tsx`.
-- Keep storage keys and app-level constants in `src/constants`.
-- Keep route-level UI inside `src/routes`.
+- Keep theme concerns in the layout provider and theme module, not scattered across route files.
 
-Practical rule of thumb:
-
-- Layout skeleton: Tailwind
-- Stateful or interactive component: Mantine
-- Fast theme-aware text color: Mantine `c` prop
-
-## Routing Practices
+### Routing
 
 - Keep routes file-based under `src/routes`.
-- Put shared shell/layout in `src/App.tsx` and `src/routes/__root.tsx`.
-- Prefer route params and nested routes over ad-hoc URL parsing.
+- Put shared shell layout in `src/routes/__root.tsx`.
 - Do not edit `src/routeTree.gen.ts` manually.
+- Prefer route params and nested routes over ad-hoc URL parsing.
 - If routing types look stale, run `corepack pnpm routes:gen`.
 
-## Database Practices
+## Database
 
 - Keep DB access in `src/lib/db`.
 - Do not write SQL directly in route files.
@@ -111,16 +137,11 @@ Practical rule of thumb:
 - Keep Tauri SQL permissions in sync with actual usage.
 - If you need details, read `DB.md`.
 
-## General Best Practices
+## Backend
 
-- Prefer small, composable route components over one large page file.
-- Keep Rust commands narrow and explicit. Validate inputs at the boundary.
-- Keep app-wide providers, theme, and cross-cutting concerns out of page files.
-- Do not duplicate state in both router and local component state unless there is a clear reason.
-- Prefer explicit types on shared helpers, provider values, and Tauri command payloads.
-- Avoid introducing a second component library unless there is a strong reason.
-- Preserve the existing split: Tailwind for structure, Mantine for components.
-- Keep generated files out of manual edits.
+- Keep Rust commands narrow and explicit.
+- Validate inputs at the Tauri boundary.
+- Keep desktop-only system logic in Rust or official Tauri plugins when that boundary is clearer than frontend-only code.
 
 ## Multi-Device Notes
 
@@ -135,14 +156,3 @@ corepack pnpm -v
 rustc -V
 cargo -V
 ```
-
-## Editing Rules
-
-- Keep files ASCII unless there is a real need for Unicode.
-- Avoid unnecessary comments.
-- Prefer clear file names and predictable route names.
-- When cloning this repo into a new app, update package name, product name, Tauri identifier, and app title before shipping.
-- When adding a new screen, prefer:
-  1. new file in `src/routes`
-  2. route-specific UI in that file
-  3. shared UI extracted only after a real second use case exists
