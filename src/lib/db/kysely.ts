@@ -1,0 +1,150 @@
+import Database from "@tauri-apps/plugin-sql"
+import {
+  ColumnType,
+  Generated,
+  Kysely,
+  SqliteAdapter,
+  SqliteIntrospector,
+  SqliteQueryCompiler,
+} from "kysely"
+import type {
+  CompiledQuery,
+  DatabaseConnection,
+  Dialect,
+  DialectAdapter,
+  Driver,
+  KyselyConfig,
+  QueryResult,
+  QueryCompiler,
+  TransactionSettings,
+} from "kysely"
+import { getDatabase } from "./client"
+
+type TodoTable = {
+  id: Generated<number>
+  title: string
+  completed: ColumnType<number, number | undefined, number>
+  created_at: ColumnType<string, string | undefined, never>
+}
+
+export interface DatabaseSchema {
+  todos: TodoTable
+}
+
+class TauriSqliteConnection implements DatabaseConnection {
+  constructor(private readonly database: Database) {}
+
+  async executeQuery<O>(compiledQuery: CompiledQuery): Promise<QueryResult<O>> {
+    const sql = compiledQuery.sql.trim().toLowerCase()
+
+    if (sql.startsWith("select") || sql.startsWith("pragma")) {
+      const rows = await this.database.select<O[]>(
+        compiledQuery.sql,
+        compiledQuery.parameters as unknown[],
+      )
+
+      return {
+        rows,
+      }
+    }
+
+    const result = await this.database.execute(
+      compiledQuery.sql,
+      compiledQuery.parameters as unknown[],
+    )
+
+    return {
+      numAffectedRows: BigInt(result.rowsAffected),
+      rows: [],
+    }
+  }
+
+  async *streamQuery<R>(): AsyncIterableIterator<QueryResult<R>> {
+    throw new Error("Streaming queries are not supported by the Tauri SQL plugin.")
+  }
+}
+
+class TauriSqliteDriver implements Driver {
+  private connection: DatabaseConnection | null = null
+  private database: Database | null = null
+
+  async init(): Promise<void> {
+    const database = await getDatabase()
+    this.database = database
+    this.connection = new TauriSqliteConnection(database)
+  }
+
+  async acquireConnection(): Promise<DatabaseConnection> {
+    if (!this.connection) {
+      throw new Error("Kysely driver not initialized.")
+    }
+
+    return this.connection
+  }
+
+  async beginTransaction(_connection: DatabaseConnection): Promise<void> {
+    if (!this.database) {
+      throw new Error("Kysely driver not initialized.")
+    }
+
+    await this.database.execute("begin")
+  }
+
+  async commitTransaction(_connection: DatabaseConnection): Promise<void> {
+    if (!this.database) {
+      throw new Error("Kysely driver not initialized.")
+    }
+
+    await this.database.execute("commit")
+  }
+
+  async rollbackTransaction(_connection: DatabaseConnection): Promise<void> {
+    if (!this.database) {
+      throw new Error("Kysely driver not initialized.")
+    }
+
+    await this.database.execute("rollback")
+  }
+
+  async releaseConnection(): Promise<void> {}
+
+  async destroy(): Promise<void> {
+    this.connection = null
+    this.database = null
+  }
+
+  async beginTransactionSettings(
+    _connection: DatabaseConnection,
+    _settings: TransactionSettings,
+  ): Promise<void> {}
+}
+
+class TauriSqliteDialect implements Dialect {
+  createAdapter(): DialectAdapter {
+    return new SqliteAdapter()
+  }
+
+  createDriver(): Driver {
+    return new TauriSqliteDriver()
+  }
+
+  createIntrospector(db: Kysely<unknown>) {
+    return new SqliteIntrospector(db)
+  }
+
+  createQueryCompiler(): QueryCompiler {
+    return new SqliteQueryCompiler()
+  }
+}
+
+let kyselyInstance: Kysely<DatabaseSchema> | null = null
+
+export function getKysely() {
+  if (!kyselyInstance) {
+    kyselyInstance = new Kysely<DatabaseSchema>({
+      dialect: new TauriSqliteDialect(),
+    } satisfies KyselyConfig)
+  }
+
+  return kyselyInstance
+}

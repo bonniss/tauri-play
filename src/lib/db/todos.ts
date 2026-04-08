@@ -1,11 +1,4 @@
-import { getDatabase } from "./client";
-
-type TodoRow = {
-  id: number;
-  title: string;
-  completed: number;
-  created_at: string;
-};
+import { getKysely } from "./kysely";
 
 export type Todo = {
   id: number;
@@ -14,7 +7,7 @@ export type Todo = {
   createdAt: string;
 };
 
-function mapTodo(row: TodoRow): Todo {
+function mapTodo(row: { completed: number; created_at: string; id: number; title: string }): Todo {
   return {
     id: row.id,
     title: row.title,
@@ -24,28 +17,31 @@ function mapTodo(row: TodoRow): Todo {
 }
 
 export async function listTodos() {
-  const db = await getDatabase();
-  const rows = await db.select<TodoRow[]>(
-    "SELECT id, title, completed, created_at FROM todos ORDER BY id DESC",
-  );
+  const db = getKysely();
+  const rows = await db
+    .selectFrom("todos")
+    .select(["id", "title", "completed", "created_at"])
+    .orderBy("id", "desc")
+    .execute();
 
   return rows.map(mapTodo);
 }
 
 export async function createTodo(title: string) {
-  const db = await getDatabase();
-  await db.execute("INSERT INTO todos (title) VALUES (?)", [title.trim()]);
+  const db = getKysely();
+  await db.insertInto("todos").values({ title: title.trim() }).execute();
 }
 
 export async function toggleTodo(id: number, completed: boolean) {
-  const db = await getDatabase();
-  await db.execute("UPDATE todos SET completed = ? WHERE id = ?", [
-    completed ? 1 : 0,
-    id,
-  ]);
+  const db = getKysely();
+  await db
+    .updateTable("todos")
+    .set({ completed: completed ? 1 : 0 })
+    .where("id", "=", id)
+    .execute();
 }
 
 export async function deleteTodo(id: number) {
-  const db = await getDatabase();
-  await db.execute("DELETE FROM todos WHERE id = ?", [id]);
+  const db = getKysely();
+  await db.deleteFrom("todos").where("id", "=", id).execute();
 }
