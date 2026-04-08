@@ -1,66 +1,41 @@
-import { Box, Card, Code, Group, Stack, Text, Title } from "@mantine/core";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/")({
   component: HomePage,
-});
+})
 
 function HomePage() {
   return (
-    <Stack gap="lg">
-      <Card padding="lg" radius="lg" shadow="sm" withBorder>
-        <Stack gap="md">
-          <div>
-            <Title order={2}>Starter Overview</Title>
-            <Text c="dimmed" size="sm">
-              This repo is shaped to become a reusable Tauri starter, not a product
-              demo.
-            </Text>
-          </div>
+    <section className="relative flex min-h-[calc(100vh-8rem)] items-center justify-center overflow-hidden">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-1/2 top-[10%] h-64 w-64 -translate-x-[140%] rounded-full bg-orange-400/20 blur-3xl dark:bg-orange-300/15" />
+        <div className="absolute left-1/2 top-[0%] h-80 w-80 -translate-x-1/2 rounded-full bg-amber-300/20 blur-3xl dark:bg-amber-200/10" />
+        <div className="absolute left-1/2 top-[18%] h-72 w-72 translate-x-[45%] rounded-full bg-cyan-400/20 blur-3xl dark:bg-cyan-300/12" />
+        <div className="absolute bottom-[12%] left-1/2 h-56 w-[32rem] -translate-x-1/2 rounded-full bg-white/30 blur-3xl dark:bg-white/5" />
+      </div>
 
-          <Group align="flex-start" grow>
-            <Stack gap={6}>
-              <Text fw={600}>What is already wired</Text>
-              <Box c="dimmed">Tauri desktop shell</Box>
-              <Box c="dimmed">React + TypeScript + Vite</Box>
-              <Box c="dimmed">Mantine theme and settings modal</Box>
-              <Box c="dimmed">Tailwind for layout and basic text styling</Box>
-              <Box c="dimmed">TanStack Router with file-based routing</Box>
-              <Box c="dimmed">SQLite sample with migrations</Box>
-            </Stack>
+      <div className="relative flex w-full max-w-3xl flex-col items-center gap-10 px-4 text-center">
+        <div className="flex items-center justify-center gap-4 sm:gap-6">
+          <Logo alt="Tauri" src="/tauri.svg" />
+          <Logo alt="React" src="/react.svg" />
+          <Logo alt="Vite" src="/vite.svg" />
+        </div>
 
-            <Stack gap={6}>
-              <Text fw={600}>Useful starting points</Text>
-              <Box c="dimmed">
-                Routes live in <Code>src/routes</Code>
-              </Box>
-              <Box c="dimmed">
-                Providers live in <Code>src/AppProvider.tsx</Code>
-              </Box>
-              <Box c="dimmed">
-                SQLite sample lives in <Code>src/routes/todos.tsx</Code>
-              </Box>
-              <Box c="dimmed">
-                Native setup lives in <Code>src-tauri</Code>
-              </Box>
-            </Stack>
-          </Group>
-        </Stack>
-      </Card>
-
-      <Card padding="lg" radius="lg" shadow="sm" withBorder>
-        <Stack gap="sm">
-          <Title order={3}>Template Direction</Title>
-          <Text c="dimmed" size="sm">
-            Keep this starter opinionated enough to move fast, but small enough that
-            a new app can replace pieces without fighting boilerplate.
-          </Text>
-          <Box c="dimmed">
-            Suggested next step after cloning: rename app metadata, keep the shell,
-            keep settings/theme, then either extend or remove the SQLite sample.
-          </Box>
-        </Stack>
-      </Card>
-    </Stack>
-  );
+        <div className="space-y-3">
+          <h1 className="bg-[linear-gradient(135deg,_#f97316_0%,_#fb7185_32%,_#f59e0b_58%,_#22c55e_78%,_#38bdf8_100%)] bg-clip-text text-5xl font-black tracking-[-0.06em] text-transparent dark:bg-[linear-gradient(135deg,_#fdba74_0%,_#f9a8d4_34%,_#fde68a_60%,_#86efac_80%,_#7dd3fc_100%)] sm:text-7xl">
+            Tauri Starter
+          </h1>
+          <p className="text-lg">
+            Opinionated Tauri app template with React, Tailwind and Mantine.
+          </p>
+        </div>
+      </div>
+    </section>
+  )
 }
+
+function Logo({ alt, src }: { alt: string; src: string }) {
+  return <img alt={alt} className="size-14 sm:size-20" src={src} />
+}
+
+export default HomePage
