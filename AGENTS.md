@@ -136,7 +136,7 @@ export default Component
 - Do not write SQL directly in route files.
 - Keep migrations in `src-tauri/migrations`.
 - Keep Tauri SQL permissions in sync with actual usage.
-- If you need details, read `DB.md`.
+- Read `DB.md` for the database workflow, rationale, and current SQLite/Kysely setup.
 
 ## Backend
 
