@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router"
-import CameraCapture from "~/components/camera/CameraCapture"
+import CameraUI from "~/components/camera/CameraUI"
 
 export const Route = createFileRoute("/camera")({
   component: CameraPage,
 })
 
 function CameraPage() {
-  return <CameraCapture />
+  return <CameraUI onCapture={(frame) => console.log(frame)} />
 }
 
 export default CameraPage
