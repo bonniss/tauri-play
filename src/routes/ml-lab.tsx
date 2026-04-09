@@ -1,22 +1,25 @@
-import { Button, Center } from '@mantine/core';
 import { createFileRoute } from '@tanstack/react-router';
-import { initTf } from '~/lib/ml/backend';
+import { useRef } from 'react';
+import { TinyModelTrainDemo } from '~/components/ml/TinyModelTrainDemo';
 
 export const Route = createFileRoute('/ml-lab')({
   component: MlLabPage,
 });
 
 function MlLabPage() {
+  const modelRef = useRef<any>(null);
+
   return (
-    <Center>
-      <Button
-        onClick={async () => {
-          const tf = await initTf();
-          alert(JSON.stringify({ tf }, null, 2));
-        }}
-      >
-        Init TF
-      </Button>
-    </Center>
+    <div className="flex flex-col gap-4 max-w-64 mx-auto">
+      {/* <Button onClick={
+        async () => {
+          modelRef.current = createTinyModel(inputShape, numClasses)
+
+        }
+      }>
+        Train model
+      </Button> */}
+      <TinyModelTrainDemo />
+    </div>
   );
 }
