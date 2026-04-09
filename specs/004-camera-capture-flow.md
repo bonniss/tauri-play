@@ -296,6 +296,92 @@ const DEFAULT_REC_DELAY_MS = 500
 const DEFAULT_REC_DURATION_MS = 2000
 ```
 
+## UI Component — CameraUI
+
+`CameraUI` is a ready-made consumer of `CameraCapture`. It provides a complete overlay UI while staying styleable via Tailwind classes on the container.
+
+### File
+
+```
+src/components/camera/CameraUI.tsx
+```
+
+### Props
+
+```tsx
+interface CameraUIProps {
+  className?: string
+  defaultSettings?: Partial<CaptureSettings>
+  onCapture?: (frame: CapturedFrame) => void
+  children?: (frames: CapturedFrame[]) => React.ReactNode
+}
+```
+
+`children` is a render prop for frames — parent decides how thumbnails are displayed.
+
+### Usage
+
+```tsx
+<CameraUI
+  className="max-w-2xl"
+  onCapture={(frame) => saveCapturedImage(frame)}
+>
+  {(frames) => (
+    <div className="grid grid-cols-4 gap-2">
+      {frames.map((f) => (
+        <img key={f.id} src={f.dataUrl} className="rounded-lg aspect-square object-cover" />
+      ))}
+    </div>
+  )}
+</CameraUI>
+```
+
+### Layout
+
+```
+┌─────────────────────────────────────┐
+│  [photo | rec]        [4fps ▾]      │  ← top bar overlay
+│                                     │
+│                                     │
+│              [video]                │
+│                                     │
+│                                     │
+│               [ ◉ ]                 │  ← shutter, bottom center
+└─────────────────────────────────────┘
+  {children(frames)}                     ← outside frame, render prop
+```
+
+Default ratio: `aspect-video` (16/9). Override via `className`.
+
+### Settings panel
+
+- compact state: shows `4fps` (photo) or `4fps · 0.5s · 2s` (rec), readonly
+- click to expand: slides down with 160ms ease-out transition
+- expanded: slider rows per setting, filtered by current mode
+- photo mode: fps only
+- rec mode: fps, rec delay (s), rec duration (s)
+- close button collapses back to compact
+
+### Shutter button states
+
+- idle: white disc + white ring
+- burst active: slightly scaled ring, dimmed disc
+- rec active: ring scales up + red tint, inner disc becomes rounded square (red)
+
+### Required keyframes (add to `src/assets/styles/index.css`)
+
+```css
+@keyframes cameraFlash {
+  0%   { opacity: 0.55; }
+  100% { opacity: 0; }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+```
+
 ## NFR
 
 - no audio files bundled — all sound via Web Audio API
