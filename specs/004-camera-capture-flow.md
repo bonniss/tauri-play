@@ -1,283 +1,305 @@
-# 004 Camera Capture Flow
+# 004 Camera Capture Component
 
 ## Purpose
 
-This document defines the first camera-driven workflow for the app.
+This document defines the camera capture component for the app.
 
-The goal is to build the capture foundation for image classification before building broader project management.
+The component is the foundation for all sample collection. It handles webcam access, single shot, burst, and recording capture modes, sound feedback, and frame output — and exposes everything via a headless render prop API so the parent controls all UI.
 
-## Scope
+## Design Principle
 
-This phase covers:
+The component is as headless as possible.
 
-- webcam preview
-- image capture
-- local image persistence
-- sample metadata persistence
-- per-class sample organization
-- one hidden project id for the current working session
+It owns:
 
-This phase does not yet require:
+- webcam stream lifecycle
+- capture logic (single, burst, rec)
+- frame accumulation
+- sound feedback
+- flash trigger timing
 
-- visible project management UI
-- multiple user-created projects
-- training UI polish
-- advanced dataset inspection
+It does not own:
 
-## Product Decision
+- any visible UI
+- layout or styling
+- how frames are displayed
+- the shutter button appearance
+- the settings panel appearance
 
-Even though we are not building project management first, we should still store data in a project-shaped structure from day one.
+The parent receives full context via a render function children prop and builds all UI from that.
 
-That means:
+## API
 
-- each working session gets one hidden project id
-- all captured images for that session live under a folder for that id
-- later, this hidden id can become the real project id without changing the storage model
+### Props
 
-## Core Rule
-
-On app open, if there is no active working session yet, generate one hidden project id and use it as the storage root for captures.
-
-For now:
-
-- one app session maps to one implicit project
-- the user does not need to manage that project explicitly
-
-Later:
-
-- this id becomes the real project id
-- explicit project management can be added on top
-
-## Storage Direction
-
-Captured images should be stored as files on disk.
-
-Metadata should be stored in SQLite.
-
-Recommended shape:
-
-```text
-app-data/
-  projects/
-    <project-id>/
-      samples/
-        <class-id>/
-          <sample-id>.jpg
-  app.db
+```tsx
+interface CameraCaptureProps {
+  children: (context: CameraCaptureContext) => React.ReactNode
+  defaultSettings?: Partial<CaptureSettings>
+  onCapture?: (frame: CapturedFrame) => void
+}
 ```
 
-This structure is important because it already matches the future product shape:
+`onCapture` fires for every individual frame captured, in all modes. Useful for wiring up persistence without touching frames array directly.
+
+### Context Shape
+
+```tsx
+interface CameraCaptureContext {
+  // camera lifecycle
+  cameraState: 'idle' | 'connecting' | 'ready' | 'error'
+  error: string | null
+  connect: () => void
+  disconnect: () => void
+  videoRef: React.RefObject<HTMLVideoElement>
 
-- project
-- class
-- samples
+  // mode
+  mode: 'photo' | 'rec'
+  setMode: (mode: 'photo' | 'rec') => void
+
+  // capture
+  isCapturing: boolean
+  captureCount: number
+  onShutterDown: () => void
+  onShutterUp: () => void
 
-## Entities Needed Now
+  // settings
+  settings: CaptureSettings
+  setSettings: (patch: Partial<CaptureSettings>) => void
 
-### Hidden Project Session
+  // frames
+  frames: CapturedFrame[]
+  clear: () => void
+}
+```
 
-Represents the current working project, even though the UI does not expose it yet.
+### Settings
 
-Suggested fields:
+```tsx
+interface CaptureSettings {
+  fps: number           // capture rate for burst and rec, default 4
+  recDelay: number      // ms before rec starts capturing, default 500
+  recDuration: number   // ms of rec capture window, default 2000
+}
+```
 
-- `id`
-- `createdAt`
-- `updatedAt`
-- `status`
+These have sensible defaults and can be overridden via `defaultSettings` prop or via `setSettings` at runtime.
 
-### Class
+### Frame
 
-Represents a label/category for image classification.
+```tsx
+interface CapturedFrame {
+  id: string
+  dataUrl: string
+  capturedAt: number
+  source: 'single' | 'burst' | 'rec'
+}
+```
+
+## Capture Behavior
+
+### Single shot (photo mode)
+
+- user presses and releases shutter in under `HOLD_THRESHOLD` ms
+- one frame is captured on release
+- tick sound plays
+- flash triggers
 
-Suggested fields:
+`HOLD_THRESHOLD` is a named constant in the component file, default `400` ms. Easy to adjust without touching logic.
 
-- `id`
-- `projectId`
-- `name`
-- `createdAt`
+### Burst (photo mode)
 
-### Sample
+- user presses and holds shutter for at least `HOLD_THRESHOLD` ms
+- burst starts: frames captured continuously at `settings.fps`
+- tick sound plays on every frame
+- flash triggers on every frame
+- burst stops when user releases shutter
+- positive feedback sound plays on stop
 
-Represents one captured image.
+### Recording (rec mode)
 
-Suggested fields:
+- user presses shutter once
+- rec delay waits `settings.recDelay` ms (no capture yet)
+- capture starts: frames at `settings.fps` for `settings.recDuration` ms
+- tick sound on every frame, flash on every frame
+- capture ends automatically after duration
+- positive feedback sound plays on end
+- pressing shutter again during rec does nothing (debounced)
 
-- `id`
-- `projectId`
-- `classId`
-- `path`
-- `source`
-- `createdAt`
+## Sound Feedback
 
-For now, `source` can be:
-
-- `camera`
-- `upload`
-
-## Camera Flow
-
-### 1. Open camera
-
-The app should:
-
-- request webcam permission
-- show a live preview
-- show a clear error state if permission fails or no device exists
-
-### 2. Select target class
-
-Before capture, the user must choose which class the sample belongs to.
-
-The app should always know the current target class before saving a sample.
-
-### 3. Capture frame
-
-When the user captures:
-
-- grab the current video frame
-- convert it to an image
-- persist it under the hidden project folder
-- create sample metadata in SQLite
-- update the UI immediately
-
-### 4. Show local result
-
-After capture, the app should:
-
-- increment the sample count
-- show the latest thumbnail
-- keep the preview running
-
-## UX Requirements
-
-The first camera UX should be simple.
-
-It should include:
-
-- live preview
-- current class selection
-- capture button
-- sample count per class
-- latest captured items
-
-It should avoid:
-
-- too many controls
-- advanced training settings
-- project naming or project switching
-
-## Technical Requirements
-
-### Camera access
-
-Use browser media APIs in the Tauri webview.
-
-At minimum, the app must handle:
-
-- permission granted
-- permission denied
-- no camera found
-- camera stream interrupted
-
-### Capture output
-
-The capture pipeline should produce a real image file, not just in-memory preview data.
-
-Why:
-
-- files are needed for later training
-- files survive app restart
-- files are easier to inspect and debug
-
-### Persistence
-
-The capture flow is not complete until both of these succeed:
-
-- image file written to disk
-- sample metadata written to SQLite
-
-If one succeeds and the other fails, the app should treat that as an error state and recover cleanly.
-
-## Recommended Build Order
-
-### 1. Hidden project id bootstrap
-
-Build:
-
-- generate one implicit project id
-- persist it for the current working context
-
-Done means:
-
-- the app always has a storage root before capture starts
-
-### 2. Camera preview
-
-Build:
-
-- webcam permission request
-- preview stream
-- basic error states
-
-Done means:
-
-- user can see a stable live preview
-
-### 3. Frame capture
-
-Build:
-
-- capture one frame from the preview
-- convert frame into an image blob/file
-
-Done means:
-
-- the app can produce a valid image from the camera
-
-### 4. File persistence
-
-Build:
-
-- create folder path from hidden project id and class id
-- write captured image to disk
-
-Done means:
-
-- the file exists in the correct local folder
-
-### 5. Metadata persistence
-
-Build:
-
-- save sample record in SQLite
-- load sample count by class
-
-Done means:
-
-- restart does not lose sample state
-
-### 6. Capture UI feedback
-
-Build:
-
-- count updates
-- latest sample preview
-- simple sample list
-
-Done means:
-
-- users can feel progress while collecting data
-
-## Risks
-
-- camera behavior may vary across devices
-- webview camera support may differ from normal Chrome behavior
-- file writing must be coordinated with capture timing
-- repeated capture can create too many near-duplicate samples
-
-## Open Questions
-
-- Should the hidden project id survive app restart until the user explicitly resets it?
-- Should class ids also map directly to folder names, or should folder names stay separate from display names?
-- What image format should v1 store by default: jpeg or png?
-- Do we want single-shot capture only first, or also burst capture soon after?
+All sounds are generated via Web Audio API. No audio files required.
+
+### Tick sound
+
+Plays on every individual frame captured across all modes.
+
+```
+OscillatorNode — sine wave
+frequency: 1100 Hz
+attack: 3 ms
+decay: 72 ms
+peak gain: 0.15
+total duration: ~80 ms
+```
+
+Must be short enough to not overlap at high fps. At 4 fps (250 ms interval) there is no overlap. At 10 fps (100 ms interval) the tail may slightly overlap — acceptable.
+
+### Positive feedback sound
+
+Plays once when a burst ends (on shutter release) or a rec ends (after duration).
+
+```
+Two tones in sequence:
+  note 1 — 880 Hz, 110 ms, peak gain 0.14
+  note 2 — 1320 Hz, 130 ms, peak gain 0.12
+  gap between notes — 110 ms
+  wave type — sine
+```
+
+Ascending interval gives a clear "done" signal distinct from the tick.
+
+### Implementation note
+
+AudioContext must be created (or resumed) inside a user gesture handler to satisfy browser autoplay policy. Initialize lazily on first shutter interaction.
+
+## Flash Feedback
+
+On every frame capture, the component calls a flash trigger.
+
+The flash is implemented as a white overlay div rendered inside the video container by the parent. The component exposes `flashRef` — a ref the parent attaches to whatever element should flash.
+
+```tsx
+// parent usage
+<div style={{ position: 'relative' }}>
+  <video ref={videoRef} />
+  <div ref={flashRef} className="flash-overlay" />
+</div>
+```
+
+The component triggers the flash by toggling a CSS class on `flashRef.current`. The animation itself is owned by the parent's CSS.
+
+Recommended animation:
+
+```css
+.flash-overlay {
+  position: absolute;
+  inset: 0;
+  background: white;
+  opacity: 0;
+  pointer-events: none;
+}
+.flash-overlay.flashing {
+  animation: cameraFlash 180ms ease-out forwards;
+}
+@keyframes cameraFlash {
+  0%   { opacity: 0.55; }
+  100% { opacity: 0; }
+}
+```
+
+`flashRef` is part of the context shape:
+
+```tsx
+flashRef: React.RefObject<HTMLDivElement>
+```
+
+## Settings UI Convention
+
+The component does not render settings UI. The parent owns it entirely.
+
+The recommended pattern (matching the reference design) is an iPhone camera-style collapsible bar:
+
+- compact state: shows current values read-only, e.g. `4 fps · 0.5 s delay · 2 s duration`
+- expanded state: shows inputs for each setting relevant to the current mode
+- transition: smooth expand/collapse, triggered by tapping the compact bar
+- photo mode shows: fps only
+- rec mode shows: fps, rec delay, rec duration
+
+The parent reads `settings` and `mode` from context to drive this UI, and calls `setSettings` to apply changes.
+
+## Usage Example
+
+```tsx
+<CameraCapture onCapture={handleCapture}>
+  {({
+    cameraState, error,
+    connect, disconnect,
+    videoRef, flashRef,
+    mode, setMode,
+    isCapturing, captureCount,
+    onShutterDown, onShutterUp,
+    settings, setSettings,
+    frames, clear,
+  }) => (
+    <div className="...">
+      {/* preview */}
+      <div style={{ position: 'relative' }}>
+        <video ref={videoRef} autoPlay muted playsInline />
+        <div ref={flashRef} className="flash-overlay" />
+      </div>
+
+      {/* shutter */}
+      <button
+        onMouseDown={onShutterDown}
+        onMouseUp={onShutterUp}
+        onMouseLeave={onShutterUp}
+      >
+        {isCapturing ? 'capturing...' : 'capture'}
+      </button>
+
+      {/* mode */}
+      <button onClick={() => setMode(mode === 'photo' ? 'rec' : 'photo')}>
+        {mode}
+      </button>
+
+      {/* frame count */}
+      <span>{captureCount} frames</span>
+
+      {/* frames — render however */}
+      {frames.map(f => (
+        <img key={f.id} src={f.dataUrl} />
+      ))}
+    </div>
+  )}
+</CameraCapture>
+```
+
+## Internal Structure
+
+```
+CameraCapture (logic only, renders null for UI)
+  ├── hidden <video> ref
+  ├── hidden <canvas> ref (used for frame extraction only)
+  ├── useCamera hook — stream lifecycle
+  ├── useCapture hook — single / burst / rec logic
+  ├── useCaptureSound hook — Web Audio tick + positive
+  └── renders children(context)
+```
+
+Hooks are internal to the component. They are not exported.
+
+## File Location
+
+```
+src/components/camera/CameraCapture.tsx
+```
+
+The existing `CameraCapture.tsx` should be refactored in place to match this spec.
+
+## Constants (in component file)
+
+```ts
+const HOLD_THRESHOLD_MS = 400
+const DEFAULT_FPS = 4
+const DEFAULT_REC_DELAY_MS = 500
+const DEFAULT_REC_DURATION_MS = 2000
+```
+
+## NFR
+
+- no audio files bundled — all sound via Web Audio API
+- AudioContext created lazily on first user gesture
+- no memory leak from unreleased camera streams — `disconnect` always stops all tracks
+- canvas element never appears in DOM visibly — used only for frame extraction
+- component must handle camera permission denied, no device found, and stream interrupted gracefully — all surfaced via `cameraState` and `error`
