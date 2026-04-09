@@ -17,6 +17,7 @@ import {
   version as osVersion,
   platform,
 } from "@tauri-apps/plugin-os"
+import { isDev } from "~/lib/env"
 import ColorSchemer from "./ColorSchemer"
 
 async function getAppInfo() {
@@ -100,7 +101,7 @@ const AppInfo = () => {
     { label: "Locale", value: data.systemLocale },
   ]
 
-  if (import.meta.env.DEV) {
+  if (isDev) {
     rows.push({ label: "Tauri", value: data.tauriVersion })
   }
 
