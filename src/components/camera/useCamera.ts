@@ -36,6 +36,8 @@ export function useCamera() {
     setError(null)
   }, [])
 
+  const getMediaDevices = navigator.mediaDevices.enumerateDevices
+
   const connect = useCallback(async () => {
     try {
       setCameraState("connecting")
@@ -69,6 +71,7 @@ export function useCamera() {
     videoRef,
     cameraState,
     error,
+    getMediaDevices,
     connect,
     disconnect,
   }
