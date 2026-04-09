@@ -26,7 +26,8 @@
     "kysely": "^0.28.15",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-easy-provider": "^0.2.1"
+    "react-easy-provider": "^0.2.1",
+    "react-headless-form": "^0.13.1"
   },
   "devDependencies": {
     "@tanstack/router-cli": "^1.166.25",
