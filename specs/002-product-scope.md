@@ -4,280 +4,222 @@
 
 This document defines the first product scope for our app.
 
-The app is inspired by Teachable Machine, but it is not a clone. The goal is to build a local-first educational tool for collecting examples, training simple models, comparing results, and learning through iteration.
+The app is inspired by Teachable Machine and Lobe. The goal is a local-first desktop tool where users create image classification projects, collect labeled samples, train a model, and test it live — all offline, all on their machine.
 
 ## Product Position
 
-This is primarily an education product.
+This is a practical learning tool.
 
-That means the app should optimize for:
-
-- clarity over raw power
-- short learning loops
-- visible cause and effect
-- safe local experimentation
-- easy recovery from mistakes
+It should feel fast, direct, and satisfying to use. The value comes from the feedback loop: you collect images, you train, you see what works and what doesn't.
 
 It should help users understand:
 
 - what a dataset is
-- how labels affect training
+- how labels affect what the model learns
 - why more or better examples change outcomes
 - why models can fail
-- how to compare training attempts
+- what confidence scores mean
 
 ## Core Product Principles
 
 - offline-first
 - local-first
-- multiple saved model sessions per project
+- project-based
 - beginner-friendly
-- fast iteration
-- explicit and inspectable state
+- fast iteration loop
 
 ## Main User
 
-Primary user:
+Primary:
 
 - students
 - teachers
 - self-learners
 - workshop participants
 
-Secondary user:
+Secondary:
 
 - creators and developers who want a simple local prototype tool
 
-## Product Goal
+## Mental Model
 
-The app should let a user create a small ML project, collect examples, train multiple model sessions, compare them, and use the differences as part of the learning experience.
+A **Project** is the top-level unit of work. Each project is one classification task.
 
-The comparison part matters. Unlike a simple one-model workflow, this app should preserve multiple training attempts so users can see how changing data or settings affects results.
+Examples:
 
-## Non-Goals For Early Scope
+- "Finger Counting" — classes: One, Two, Three, Four, Five
+- "Drink Tracker" — classes: Drinking, Not Drinking
+- "Rock Paper Scissors" — classes: Rock, Paper, Scissors
 
-- cloud sync
-- collaborative multi-user editing
-- advanced MLOps workflows
-- large-scale dataset management
-- production-grade deployment pipelines
-- fully custom model architecture editing
+Each project has its own classes, its own samples, and its own trained model. Projects are independent from each other.
+
+```
+Project "Finger Counting"
+  └── classes: One, Two, Three, Four, Five
+  └── samples per class
+  └── trained model
+
+Project "Drink Tracker"
+  └── classes: Drinking, Not Drinking
+  └── samples per class
+  └── trained model
+```
+
+This is the only mental model users need to hold. There is no concept of multiple training runs or model versions inside one project in v1.
+
+## Product Shape
+
+```
+project list → create / open project → label → train → play
+```
+
+The three main views inside a project map directly to the sidebar in the UI:
+
+- **Label** — manage classes, capture or import samples
+- **Train** — trigger training, see progress and basic results
+- **Play** — test the model live with the webcam
+
+This matches the Lobe-style three-step sidebar visible in the reference screenshot.
 
 ## Core Entities
 
 ### Project
 
-The top-level container for a learning activity.
+The container for one classification task.
 
-A project contains:
+Fields:
 
-- project metadata
-- task type
-- classes
-- captured samples
-- training sessions
-- exported artifacts
+- `id`
+- `name`
+- `taskType` — image classification only for v1
+- `createdAt`
+- `updatedAt`
 
 ### Class
 
-A label/category the user wants the model to recognize.
+A label the model should learn to recognize.
+
+Fields:
+
+- `id`
+- `projectId`
+- `name`
+- `createdAt`
 
 ### Sample
 
-A captured or imported training example.
+One captured or imported training image.
 
-Depending on the task type, this may be:
+Fields:
 
-- image
-- audio
-- pose-derived data
+- `id`
+- `projectId`
+- `classId`
+- `filePath`
+- `source` — `camera` or `upload`
+- `createdAt`
 
-### Model Session
+### Model
 
-A saved training run inside a project.
+The trained artifact for a project. One model per project in v1.
 
-This is a core difference from the simplest Teachable Machine flow.
+Fields:
 
-A model session should preserve:
+- `id`
+- `projectId`
+- `artifactPath` — path to the saved TensorFlow.js model folder
+- `trainedAt`
+- `accuracy` — optional top-level summary metric
 
-- training timestamp
-- training configuration
-- model artifact location
-- summary metrics
-- notes or label from the user
-
-### Evaluation Result
-
-A set of outputs used to understand model behavior, for example:
-
-- confidence values
-- per-class correctness
-- confusion-style summary
-
-## Product Shape
-
-The base product should feel like:
-
-`project -> collect -> train -> compare -> test -> export`
-
-Not just:
-
-`collect -> train -> export`
-
-That difference is important because the educational value comes from iteration, comparison, and reflection.
-
-## Feature Decisions
-
-### Features We Should Keep From Teachable Machine
-
-- simple project creation
-- direct class management
-- webcam / microphone / file-based sample collection
-- fast local training loop
-- live prediction test view
-- export model artifacts
-
-These are core to the low-friction learning experience.
-
-### Features We Should Rebuild More Explicitly
-
-Teachable Machine is optimized for speed and accessibility. For our educational app, some flows should be more visible and inspectable.
-
-#### 1. Training sessions should be first-class
-
-Instead of only caring about the latest model, the app should preserve many model sessions in one project.
-
-Why:
-
-- learners can compare runs
-- teachers can show the effect of better data
-- users can return to earlier attempts without retraining from scratch
-
-#### 2. Dataset quality should be more visible
-
-The app should make dataset state easier to understand, such as:
-
-- sample count per class
-- empty or weak classes
-- obvious class imbalance
-- recently added samples
-
-Why:
-
-- this is one of the most teachable parts of beginner ML
-
-#### 3. Evaluation should be stronger than a simple preview
-
-Teachable Machine is strong at quick testing. Our app should expand this into learning-oriented feedback.
-
-Examples:
-
-- confidence per class
-- test history
-- quick compare between model sessions
-- visible failure cases
-
-Why:
-
-- education requires explanation, not just prediction
-
-#### 4. Persistence should be more intentional
-
-Because this app is local-first and offline-first, project and model persistence are not secondary features. They are part of the core product.
-
-The app should make it easy to:
-
-- save projects
-- keep multiple model sessions
-- reopen old work
-- export and import project bundles later
-
-## Recommended Early Feature Set
+## Feature Set
 
 ### v1 Must-Have
 
-- create project
-- choose task type
-- create and edit classes
-- capture or import samples
-- review and delete samples
-- train a model locally
-- save each training run as a model session
-- switch between saved model sessions
-- run live prediction with a selected session
-- basic project persistence
+- project list screen — create, open, delete projects
+- class management — add, rename, delete classes
+- sample collection — webcam capture and file upload per class
+- sample review — see thumbnails, delete individual samples
+- sample count per class with minimum guidance (5 images needed to train)
+- one-click training with a progress indicator
+- save trained model to disk
+- live prediction view using the webcam
+- confidence bar per class in the prediction view
+- basic persistence — projects and samples survive app restart
 
-### v1.1 Strong Additions
+### v1.1 Additions
 
-- notes for model sessions
-- basic session comparison
-- dataset summary panel
-- simple evaluation history
-- export/import project package
+- class balance warnings
+- training accuracy summary after training completes
+- export model for use outside the app
+- import existing image folders as samples
+- rename or duplicate a project
 
 ### Later
 
-- richer metrics
-- guided capture hints
-- confusion matrix
-- dataset versioning
+- audio classification
+- pose classification
+- confusion matrix view
+- per-class sample quality hints
 - teacher presentation mode
-- lesson templates or learning exercises
+
+## Navigation
+
+The app has two levels:
+
+1. **Project list** — the home screen, shows all saved projects
+2. **Project view** — opens one project with a three-tab sidebar: Label, Train, Play
+
+There is no deep navigation beyond these two levels in v1.
+
+## Non-Goals For v1
+
+- multiple training runs or model version history inside one project
+- cloud sync
+- collaborative multi-user editing
+- advanced model architecture editing
+- production-grade deployment pipelines
+- audio or pose modalities
+
+## Storage Layout
+
+```
+app-data/
+  base-model/
+    model.json
+    weights.bin
+  projects/
+    <project-id>/
+      samples/
+        <class-id>/
+          <sample-id>.jpg
+      model/
+        model.json
+        weights.bin
+  app.db
+```
+
+`app.db` holds all metadata: projects, classes, samples, model records.
+
+Files on disk hold the actual images, the base model, and trained project model artifacts.
 
 ## Offline / Local-First Requirements
 
-These are not optional.
+The app runs entirely on the user's machine. There is no server, no cloud sync, no backend of any kind.
 
-- projects must be stored locally
-- samples must be stored locally
-- model sessions must be stored locally
-- the app must work without network access after install
-- users must be able to keep multiple model sessions at the same time
+**One-time setup requirement:**
 
-This has direct product implications:
+The first time the app launches, it needs an internet connection to download the base model (MobileNet, ~18MB) from a public CDN. This is downloaded once and saved to `app-data/base-model/`. Every launch after that loads the base model from disk — no internet needed.
 
-- storage layout matters
-- project metadata matters
-- model artifact management matters
-- the app should not assume one active model overwrites all previous work
+The app must make this requirement clear and honest:
 
-## UX Implications Of Multiple Model Sessions
+- on first launch, show a setup screen explaining what is being downloaded and why
+- show download progress
+- do not proceed to the project list until the download is complete and verified
+- if the download fails, show a clear error with a retry option
 
-If we support many model sessions, the UI should expose that clearly.
+After the one-time setup:
 
-At minimum, each project should have:
-
-- one active session
-- a session list
-- a way to rename sessions
-- a way to inspect when and how a session was created
-- a way to switch between sessions
-
-Potential future additions:
-
-- pin a session
-- duplicate a session
-- compare two sessions side by side
-
-## Recommended Product Direction
-
-For our app, the strongest differentiator is not "another teachable ML toy."
-
-It is:
-
-- a local educational ML lab
-- with persistent projects
-- and multiple model sessions
-- designed to help users learn by comparing outcomes
-
-That is the direction worth leaning into.
-
-## Open Questions
-
-These need product decisions next:
-
-- Should v1 support only one modality first, such as image only?
-- Should training configuration be exposed to users in v1, or mostly hidden?
-- Should model sessions store only final artifacts, or also dataset snapshots?
-- Should project export be part of v1 or v1.1?
-- Do we want a teacher-facing presentation mode early?
+- all projects and samples are stored locally
+- training runs entirely in the app using the saved base model
+- inference runs entirely in the app
+- the app works fully offline indefinitely
