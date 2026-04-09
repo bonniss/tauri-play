@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TodosRouteImport } from './routes/todos'
+import { Route as MlLabRouteImport } from './routes/ml-lab'
 import { Route as CameraRouteImport } from './routes/camera'
 import { Route as IndexRouteImport } from './routes/index'
 
 const TodosRoute = TodosRouteImport.update({
   id: '/todos',
   path: '/todos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MlLabRoute = MlLabRouteImport.update({
+  id: '/ml-lab',
+  path: '/ml-lab',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CameraRoute = CameraRouteImport.update({
@@ -32,30 +38,34 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/camera': typeof CameraRoute
+  '/ml-lab': typeof MlLabRoute
   '/todos': typeof TodosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/camera': typeof CameraRoute
+  '/ml-lab': typeof MlLabRoute
   '/todos': typeof TodosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/camera': typeof CameraRoute
+  '/ml-lab': typeof MlLabRoute
   '/todos': typeof TodosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/camera' | '/todos'
+  fullPaths: '/' | '/camera' | '/ml-lab' | '/todos'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/camera' | '/todos'
-  id: '__root__' | '/' | '/camera' | '/todos'
+  to: '/' | '/camera' | '/ml-lab' | '/todos'
+  id: '__root__' | '/' | '/camera' | '/ml-lab' | '/todos'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CameraRoute: typeof CameraRoute
+  MlLabRoute: typeof MlLabRoute
   TodosRoute: typeof TodosRoute
 }
 
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/todos'
       fullPath: '/todos'
       preLoaderRoute: typeof TodosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ml-lab': {
+      id: '/ml-lab'
+      path: '/ml-lab'
+      fullPath: '/ml-lab'
+      preLoaderRoute: typeof MlLabRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/camera': {
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CameraRoute: CameraRoute,
+  MlLabRoute: MlLabRoute,
   TodosRoute: TodosRoute,
 }
 export const routeTree = rootRouteImport
