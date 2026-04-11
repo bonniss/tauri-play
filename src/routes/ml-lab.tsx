@@ -1,7 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useRef } from 'react';
 import TinyImageTrainDemo from '~/components/ml/TinyImageTrainDemo';
-import { TinyModelTrainDemo } from '~/components/ml/TinyModelTrainDemo';
 
 export const Route = createFileRoute('/ml-lab')({
   component: MlLabPage,

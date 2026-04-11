@@ -1,6 +1,11 @@
-import { useCallback, useRef, useState } from 'react'
-import type { CaptureMode, CapturedFrame, CaptureSettings, CaptureSource } from './types'
-import { useCaptureSound } from './useCaptureSound'
+import { useCallback, useRef, useState } from "react"
+import type {
+  CaptureMode,
+  CapturedFrame,
+  CaptureSettings,
+  CaptureSource,
+} from "./types"
+import { useCaptureSound } from "./useCaptureSound"
 
 const HOLD_THRESHOLD_MS = 400
 
@@ -11,9 +16,9 @@ const DEFAULT_SETTINGS: CaptureSettings = {
 }
 
 interface UseCaptureOptions {
-  videoRef: React.RefObject<HTMLVideoElement>
-  canvasRef: React.RefObject<HTMLCanvasElement>
-  flashRef: React.RefObject<HTMLDivElement>
+  videoRef: React.RefObject<HTMLVideoElement | null>
+  canvasRef: React.RefObject<HTMLCanvasElement | null>
+  flashRef: React.RefObject<HTMLDivElement | null>
   cameraReady: boolean
   onCapture?: (frame: CapturedFrame) => void
   defaultSettings?: Partial<CaptureSettings>
@@ -27,7 +32,7 @@ export function useCapture({
   onCapture,
   defaultSettings,
 }: UseCaptureOptions) {
-  const [mode, setMode] = useState<CaptureMode>('photo')
+  const [mode, setMode] = useState<CaptureMode>("photo")
   const [frames, setFrames] = useState<CapturedFrame[]>([])
   const [isCapturing, setIsCapturing] = useState(false)
   const [captureCount, setCaptureCount] = useState(0)
@@ -49,9 +54,9 @@ export function useCapture({
   function triggerFlash() {
     const el = flashRef.current
     if (!el) return
-    el.classList.remove('flashing')
+    el.classList.remove("flashing")
     void el.offsetWidth
-    el.classList.add('flashing')
+    el.classList.add("flashing")
   }
 
   function extractFrame(source: CaptureSource): CapturedFrame | null {
@@ -61,14 +66,14 @@ export function useCapture({
 
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
-    const ctx = canvas.getContext('2d')
+    const ctx = canvas.getContext("2d")
     if (!ctx) return null
 
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
 
     const frame: CapturedFrame = {
       id: crypto.randomUUID(),
-      dataUrl: canvas.toDataURL('image/jpeg', 0.92),
+      dataUrl: canvas.toDataURL("image/jpeg", 0.92),
       capturedAt: Date.now(),
       source,
     }
@@ -105,11 +110,11 @@ export function useCapture({
     isBurstingRef.current = true
     setIsCapturing(true)
 
-    captureOne('burst')
+    captureOne("burst")
 
     const intervalMs = 1000 / settings.fps
     burstIntervalRef.current = setInterval(() => {
-      captureOne('burst')
+      captureOne("burst")
     }, intervalMs)
   }
 
@@ -119,11 +124,11 @@ export function useCapture({
     setIsCapturing(true)
 
     recDelayTimeoutRef.current = setTimeout(() => {
-      captureOne('rec')
+      captureOne("rec")
 
       const intervalMs = 1000 / settings.fps
       burstIntervalRef.current = setInterval(() => {
-        captureOne('rec')
+        captureOne("rec")
       }, intervalMs)
 
       recTimeoutRef.current = setTimeout(() => {
@@ -142,7 +147,7 @@ export function useCapture({
     if (!cameraReady) return
     isDownRef.current = true
 
-    if (mode === 'rec') {
+    if (mode === "rec") {
       startRec()
       return
     }
@@ -150,14 +155,14 @@ export function useCapture({
     holdTimerRef.current = setTimeout(() => {
       startBurst()
     }, HOLD_THRESHOLD_MS)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cameraReady, mode, settings])
 
   const onShutterUp = useCallback(() => {
     if (!isDownRef.current) return
     isDownRef.current = false
 
-    if (mode === 'rec') return
+    if (mode === "rec") return
 
     if (holdTimerRef.current) {
       clearTimeout(holdTimerRef.current)
@@ -169,8 +174,8 @@ export function useCapture({
       return
     }
 
-    captureOne('single')
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    captureOne("single")
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode])
 
   function setSettings(patch: Partial<CaptureSettings>) {

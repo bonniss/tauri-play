@@ -1,18 +1,20 @@
+import type { MobileNet } from "@tensorflow-models/mobilenet"
 import * as tf from "@tensorflow/tfjs"
 import { useMemo, useRef, useState } from "react"
 import { getMemory } from "~/lib/ml/backend"
-import { buildImageClassificationDataset } from "~/lib/ml/sample/dataset"
 import { fileToImageTensor } from "~/lib/ml/sample/image"
-import { predictSample } from "~/lib/ml/sample/predict"
-import { createTinyModel, trainModel } from "~/lib/ml/sample/train"
+import { buildMobilenetEmbeddingDataset } from "~/lib/ml/mobilenet/dataset"
+import { loadMobilenetModel, createMobilenetClassifierHead } from "~/lib/ml/mobilenet/model"
+import { predictWithMobilenetClassifier } from "~/lib/ml/mobilenet/predict"
+import { trainMobilenetClassifier } from "~/lib/ml/mobilenet/train"
 
-const IMAGE_SIZE = 128
+const IMAGE_SIZE = 224
 
 const TinyImageTrainDemo = () => {
-  const xsRef = useRef<tf.Tensor4D | null>(null)
+  const xsRef = useRef<tf.Tensor2D | null>(null)
   const ysRef = useRef<tf.Tensor2D | null>(null)
-  const modelRef = useRef<tf.LayersModel | null>(null)
-  const testTensorRef = useRef<tf.Tensor3D | null>(null)
+  const classifierRef = useRef<tf.LayersModel | null>(null)
+  const embeddingModelRef = useRef<MobileNet | null>(null)
 
   const [class0Files, setClass0Files] = useState<File[]>([])
   const [class1Files, setClass1Files] = useState<File[]>([])
@@ -24,7 +26,8 @@ const TinyImageTrainDemo = () => {
     numClasses: number
   } | null>(null)
 
-  const [modelReady, setModelReady] = useState(false)
+  const [featureExtractorReady, setFeatureExtractorReady] = useState(false)
+  const [classifierReady, setClassifierReady] = useState(false)
   const [logs, setLogs] = useState<
     { epoch: number; loss: number; acc?: number }[]
   >([])
@@ -40,8 +43,10 @@ const TinyImageTrainDemo = () => {
   )
 
   const canBuildDataset = class0Files.length > 0 && class1Files.length > 0
-  const canTrain = !!xsRef.current && !!ysRef.current && modelReady
-  const canPredict = !!modelRef.current && !!testFile
+  const canCreateClassifier = !!datasetInfo
+  const canTrain = !!xsRef.current && !!ysRef.current && !!classifierRef.current
+  const canPredict =
+    !!classifierRef.current && !!embeddingModelRef.current && !!testFile
 
   const class0Preview = useMemo(
     () => class0Files.map((f) => URL.createObjectURL(f)),
@@ -64,27 +69,35 @@ const TinyImageTrainDemo = () => {
     xsRef.current = null
     ysRef.current = null
     setDatasetInfo(null)
-    setModelReady(false)
-    modelRef.current?.dispose()
-    modelRef.current = null
+    setFeatureExtractorReady(false)
+    setClassifierReady(false)
+    classifierRef.current?.dispose()
+    classifierRef.current = null
 
     try {
-      const data = await buildImageClassificationDataset({
+      if (!embeddingModelRef.current) {
+        setStatus("loading mobilenet")
+        embeddingModelRef.current = await loadMobilenetModel()
+      }
+
+      const data = await buildMobilenetEmbeddingDataset({
         class0Files,
         class1Files,
         imageSize: IMAGE_SIZE,
+        embeddingModel: embeddingModelRef.current,
         fileToTensor: fileToImageTensor,
       })
 
       xsRef.current = data.xs
-      ysRef.current = data.ys as tf.Tensor2D
+      ysRef.current = data.ys
 
       setDatasetInfo({
         sampleCount: data.sampleCount,
         inputShape: data.inputShape,
         numClasses: data.numClasses,
       })
-      setStatus("dataset ready")
+      setFeatureExtractorReady(true)
+      setStatus("embedding dataset ready")
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "build dataset failed")
     }
@@ -93,35 +106,35 @@ const TinyImageTrainDemo = () => {
   function handleCreateModel() {
     if (!datasetInfo) return
 
-    modelRef.current?.dispose()
-    modelRef.current = createTinyModel(
+    classifierRef.current?.dispose()
+    classifierRef.current = createMobilenetClassifierHead(
       datasetInfo.inputShape,
       datasetInfo.numClasses,
     )
-    setModelReady(true)
-    setStatus(`model ready (${modelRef.current.countParams()} params)`)
+    setClassifierReady(true)
+    setStatus(`classifier ready (${classifierRef.current.countParams()} params)`)
   }
 
   async function handleTrain() {
-    if (!modelRef.current || !xsRef.current || !ysRef.current) return
+    if (!classifierRef.current || !xsRef.current || !ysRef.current) return
 
     setStatus("training")
     setLogs([])
     setTrainTimeMs(null)
 
     try {
-      const result = await trainModel({
-        model: modelRef.current,
+      const result = await trainMobilenetClassifier({
+        model: classifierRef.current,
         xs: xsRef.current,
         ys: ysRef.current,
-        epochs: 10,
+        epochs: 20,
         batchSize: 8,
         onEpochEnd: (log) => {
           setLogs((prev) => [...prev, log])
         },
       })
 
-      const evalResult = modelRef.current.evaluate(
+      const evalResult = classifierRef.current.evaluate(
         xsRef.current,
         ysRef.current,
       ) as tf.Tensor[]
@@ -138,17 +151,16 @@ const TinyImageTrainDemo = () => {
   }
 
   async function handlePredict() {
-    if (!modelRef.current || !testFile) return
+    if (!classifierRef.current || !embeddingModelRef.current || !testFile) return
 
     setStatus("predicting")
     setPrediction(null)
-
-    testTensorRef.current?.dispose()
-    testTensorRef.current = await fileToImageTensor(testFile, IMAGE_SIZE)
-
-    const result = await predictSample({
-      model: modelRef.current,
-      sample: testTensorRef.current,
+    const result = await predictWithMobilenetClassifier({
+      classifier: classifierRef.current,
+      embeddingModel: embeddingModelRef.current,
+      file: testFile,
+      fileToTensor: fileToImageTensor,
+      imageSize: IMAGE_SIZE,
     })
 
     setPrediction(result)
@@ -159,33 +171,19 @@ const TinyImageTrainDemo = () => {
     setMemory(getMemory())
   }
 
-  async function handlePredictFirstTrainSample() {
-    if (!modelRef.current || !xsRef.current) return
-
-    const sample = tf.tidy(() =>
-      xsRef.current!.slice([0, 0, 0, 0], [1, IMAGE_SIZE, IMAGE_SIZE, 3]),
-    )
-
-    const output = modelRef.current.predict(sample) as tf.Tensor
-    output.print()
-
-    sample.dispose()
-    output.dispose()
-  }
-
   function handleReset() {
     xsRef.current?.dispose()
     ysRef.current?.dispose()
-    modelRef.current?.dispose()
-    testTensorRef.current?.dispose()
+    classifierRef.current?.dispose()
 
     xsRef.current = null
     ysRef.current = null
-    modelRef.current = null
-    testTensorRef.current = null
+    classifierRef.current = null
+    embeddingModelRef.current = null
 
     setDatasetInfo(null)
-    setModelReady(false)
+    setFeatureExtractorReady(false)
+    setClassifierReady(false)
     setLogs([])
     setTrainTimeMs(null)
     setPrediction(null)
@@ -259,6 +257,7 @@ const TinyImageTrainDemo = () => {
             <div>Samples: {datasetInfo.sampleCount}</div>
             <div>Input shape: {JSON.stringify(datasetInfo.inputShape)}</div>
             <div>Classes: {datasetInfo.numClasses}</div>
+            <div>Feature extractor: {featureExtractorReady ? "MobileNet ready" : "not loaded"}</div>
           </div>
         )}
       </div>
@@ -268,9 +267,9 @@ const TinyImageTrainDemo = () => {
           <button
             className="rounded bg-black px-3 py-2 text-white disabled:opacity-50"
             onClick={handleCreateModel}
-            disabled={!datasetInfo}
+            disabled={!canCreateClassifier}
           >
-            Create Model
+            Create Classifier
           </button>
 
           <button
@@ -297,7 +296,8 @@ const TinyImageTrainDemo = () => {
         </div>
 
         <div className="text-sm">Status: {status}</div>
-        <div className="text-sm">Model ready: {modelReady ? "yes" : "no"}</div>
+        <div className="text-sm">Feature extractor ready: {featureExtractorReady ? "yes" : "no"}</div>
+        <div className="text-sm">Classifier ready: {classifierReady ? "yes" : "no"}</div>
         {trainTimeMs !== null && (
           <div className="text-sm">Train time: {trainTimeMs.toFixed(2)} ms</div>
         )}

@@ -40,8 +40,6 @@ export function createSyntheticDataset({
 
 function generateImage(size: number, type: "left" | "right") {
   return tf.tidy(() => {
-    const img = tf.zeros([size, size, 1])
-
     const mid = Math.floor(size / 2)
 
     if (type === "left") {

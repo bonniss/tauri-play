@@ -23,6 +23,7 @@
     "@tauri-apps/plugin-opener": "^2",
     "@tauri-apps/plugin-os": "~2.3.2",
     "@tauri-apps/plugin-sql": "^2.4.0",
+    "@tensorflow-models/mobilenet": "^2.1.1",
     "@tensorflow/tfjs": "^4.22.0",
     "kysely": "^0.28.15",
     "react": "^19.1.0",
