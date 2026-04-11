@@ -29,7 +29,8 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-easy-provider": "^0.2.1",
-    "react-headless-form": "^0.13.1"
+    "react-headless-form": "^0.13.1",
+    "sonner": "^2.0.7"
   },
   "devDependencies": {
     "@tanstack/router-cli": "^1.166.25",

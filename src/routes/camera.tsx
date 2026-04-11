@@ -1,4 +1,7 @@
+import { Button } from "@mantine/core"
+import { IconBellBolt } from "@tabler/icons-react";
 import { createFileRoute } from "@tanstack/react-router"
+import { toast } from "sonner"
 import { CapturedFrame } from "~/components/camera/CameraCapture"
 import CameraUI from "~/components/camera/CameraUI"
 import { getOrCreateWorkingProjectId } from "~/lib/camera/session"
@@ -18,11 +21,27 @@ function CameraPage() {
         projectId,
       })
     } catch (e) {
-      console.error('save failed', e)
+      console.error("save failed", e)
     }
   }
 
-  return <CameraUI onCapture={handleCapture} />
+  return (
+    <>
+      <CameraUI onCapture={handleCapture} />
+      <Button
+        onClick={() => {
+          toast.info('duytrung', {
+            description: "This is a description",
+            icon: <IconBellBolt />,
+            position: 'top-center',
+            action: 'success',
+          })
+        }}
+      >
+        Test toast
+      </Button>
+    </>
+  )
 }
 
 export default CameraPage
