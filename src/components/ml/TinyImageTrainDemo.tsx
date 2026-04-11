@@ -4,9 +4,20 @@ import { useMemo, useRef, useState } from "react"
 import { getMemory } from "~/lib/ml/backend"
 import { fileToImageTensor } from "~/lib/ml/sample/image"
 import { buildMobilenetEmbeddingDataset } from "~/lib/ml/mobilenet/dataset"
-import { loadMobilenetModel, createMobilenetClassifierHead } from "~/lib/ml/mobilenet/model"
+import {
+  MOBILENET_ALPHA,
+  MOBILENET_VERSION,
+  createMobilenetClassifierHead,
+  loadMobilenetModel,
+} from "~/lib/ml/mobilenet/model"
 import { predictWithMobilenetClassifier } from "~/lib/ml/mobilenet/predict"
+import {
+  loadMobilenetClassifierModel,
+  saveMobilenetClassifierModel,
+  type MobilenetClassifierMetadata,
+} from "~/lib/ml/mobilenet/storage"
 import { trainMobilenetClassifier } from "~/lib/ml/mobilenet/train"
+import { Button } from "@mantine/core"
 
 const IMAGE_SIZE = 224
 
@@ -41,12 +52,15 @@ const TinyImageTrainDemo = () => {
   const [memory, setMemory] = useState<ReturnType<typeof getMemory> | null>(
     null,
   )
+  const [savedModelInfo, setSavedModelInfo] =
+    useState<MobilenetClassifierMetadata | null>(null)
 
   const canBuildDataset = class0Files.length > 0 && class1Files.length > 0
   const canCreateClassifier = !!datasetInfo
   const canTrain = !!xsRef.current && !!ysRef.current && !!classifierRef.current
   const canPredict =
     !!classifierRef.current && !!embeddingModelRef.current && !!testFile
+  const canExport = !!classifierRef.current && !!datasetInfo
 
   const class0Preview = useMemo(
     () => class0Files.map((f) => URL.createObjectURL(f)),
@@ -112,7 +126,9 @@ const TinyImageTrainDemo = () => {
       datasetInfo.numClasses,
     )
     setClassifierReady(true)
-    setStatus(`classifier ready (${classifierRef.current.countParams()} params)`)
+    setStatus(
+      `classifier ready (${classifierRef.current.countParams()} params)`,
+    )
   }
 
   async function handleTrain() {
@@ -151,7 +167,8 @@ const TinyImageTrainDemo = () => {
   }
 
   async function handlePredict() {
-    if (!classifierRef.current || !embeddingModelRef.current || !testFile) return
+    if (!classifierRef.current || !embeddingModelRef.current || !testFile)
+      return
 
     setStatus("predicting")
     setPrediction(null)
@@ -165,6 +182,57 @@ const TinyImageTrainDemo = () => {
 
     setPrediction(result)
     setStatus("predict done")
+  }
+
+  async function handleExportModel() {
+    if (!classifierRef.current || !datasetInfo) return
+
+    setStatus("saving model")
+
+    try {
+      const result = await saveMobilenetClassifierModel({
+        imageSize: IMAGE_SIZE,
+        metadata: {
+          inputShape: datasetInfo.inputShape,
+          mobilenetAlpha: MOBILENET_ALPHA,
+          mobilenetVersion: MOBILENET_VERSION,
+          numClasses: datasetInfo.numClasses,
+        },
+        model: classifierRef.current,
+      })
+
+      setSavedModelInfo(result.metadata)
+      setStatus(`model saved to AppData/${result.directoryPath}`)
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "save model failed")
+    }
+  }
+
+  async function handleImportModel() {
+    setStatus("loading saved model")
+
+    try {
+      if (!embeddingModelRef.current) {
+        embeddingModelRef.current = await loadMobilenetModel()
+      }
+
+      classifierRef.current?.dispose()
+
+      const result = await loadMobilenetClassifierModel()
+      classifierRef.current = result.model
+
+      setDatasetInfo({
+        sampleCount: 0,
+        inputShape: result.metadata.inputShape,
+        numClasses: result.metadata.numClasses,
+      })
+      setFeatureExtractorReady(true)
+      setClassifierReady(true)
+      setSavedModelInfo(result.metadata)
+      setStatus("saved model loaded")
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "load model failed")
+    }
   }
 
   function handleMemory() {
@@ -188,6 +256,7 @@ const TinyImageTrainDemo = () => {
     setTrainTimeMs(null)
     setPrediction(null)
     setMemory(null)
+    setSavedModelInfo(null)
     setStatus("reset done")
   }
 
@@ -257,49 +326,64 @@ const TinyImageTrainDemo = () => {
             <div>Samples: {datasetInfo.sampleCount}</div>
             <div>Input shape: {JSON.stringify(datasetInfo.inputShape)}</div>
             <div>Classes: {datasetInfo.numClasses}</div>
-            <div>Feature extractor: {featureExtractorReady ? "MobileNet ready" : "not loaded"}</div>
+            <div>
+              Feature extractor:{" "}
+              {featureExtractorReady ? "MobileNet ready" : "not loaded"}
+            </div>
           </div>
         )}
       </div>
 
       <div className="rounded-lg border p-4 space-y-3">
-        <div className="flex gap-2">
-          <button
-            className="rounded bg-black px-3 py-2 text-white disabled:opacity-50"
+        <div className="grid grid-cols-3 gap-2">
+          <Button
+            color="dark"
             onClick={handleCreateModel}
             disabled={!canCreateClassifier}
           >
             Create Classifier
-          </button>
+          </Button>
 
-          <button
-            className="rounded bg-black px-3 py-2 text-white disabled:opacity-50"
-            onClick={handleTrain}
-            disabled={!canTrain}
-          >
+          <Button color="dark" onClick={handleTrain} disabled={!canTrain}>
             Train
-          </button>
+          </Button>
 
-          <button
-            className="rounded bg-black px-3 py-2 text-white"
-            onClick={handleMemory}
+          <Button
+            color="dark"
+            onClick={handleExportModel}
+            disabled={!canExport}
           >
+            Export Model
+          </Button>
+
+          <Button color="indigo" onClick={handleImportModel}>
+            Import Model
+          </Button>
+
+          <Button color="indigo" onClick={handleMemory}>
             Snapshot Memory
-          </button>
+          </Button>
 
-          <button
-            className="rounded bg-red-600 px-3 py-2 text-white"
-            onClick={handleReset}
-          >
+          <Button color="red" onClick={handleReset}>
             Reset
-          </button>
+          </Button>
         </div>
 
         <div className="text-sm">Status: {status}</div>
-        <div className="text-sm">Feature extractor ready: {featureExtractorReady ? "yes" : "no"}</div>
-        <div className="text-sm">Classifier ready: {classifierReady ? "yes" : "no"}</div>
+        <div className="text-sm">
+          Feature extractor ready: {featureExtractorReady ? "yes" : "no"}
+        </div>
+        <div className="text-sm">
+          Classifier ready: {classifierReady ? "yes" : "no"}
+        </div>
         {trainTimeMs !== null && (
           <div className="text-sm">Train time: {trainTimeMs.toFixed(2)} ms</div>
+        )}
+        {savedModelInfo && (
+          <div className="text-sm">
+            Saved model: MobileNet v{savedModelInfo.mobilenetVersion} alpha{" "}
+            {savedModelInfo.mobilenetAlpha} at {savedModelInfo.savedAt}
+          </div>
         )}
 
         <div className="max-h-48 overflow-auto rounded bg-zinc-50 p-3 text-sm">

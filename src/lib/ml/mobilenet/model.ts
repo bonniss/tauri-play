@@ -14,6 +14,9 @@ export function loadMobilenetModel() {
   return mobilenetPromise
 }
 
+export const MOBILENET_VERSION = 2
+export const MOBILENET_ALPHA = 1
+
 export function createMobilenetClassifierHead(
   inputShape: number[],
   numClasses: number,
