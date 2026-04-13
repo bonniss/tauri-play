@@ -3,14 +3,17 @@ import {
   Badge,
   Button,
   Loader,
+  Modal,
   Paper,
   Stack,
   Text,
   TextInput,
 } from "@mantine/core"
+import { useDisclosure } from "@mantine/hooks"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
 import { startTransition, useDeferredValue, useState } from "react"
+import { Form, defineConfig } from "~/components/form"
 import { createProject, listProjects } from "~/lib/db/domain/projects"
 import { generateRandomProjectName } from "~/lib/project/name"
 
@@ -18,8 +21,32 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 })
 
+const createProjectForm = defineConfig<{
+  description: string
+  name: string
+}>({
+  name: {
+    type: "text",
+    label: "Name",
+    rules: {
+      required: true,
+    },
+    props: {
+      autoFocus: true,
+    }
+  },
+  description: {
+    type: "longText",
+    label: "Description",
+  },
+})
+
 function HomePage() {
   const [search, setSearch] = useState("")
+  const [projectNameSeed, setProjectNameSeed] = useState(
+    generateRandomProjectName(),
+  )
+  const [createProjectOpened, createProjectHandlers] = useDisclosure(false)
   const deferredSearch = useDeferredValue(search)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -28,13 +55,21 @@ function HomePage() {
     queryFn: () => listProjects({ search: deferredSearch }),
   })
   const createProjectMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({
+      description,
+      name,
+    }: {
+      description: string
+      name: string
+    }) => {
       return createProject({
-        name: generateRandomProjectName(),
+        description: description.trim() || null,
+        name,
         status: "draft",
       })
     },
     onSuccess: async (projectId) => {
+      createProjectHandlers.close()
       await queryClient.invalidateQueries({ queryKey: ["projects"] })
 
       startTransition(() => {
@@ -48,23 +83,55 @@ function HomePage() {
 
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 py-4">
+      <Modal
+        onClose={createProjectHandlers.close}
+        opened={createProjectOpened}
+        title="New Project"
+      >
+        <Form
+          renderRoot={({ children, onSubmit }) => (
+            <form className="space-y-3" onSubmit={onSubmit}>
+              {children}
+            </form>
+          )}
+          config={createProjectForm}
+          defaultValues={{
+            description: "",
+            name: projectNameSeed,
+          }}
+          onSubmit={async (values) => {
+            await createProjectMutation.mutateAsync(values)
+          }}
+        >
+          <div className="mt-4 flex justify-end gap-3">
+            <Button
+              onClick={createProjectHandlers.close}
+              type="button"
+              variant="default"
+            >
+              Cancel
+            </Button>
+            <Button loading={createProjectMutation.isPending} type="submit">
+              Create Project
+            </Button>
+          </div>
+        </Form>
+      </Modal>
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-tight">Projects</h1>
-          <Text c="dimmed" size="sm">
-            Browse image classification projects and search by name.
-          </Text>
-        </div>
+        <h1 className="text-3xl font-semibold tracking-tight">Projects</h1>
         <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
           <TextInput
-            className="w-full sm:min-w-80"
+            className="w-full sm:min-w-64"
             onChange={(event) => setSearch(event.currentTarget.value)}
             placeholder="Search projects by name"
             value={search}
           />
           <Button
-            loading={createProjectMutation.isPending}
-            onClick={() => createProjectMutation.mutate()}
+            onClick={() => {
+              setProjectNameSeed(generateRandomProjectName())
+              createProjectHandlers.open()
+            }}
           >
             New Project
           </Button>
