@@ -1,4 +1,6 @@
 import { getKysely } from "../kysely"
+import { listProjectClasses, type ProjectClass } from "./classes"
+import { listProjectSamples, type ProjectSample } from "./samples"
 
 export type ProjectStatus = "draft" | "active" | "archived"
 
@@ -14,6 +16,23 @@ export type ProjectListItem = {
   updatedAt: string
 }
 
+export type ProjectRecord = {
+  id: string
+  name: string
+  description: string | null
+  settings: string
+  status: ProjectStatus
+  taskType: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type ProjectWorkspace = {
+  classes: ProjectClass[]
+  project: ProjectRecord
+  samples: ProjectSample[]
+}
+
 type ProjectListRow = {
   classCount: number | string
   description: string | null
@@ -21,6 +40,17 @@ type ProjectListRow = {
   id: string
   name: string
   sampleCount: number | string
+  status: ProjectStatus
+  task_type: string
+  updated_at: string
+}
+
+type ProjectRow = {
+  created_at: string
+  description: string | null
+  id: string
+  name: string
+  settings: string
   status: ProjectStatus
   task_type: string
   updated_at: string
@@ -36,6 +66,19 @@ function mapProjectRow(row: ProjectListRow): ProjectListItem {
     classCount: Number(row.classCount),
     sampleCount: Number(row.sampleCount),
     hasModel: row.hasModel > 0,
+    updatedAt: row.updated_at,
+  }
+}
+
+function mapProjectRecord(row: ProjectRow): ProjectRecord {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    settings: row.settings,
+    status: row.status,
+    taskType: row.task_type,
+    createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
 }
@@ -91,6 +134,44 @@ export async function listProjects({
   const rows = await query.execute()
 
   return rows.map((row) => mapProjectRow(row as ProjectListRow))
+}
+
+export async function getProject(projectId: string) {
+  const db = getKysely()
+  const row = await db
+    .selectFrom("projects")
+    .select([
+      "id",
+      "name",
+      "description",
+      "settings",
+      "status",
+      "task_type",
+      "created_at",
+      "updated_at",
+    ])
+    .where("id", "=", projectId)
+    .executeTakeFirst()
+
+  if (!row) {
+    throw new Error("Project not found.")
+  }
+
+  return mapProjectRecord(row as ProjectRow)
+}
+
+export async function getProjectWorkspace(projectId: string): Promise<ProjectWorkspace> {
+  const [project, classes, samples] = await Promise.all([
+    getProject(projectId),
+    listProjectClasses(projectId),
+    listProjectSamples(projectId),
+  ])
+
+  return {
+    project,
+    classes,
+    samples,
+  }
 }
 
 export async function createProject({

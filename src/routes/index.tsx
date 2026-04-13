@@ -9,7 +9,7 @@ import {
   TextInput,
 } from "@mantine/core"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
 import { startTransition, useDeferredValue, useState } from "react"
 import { createProject, listProjects } from "~/lib/db/domain/projects"
 import { generateRandomProjectName } from "~/lib/project/name"
@@ -124,6 +124,15 @@ function HomePage() {
                     value={new Date(project.updatedAt).toLocaleDateString()}
                   />
                 </div>
+
+                <Button
+                  component={Link}
+                  params={{ projectId: project.id } as never}
+                  to="/projects/$projectId"
+                  variant="light"
+                >
+                  Open
+                </Button>
               </Stack>
             </Paper>
           ))}
