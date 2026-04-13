@@ -1,25 +1,16 @@
-import { Paper, Text } from "@mantine/core"
-import { createFileRoute } from "@tanstack/react-router"
-import { useProjectOne } from "~/components/project/ProjectOneProvider"
+import { Navigate, createFileRoute } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/projects/$projectId/")({
-  component: ProjectHomePage,
+  component: ProjectIndexRedirect,
 })
 
-function ProjectHomePage() {
-  const { projectQuery } = useProjectOne()
-  const data = projectQuery.data!
+function ProjectIndexRedirect() {
+  const { projectId } = Route.useParams()
 
   return (
-    <Paper className="p-6" radius="xl" withBorder>
-      <div className="space-y-2">
-        <h2 className="text-2xl font-semibold tracking-tight">
-          {data.project.name}
-        </h2>
-        <Text c="dimmed" size="sm">
-          Open the label step to create classes and collect samples.
-        </Text>
-      </div>
-    </Paper>
+    <Navigate
+      params={{ projectId } as never}
+      to="/projects/$projectId/label"
+    />
   )
 }

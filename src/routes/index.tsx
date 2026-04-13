@@ -39,7 +39,7 @@ function HomePage() {
 
       startTransition(() => {
         void navigate({
-          to: "/projects/$projectId",
+          to: "/projects/$projectId/label",
           params: { projectId },
         })
       })
@@ -128,7 +128,7 @@ function HomePage() {
                 <Button
                   component={Link}
                   params={{ projectId: project.id } as never}
-                  to="/projects/$projectId"
+                  to="/projects/$projectId/label"
                   variant="light"
                 >
                   Open
