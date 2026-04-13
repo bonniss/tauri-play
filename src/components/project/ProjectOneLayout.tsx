@@ -1,27 +1,125 @@
 import { Badge, Button, Paper, Text } from "@mantine/core"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link, Outlet } from "@tanstack/react-router"
 import { FunctionComponent } from "react"
+import ContentEditable from "~/components/headless/ContentEditable"
+import {
+  type ProjectWorkspace,
+  updateProject,
+} from "~/lib/db/domain/projects"
 import { useProjectOne } from "./ProjectOneProvider"
 
 interface ProjectOneLayoutProps {}
 
 const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
   const { projectId, projectQuery } = useProjectOne()
+  const queryClient = useQueryClient()
   const data = projectQuery.data!
   const totalImages = data.samples.length
+  const updateProjectMutation = useMutation({
+    mutationFn: async ({
+      description,
+      name,
+    }: {
+      description?: string | null
+      name?: string
+    }) => {
+      await updateProject({
+        projectId,
+        description,
+        name,
+      })
+    },
+    onError: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["project-workspace", projectId],
+      })
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["projects"] })
+    },
+  })
+
+  async function saveProjectField(next: {
+    description?: string | null
+    name?: string
+  }) {
+    const nextName = next.name?.trim()
+    const nextDescription =
+      next.description !== undefined
+        ? next.description?.trim() || null
+        : undefined
+
+    if (next.name !== undefined && !nextName) {
+      await queryClient.invalidateQueries({
+        queryKey: ["project-workspace", projectId],
+      })
+      return
+    }
+
+    if (
+      nextName === data.project.name &&
+      nextDescription === (data.project.description ?? null)
+    ) {
+      return
+    }
+
+    queryClient.setQueryData<ProjectWorkspace>(
+      ["project-workspace", projectId],
+      (current) => {
+        if (!current) {
+          return current
+        }
+
+        return {
+          ...current,
+          project: {
+            ...current.project,
+            name: nextName ?? current.project.name,
+            description:
+              nextDescription !== undefined
+                ? nextDescription
+                : current.project.description,
+            updatedAt: new Date().toISOString(),
+          },
+        }
+      },
+    )
+
+    await updateProjectMutation.mutateAsync({
+      description: nextDescription,
+      name: nextName,
+    })
+  }
 
   return (
     <section className="mx-auto grid w-full max-w-7xl gap-6 py-4 lg:grid-cols-[17rem_minmax(0,1fr)]">
       <Paper className="flex h-fit flex-col gap-6 p-4" radius="xl" withBorder>
         <div className="space-y-2">
           <div className="flex items-start justify-between gap-3">
-            <div>
-              <h1 className="text-xl font-semibold leading-tight">
-                {data.project.name}
-              </h1>
-              <Text c="dimmed" size="sm">
-                {data.project.description || "Project workspace"}
-              </Text>
+            <div className="min-w-0 flex-1 space-y-1">
+              <ContentEditable
+                ariaLabel="Project name"
+                activeClassName="rounded-md bg-orange-50 px-2 py-1 ring-1 ring-orange-300 dark:bg-orange-950/30 dark:ring-orange-700"
+                className="min-w-0 rounded-md px-2 py-1 text-xl font-semibold leading-tight outline-none transition-colors"
+                inactiveClassName="hover:bg-black/5 dark:hover:bg-white/5"
+                onCommit={async (value) => {
+                  await saveProjectField({ name: value })
+                }}
+                value={data.project.name}
+              />
+              <ContentEditable
+                ariaLabel="Project description"
+                activeClassName="rounded-md bg-orange-50 px-2 py-1 ring-1 ring-orange-300 dark:bg-orange-950/30 dark:ring-orange-700"
+                className="min-w-0 rounded-md px-2 py-1 text-sm text-zinc-500 outline-none transition-colors dark:text-zinc-400"
+                inactiveClassName="hover:bg-black/5 dark:hover:bg-white/5"
+                multiline
+                onCommit={async (value) => {
+                  await saveProjectField({ description: value })
+                }}
+                placeholder="Add project description"
+                value={data.project.description ?? ""}
+              />
             </div>
             <Badge
               color={data.project.status === "active" ? "green" : "gray"}
