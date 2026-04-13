@@ -8,12 +8,15 @@ fn greet(name: &str) -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let migrations = vec![Migration {
-        version: 1,
-        description: "create_todos_table",
-        sql: include_str!("../migrations/0001_create_todos.sql"),
-        kind: MigrationKind::Up,
-    }];
+    let db_url = "sqlite:app.db";
+    let migrations = vec![
+        Migration {
+            version: 1,
+            description: "create_image_classification_core",
+            sql: include_str!("../migrations/0001_create_image_classification_core.sql"),
+            kind: MigrationKind::Up,
+        },
+    ];
 
     tauri::Builder::default()
         .plugin(tauri_plugin_os::init())
@@ -21,7 +24,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(
             tauri_plugin_sql::Builder::default()
-                .add_migrations("sqlite:todo.db", migrations)
+                .add_migrations(db_url, migrations)
                 .build(),
         )
         .invoke_handler(tauri::generate_handler![greet])

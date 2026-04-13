@@ -191,6 +191,8 @@ Fields:
 - `id`
 - `name`
 - `taskType`
+- `description`
+- `settings` (JSON) để mở rộng
 - `createdAt`
 - `updatedAt`
 
@@ -205,7 +207,9 @@ Fields:
 - `id`
 - `projectId`
 - `name`
+- `description`
 - `createdAt`
+- `updatedAt`
 
 ### Sample
 
@@ -231,6 +235,8 @@ Fields:
 - `artifactPath`
 - `trainedAt`
 - `accuracy` — optional summary metric
+- `createdAt`
+- `updatedAt`
 
 Important v1 rule:
 

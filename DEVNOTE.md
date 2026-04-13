@@ -91,3 +91,7 @@ Tauri uses WebKit:
 ### Gaining access to the camera and microphone after being blocked not working
 
 [#5042](https://github.com/tauri-apps/tauri/issues/5042)
+
+## Core flow
+
+
