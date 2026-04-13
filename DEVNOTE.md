@@ -94,4 +94,8 @@ Tauri uses WebKit:
 
 ## Core flow
 
+### Create a project
+
+- From list page -> Create new project/app (suggest me)
+- UI create/edit page will match 
 
