@@ -1,4 +1,4 @@
-import { getKysely } from "./kysely"
+import { getKysely } from "../kysely"
 
 export type ProjectClass = {
   id: string

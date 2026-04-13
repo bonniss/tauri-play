@@ -1,0 +1,71 @@
+const ADJECTIVES = [
+  "amber",
+  "bold",
+  "brisk",
+  "calm",
+  "clever",
+  "crisp",
+  "curious",
+  "daring",
+  "eager",
+  "fast",
+  "gentle",
+  "glossy",
+  "happy",
+  "icy",
+  "jolly",
+  "kind",
+  "lively",
+  "mellow",
+  "nimble",
+  "quiet",
+  "rapid",
+  "shiny",
+  "sparkling",
+  "steady",
+  "sunny",
+  "swift",
+  "tidy",
+  "vivid",
+  "warm",
+  "zesty",
+] as const
+
+const ANIMALS = [
+  "badger",
+  "bear",
+  "camel",
+  "crane",
+  "deer",
+  "dolphin",
+  "eagle",
+  "falcon",
+  "fox",
+  "gecko",
+  "heron",
+  "koala",
+  "lemur",
+  "lion",
+  "lynx",
+  "otter",
+  "owl",
+  "panda",
+  "quail",
+  "rabbit",
+  "raven",
+  "seal",
+  "tiger",
+  "turtle",
+  "whale",
+  "wolf",
+  "yak",
+  "zebra",
+] as const
+
+function pickRandom<T>(items: readonly T[]) {
+  return items[Math.floor(Math.random() * items.length)]
+}
+
+export function generateRandomProjectName() {
+  return `${pickRandom(ADJECTIVES)} ${pickRandom(ANIMALS)}`
+}

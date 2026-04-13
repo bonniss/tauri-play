@@ -1,16 +1,18 @@
 import {
   Alert,
   Badge,
+  Button,
   Loader,
   Paper,
   Stack,
   Text,
   TextInput,
 } from "@mantine/core"
-import { useDeferredValue, useState } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
-import { listProjects } from "~/lib/db/projects"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { startTransition, useDeferredValue, useState } from "react"
+import { createProject, listProjects } from "~/lib/db/domain/projects"
+import { generateRandomProjectName } from "~/lib/project/name"
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -19,9 +21,29 @@ export const Route = createFileRoute("/")({
 function HomePage() {
   const [search, setSearch] = useState("")
   const deferredSearch = useDeferredValue(search)
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const projectsQuery = useQuery({
     queryKey: ["projects", deferredSearch],
-    queryFn: () => listProjects(deferredSearch),
+    queryFn: () => listProjects({ search: deferredSearch }),
+  })
+  const createProjectMutation = useMutation({
+    mutationFn: async () => {
+      return createProject({
+        name: generateRandomProjectName(),
+        status: "draft",
+      })
+    },
+    onSuccess: async (projectId) => {
+      await queryClient.invalidateQueries({ queryKey: ["projects"] })
+
+      startTransition(() => {
+        void navigate({
+          to: "/projects/$projectId",
+          params: { projectId },
+        })
+      })
+    },
   })
 
   return (
@@ -33,13 +55,29 @@ function HomePage() {
             Browse image classification projects and search by name.
           </Text>
         </div>
-        <TextInput
-          className="w-full sm:max-w-sm"
-          onChange={(event) => setSearch(event.currentTarget.value)}
-          placeholder="Search projects by name"
-          value={search}
-        />
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+          <TextInput
+            className="w-full sm:min-w-80"
+            onChange={(event) => setSearch(event.currentTarget.value)}
+            placeholder="Search projects by name"
+            value={search}
+          />
+          <Button
+            loading={createProjectMutation.isPending}
+            onClick={() => createProjectMutation.mutate()}
+          >
+            New Project
+          </Button>
+        </div>
       </div>
+
+      {createProjectMutation.error ? (
+        <Alert color="red" title="Failed to create project" variant="light">
+          {createProjectMutation.error instanceof Error
+            ? createProjectMutation.error.message
+            : "Unknown error while creating the project."}
+        </Alert>
+      ) : null}
 
       {projectsQuery.isLoading ? (
         <div className="flex justify-center py-12">
@@ -69,7 +107,10 @@ function HomePage() {
                       {project.description || "No description yet."}
                     </Text>
                   </div>
-                  <Badge color={project.hasModel ? "green" : "gray"} variant="light">
+                  <Badge
+                    color={project.hasModel ? "green" : "gray"}
+                    variant="light"
+                  >
                     {project.hasModel ? "Model ready" : "No model"}
                   </Badge>
                 </div>
@@ -89,7 +130,9 @@ function HomePage() {
         </div>
       ) : null}
 
-      {!projectsQuery.isLoading && !projectsQuery.error && !projectsQuery.data?.length ? (
+      {!projectsQuery.isLoading &&
+      !projectsQuery.error &&
+      !projectsQuery.data?.length ? (
         <Paper className="p-8 text-center" radius="lg" withBorder>
           <Stack gap="xs">
             <Text fw={600}>

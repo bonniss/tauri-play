@@ -30,6 +30,7 @@ type TodoTable = {
 type ProjectTable = {
   id: string
   name: string
+  status: "draft" | "active" | "archived"
   task_type: string
   description: string | null
   settings: string

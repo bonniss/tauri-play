@@ -1,11 +1,13 @@
 CREATE TABLE IF NOT EXISTS projects (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'draft',
     task_type TEXT NOT NULL,
     description TEXT,
     settings TEXT NOT NULL DEFAULT '{}',
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CHECK (status IN ('draft', 'active', 'archived')),
     CHECK (task_type IN ('image_classification'))
 );
 
