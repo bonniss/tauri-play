@@ -2,7 +2,7 @@ import { Paper, Text } from "@mantine/core"
 import { createFileRoute } from "@tanstack/react-router"
 import { useProjectOne } from "~/components/project/ProjectOneProvider"
 
-export const Route = createFileRoute("/projects/$projectId/label")({
+export const Route = createFileRoute("/projects/$projectId/label/")({
   component: ProjectLabelPage,
 })
 

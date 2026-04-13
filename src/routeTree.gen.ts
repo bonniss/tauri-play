@@ -18,7 +18,8 @@ import { Route as ProjectsProjectIdRouteRouteImport } from './routes/projects/$p
 import { Route as ProjectsProjectIdIndexRouteImport } from './routes/projects/$projectId/index'
 import { Route as ProjectsProjectIdTrainRouteImport } from './routes/projects/$projectId/train'
 import { Route as ProjectsProjectIdPlayRouteImport } from './routes/projects/$projectId/play'
-import { Route as ProjectsProjectIdLabelRouteImport } from './routes/projects/$projectId/label'
+import { Route as ProjectsProjectIdLabelIndexRouteImport } from './routes/projects/$projectId/label/index'
+import { Route as ProjectsProjectIdLabelClassIdRouteImport } from './routes/projects/$projectId/label/$classId'
 
 const TodosRoute = TodosRouteImport.update({
   id: '/todos',
@@ -65,11 +66,18 @@ const ProjectsProjectIdPlayRoute = ProjectsProjectIdPlayRouteImport.update({
   path: '/play',
   getParentRoute: () => ProjectsProjectIdRouteRoute,
 } as any)
-const ProjectsProjectIdLabelRoute = ProjectsProjectIdLabelRouteImport.update({
-  id: '/label',
-  path: '/label',
-  getParentRoute: () => ProjectsProjectIdRouteRoute,
-} as any)
+const ProjectsProjectIdLabelIndexRoute =
+  ProjectsProjectIdLabelIndexRouteImport.update({
+    id: '/label/',
+    path: '/label/',
+    getParentRoute: () => ProjectsProjectIdRouteRoute,
+  } as any)
+const ProjectsProjectIdLabelClassIdRoute =
+  ProjectsProjectIdLabelClassIdRouteImport.update({
+    id: '/label/$classId',
+    path: '/label/$classId',
+    getParentRoute: () => ProjectsProjectIdRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -78,10 +86,11 @@ export interface FileRoutesByFullPath {
   '/ml-lab': typeof MlLabRoute
   '/todos': typeof TodosRoute
   '/projects/$projectId': typeof ProjectsProjectIdRouteRouteWithChildren
-  '/projects/$projectId/label': typeof ProjectsProjectIdLabelRoute
   '/projects/$projectId/play': typeof ProjectsProjectIdPlayRoute
   '/projects/$projectId/train': typeof ProjectsProjectIdTrainRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
+  '/projects/$projectId/label/$classId': typeof ProjectsProjectIdLabelClassIdRoute
+  '/projects/$projectId/label/': typeof ProjectsProjectIdLabelIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -89,10 +98,11 @@ export interface FileRoutesByTo {
   '/camera': typeof CameraRoute
   '/ml-lab': typeof MlLabRoute
   '/todos': typeof TodosRoute
-  '/projects/$projectId/label': typeof ProjectsProjectIdLabelRoute
   '/projects/$projectId/play': typeof ProjectsProjectIdPlayRoute
   '/projects/$projectId/train': typeof ProjectsProjectIdTrainRoute
   '/projects/$projectId': typeof ProjectsProjectIdIndexRoute
+  '/projects/$projectId/label/$classId': typeof ProjectsProjectIdLabelClassIdRoute
+  '/projects/$projectId/label': typeof ProjectsProjectIdLabelIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -102,10 +112,11 @@ export interface FileRoutesById {
   '/ml-lab': typeof MlLabRoute
   '/todos': typeof TodosRoute
   '/projects/$projectId': typeof ProjectsProjectIdRouteRouteWithChildren
-  '/projects/$projectId/label': typeof ProjectsProjectIdLabelRoute
   '/projects/$projectId/play': typeof ProjectsProjectIdPlayRoute
   '/projects/$projectId/train': typeof ProjectsProjectIdTrainRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
+  '/projects/$projectId/label/$classId': typeof ProjectsProjectIdLabelClassIdRoute
+  '/projects/$projectId/label/': typeof ProjectsProjectIdLabelIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -116,10 +127,11 @@ export interface FileRouteTypes {
     | '/ml-lab'
     | '/todos'
     | '/projects/$projectId'
-    | '/projects/$projectId/label'
     | '/projects/$projectId/play'
     | '/projects/$projectId/train'
     | '/projects/$projectId/'
+    | '/projects/$projectId/label/$classId'
+    | '/projects/$projectId/label/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -127,10 +139,11 @@ export interface FileRouteTypes {
     | '/camera'
     | '/ml-lab'
     | '/todos'
-    | '/projects/$projectId/label'
     | '/projects/$projectId/play'
     | '/projects/$projectId/train'
     | '/projects/$projectId'
+    | '/projects/$projectId/label/$classId'
+    | '/projects/$projectId/label'
   id:
     | '__root__'
     | '/'
@@ -139,10 +152,11 @@ export interface FileRouteTypes {
     | '/ml-lab'
     | '/todos'
     | '/projects/$projectId'
-    | '/projects/$projectId/label'
     | '/projects/$projectId/play'
     | '/projects/$projectId/train'
     | '/projects/$projectId/'
+    | '/projects/$projectId/label/$classId'
+    | '/projects/$projectId/label/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -218,29 +232,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdPlayRouteImport
       parentRoute: typeof ProjectsProjectIdRouteRoute
     }
-    '/projects/$projectId/label': {
-      id: '/projects/$projectId/label'
+    '/projects/$projectId/label/': {
+      id: '/projects/$projectId/label/'
       path: '/label'
-      fullPath: '/projects/$projectId/label'
-      preLoaderRoute: typeof ProjectsProjectIdLabelRouteImport
+      fullPath: '/projects/$projectId/label/'
+      preLoaderRoute: typeof ProjectsProjectIdLabelIndexRouteImport
+      parentRoute: typeof ProjectsProjectIdRouteRoute
+    }
+    '/projects/$projectId/label/$classId': {
+      id: '/projects/$projectId/label/$classId'
+      path: '/label/$classId'
+      fullPath: '/projects/$projectId/label/$classId'
+      preLoaderRoute: typeof ProjectsProjectIdLabelClassIdRouteImport
       parentRoute: typeof ProjectsProjectIdRouteRoute
     }
   }
 }
 
 interface ProjectsProjectIdRouteRouteChildren {
-  ProjectsProjectIdLabelRoute: typeof ProjectsProjectIdLabelRoute
   ProjectsProjectIdPlayRoute: typeof ProjectsProjectIdPlayRoute
   ProjectsProjectIdTrainRoute: typeof ProjectsProjectIdTrainRoute
   ProjectsProjectIdIndexRoute: typeof ProjectsProjectIdIndexRoute
+  ProjectsProjectIdLabelClassIdRoute: typeof ProjectsProjectIdLabelClassIdRoute
+  ProjectsProjectIdLabelIndexRoute: typeof ProjectsProjectIdLabelIndexRoute
 }
 
 const ProjectsProjectIdRouteRouteChildren: ProjectsProjectIdRouteRouteChildren =
   {
-    ProjectsProjectIdLabelRoute: ProjectsProjectIdLabelRoute,
     ProjectsProjectIdPlayRoute: ProjectsProjectIdPlayRoute,
     ProjectsProjectIdTrainRoute: ProjectsProjectIdTrainRoute,
     ProjectsProjectIdIndexRoute: ProjectsProjectIdIndexRoute,
+    ProjectsProjectIdLabelClassIdRoute: ProjectsProjectIdLabelClassIdRoute,
+    ProjectsProjectIdLabelIndexRoute: ProjectsProjectIdLabelIndexRoute,
   }
 
 const ProjectsProjectIdRouteRouteWithChildren =
