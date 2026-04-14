@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { createProvider } from 'react-easy-provider';
-import { ProjectClassUpsertDto, renameClass } from '~/lib/db/domain/classes';
+import { ProjectClass, renameClass } from '~/lib/db/domain/classes';
 import { getProjectWorkspace, ProjectRecord } from '~/lib/db/domain/projects';
-import { ProjectSampleUpsertDto } from '~/lib/db/domain/samples';
+import { ProjectSample } from '~/lib/db/domain/samples';
 import { genClassId } from '~/lib/project/id-generator';
 
-export type ExtendedProjectClass = ProjectClassUpsertDto & {
-  samples: ProjectSampleUpsertDto[];
+export type ProjectOneClass = Pick<
+  ProjectClass,
+  'id' | 'projectId' | 'name' | 'description' | 'order'
+> & {
+  samples: ProjectSample[];
 };
 
 export const [useProjectOne, ProjectOneProvider] = createProvider(
@@ -15,7 +18,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
 
     const [isInitialized, setIsInitialized] = useState(false);
     const [project, setProject] = useState<ProjectRecord | undefined>();
-    const [classes, setClasses] = useState<ExtendedProjectClass[]>([]);
+    const [classes, setClasses] = useState<ProjectOneClass[]>([]);
 
     useEffect(() => {
       if (projectId) {
@@ -25,8 +28,9 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
           setClasses(
             workspace.classes.map((cls) => ({
               id: cls.id,
+              projectId: cls.projectId,
               name: cls.name,
-              description: cls.description ?? undefined,
+              description: cls.description,
               order: cls.order,
               samples: workspace.samples.filter(
                 (sample) => sample.classId === cls.id,
@@ -66,7 +70,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
         id: genClassId(),
         projectId,
         name: payload.name,
-        description: payload.description,
+        description: payload.description ?? null,
         order: payload.order ?? totalClasses,
         samples: [],
       };
@@ -81,6 +85,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
           id: genClassId(),
           projectId,
           name: `Class ${totalClasses + 1}`,
+          description: null,
           order: totalClasses,
           samples: [],
         };

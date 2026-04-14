@@ -1,9 +1,13 @@
 import { Box, Button, Group, Loader, Paper, Text } from '@mantine/core';
 import { IconCamera } from '@tabler/icons-react';
 import { createFileRoute } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useProjectOne } from '~/components/project/ProjectOneProvider';
 import UploadSamplesButton from '~/components/project/UploadSamplesButton';
+import {
+  createSamplePreviewUrl,
+  revokeSamplePreviewUrl,
+} from '~/lib/project/sample-preview';
 
 export const Route = createFileRoute('/projects/$projectId/label/')({
   component: ProjectLabelPage,
@@ -12,10 +16,55 @@ export const Route = createFileRoute('/projects/$projectId/label/')({
 function ProjectLabelPage() {
   const { classes } = useProjectOne();
   const hasClasses = classes.length > 0;
+  const samples = useMemo(
+    () => classes.flatMap((item) => item.samples),
+    [classes],
+  );
   const [isLoadingPreviews, setIsLoadingPreviews] = useState(false);
   const [samplePreviewMap, setSamplePreviewMap] = useState<
     Record<string, string>
   >({});
+
+  useEffect(() => {
+    let cancelled = false;
+    let nextPreviewMap: Record<string, string> = {};
+
+    if (!samples.length) {
+      setSamplePreviewMap({});
+      setIsLoadingPreviews(false);
+      return;
+    }
+
+    setIsLoadingPreviews(true);
+
+    void Promise.all(
+      samples
+        .filter((sample) => sample.id)
+        .map(async (sample) => [
+          sample.id!,
+          await createSamplePreviewUrl(sample.filePath),
+        ] as const),
+    )
+      .then((entries) => {
+        if (cancelled) {
+          entries.forEach(([, url]) => revokeSamplePreviewUrl(url));
+          return;
+        }
+
+        nextPreviewMap = Object.fromEntries(entries);
+        setSamplePreviewMap(nextPreviewMap);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoadingPreviews(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+      Object.values(nextPreviewMap).forEach((url) => revokeSamplePreviewUrl(url));
+    };
+  }, [samples]);
 
   return (
     <Paper className="p-6" withBorder>

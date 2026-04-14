@@ -7,14 +7,14 @@ export const Route = createFileRoute("/projects/$projectId/train")({
 })
 
 function ProjectTrainPage() {
-  const { classes, samples } = useProjectOne()
+  const { classes, totalSamples } = useProjectOne()
 
   return (
     <Paper className="p-6" radius="xl" withBorder>
       <div className="space-y-3">
         <h2 className="text-2xl font-semibold tracking-tight">Train</h2>
         <Text c="dimmed" size="sm">
-          Current dataset: {classes.length} classes, {samples.length} samples.
+          Current dataset: {classes.length} classes, {totalSamples} samples.
         </Text>
       </div>
     </Paper>

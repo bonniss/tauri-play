@@ -13,16 +13,6 @@ export type ProjectSample = {
   createdAt: string
 }
 
-export type ProjectSampleUpsertDto = {
-  id?: string
-  projectId: string
-  classId: string
-  filePath: string
-  source: SampleSource
-  order?: number
-  createdAt?: string
-}
-
 type ProjectSampleRow = {
   class_id: string
   class_name: string | null

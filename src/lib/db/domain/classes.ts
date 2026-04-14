@@ -11,15 +11,6 @@ export type ProjectClass = {
   updatedAt?: string;
 };
 
-export type ProjectClassUpsertDto = {
-  id?: string;
-  name: string;
-  description?: string;
-  order?: number;
-  createdAt?: string;
-  updatedAt?: string;
-};
-
 type ProjectClassRow = {
   created_at: string;
   description: string | null;

@@ -31,7 +31,7 @@ const UploadSamplesButton: FunctionComponent<UploadSamplesButtonProps> = ({
     () =>
       classes.map((item) => ({
         label: item.name,
-        value: item.id,
+        value: item.id ?? "",
       })),
     [classes],
   )
@@ -155,7 +155,7 @@ const UploadSamplesButton: FunctionComponent<UploadSamplesButtonProps> = ({
             <Select
               data={classOptions}
               label="Existing class"
-              onChange={setSelectedClassId}
+              onChange={(value) => setSelectedClassId(value ? String(value) : null)}
               placeholder="Choose a class"
               value={selectedClassId}
             />

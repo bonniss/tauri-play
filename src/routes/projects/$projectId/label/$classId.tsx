@@ -9,9 +9,9 @@ export const Route = createFileRoute("/projects/$projectId/label/$classId")({
 
 function ProjectLabelClassPage() {
   const { classId } = Route.useParams()
-  const { classes, samples } = useProjectOne()
+  const { classes } = useProjectOne()
   const currentClass = classes.find((item) => item.id === classId)
-  const classSamples = samples.filter((item) => item.classId === classId)
+  const classSamples = currentClass?.samples ?? []
 
   return (
     <Paper className="p-6" radius="xl" withBorder>
