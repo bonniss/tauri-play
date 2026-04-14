@@ -131,7 +131,7 @@ function HomePage() {
       </Modal>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">Projects</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <TextInput
             className="w-full sm:w-48"
