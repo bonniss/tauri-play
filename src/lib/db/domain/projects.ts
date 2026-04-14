@@ -1,4 +1,5 @@
 import { getKysely } from "../kysely"
+import { deleteProjectStorage } from "~/lib/project/project-storage"
 import { listProjectClasses, type ProjectClass } from "./classes"
 import { listProjectSamples, type ProjectSample } from "./samples"
 
@@ -278,5 +279,7 @@ export async function activateProject(projectId: string) {
 
 export async function deleteProject(projectId: string) {
   const db = getKysely()
+
+  await deleteProjectStorage(projectId)
   await db.deleteFrom("projects").where("id", "=", projectId).execute()
 }

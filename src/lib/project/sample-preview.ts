@@ -1,20 +1,32 @@
-import { convertFileSrc } from "@tauri-apps/api/core"
-import { appDataDir } from "@tauri-apps/api/path"
+import { BaseDirectory, readFile } from "@tauri-apps/plugin-fs"
 
-let appDataPathPromise: Promise<string> | null = null
+function inferMimeType(filePath: string) {
+  const extension = filePath.split(".").pop()?.trim().toLowerCase()
 
-async function getAppDataPath() {
-  if (!appDataPathPromise) {
-    appDataPathPromise = appDataDir()
+  switch (extension) {
+    case "png":
+      return "image/png"
+    case "webp":
+      return "image/webp"
+    case "gif":
+      return "image/gif"
+    default:
+      return "image/jpeg"
   }
-
-  return appDataPathPromise
 }
 
-export async function getSamplePreviewSrc(filePath: string) {
-  const appDataPath = await getAppDataPath()
-  const normalizedBasePath = appDataPath.replace(/[\\/]+$/, "")
-  const normalizedFilePath = filePath.replace(/^[/\\]+/, "").replace(/\//g, "\\")
+export async function createSamplePreviewUrl(filePath: string) {
+  const bytes = await readFile(filePath, {
+    baseDir: BaseDirectory.AppData,
+  })
 
-  return convertFileSrc(`${normalizedBasePath}\\${normalizedFilePath}`)
+  const blob = new Blob([bytes], {
+    type: inferMimeType(filePath),
+  })
+
+  return URL.createObjectURL(blob)
+}
+
+export function revokeSamplePreviewUrl(url: string) {
+  URL.revokeObjectURL(url)
 }

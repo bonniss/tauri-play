@@ -1,10 +1,13 @@
 import { Box, Button, Group, Loader, Paper, Text } from "@mantine/core"
-import { useQuery } from "@tanstack/react-query"
 import { IconCamera } from "@tabler/icons-react"
 import { createFileRoute } from "@tanstack/react-router"
+import { useEffect, useState } from "react"
 import UploadSamplesButton from "~/components/project/UploadSamplesButton"
 import { useProjectOne } from "~/components/project/ProjectOneProvider"
-import { getSamplePreviewSrc } from "~/lib/project/sample-preview"
+import {
+  createSamplePreviewUrl,
+  revokeSamplePreviewUrl,
+} from "~/lib/project/sample-preview"
 
 export const Route = createFileRoute("/projects/$projectId/label/")({
   component: ProjectLabelPage,
@@ -13,23 +16,53 @@ export const Route = createFileRoute("/projects/$projectId/label/")({
 function ProjectLabelPage() {
   const { classes, samples } = useProjectOne()
   const hasClasses = classes.length > 0
-  const { data: samplePreviewMap, isLoading: isLoadingPreviews } = useQuery({
-    queryKey: [
-      "sample-preview-map",
-      samples.map((sample) => `${sample.id}:${sample.filePath}`),
-    ],
-    queryFn: async () => {
-      const entries = await Promise.all(
-        samples.map(async (sample) => [
-          sample.id,
-          await getSamplePreviewSrc(sample.filePath),
-        ]),
-      )
+  const [isLoadingPreviews, setIsLoadingPreviews] = useState(false)
+  const [samplePreviewMap, setSamplePreviewMap] = useState<Record<string, string>>({})
 
-      return Object.fromEntries(entries)
-    },
-    enabled: samples.length > 0,
-  })
+  useEffect(() => {
+    let cancelled = false
+    let nextPreviewMap: Record<string, string> = {}
+
+    if (!samples.length) {
+      setSamplePreviewMap((currentMap) => {
+        Object.values(currentMap).forEach((url) => revokeSamplePreviewUrl(url))
+        return {}
+      })
+      setIsLoadingPreviews(false)
+      return
+    }
+
+    setIsLoadingPreviews(true)
+
+    void Promise.all(
+      samples.map(async (sample) => [
+        sample.id,
+        await createSamplePreviewUrl(sample.filePath),
+      ]),
+    )
+      .then((entries) => {
+        if (cancelled) {
+          entries.forEach(([, url]) => revokeSamplePreviewUrl(url))
+          return
+        }
+
+        nextPreviewMap = Object.fromEntries(entries)
+        setSamplePreviewMap((currentMap) => {
+          Object.values(currentMap).forEach((url) => revokeSamplePreviewUrl(url))
+          return nextPreviewMap
+        })
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoadingPreviews(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+      Object.values(nextPreviewMap).forEach((url) => revokeSamplePreviewUrl(url))
+    }
+  }, [samples])
 
   const samplesByClass = classes.map((item) => ({
     id: item.id,
@@ -95,12 +128,12 @@ function ProjectLabelPage() {
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                     {item.samples.map((sample) => (
                       <div
-                        className="overflow-hidden rounded-lg border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950"
+                        className="size-16 overflow-hidden rounded-md border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950"
                         key={sample.id}
                       >
                         <img
                           alt={item.name}
-                          className="aspect-square h-full w-full object-cover"
+                          className="size-full object-cover"
                           loading="lazy"
                           src={samplePreviewMap?.[sample.id]}
                         />
