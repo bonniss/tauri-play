@@ -97,34 +97,33 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1 space-y-1">
               <ContentEditable
-                ariaLabel="Project name"
-                activeClassName="rounded-md bg-orange-50 px-2 py-1 ring-1 ring-orange-300 dark:bg-orange-950/30 dark:ring-orange-700"
+                as="h2"
+                aria-label="Project name"
                 className="min-w-0 rounded-md px-2 py-1 text-xl font-semibold leading-tight outline-none transition-colors"
-                inactiveClassName="hover:bg-black/5 dark:hover:bg-white/5"
-                onCommit={async (value) => {
+                focusedClassName="dark:bg-zinc-800 dark:text-zinc-100 bg-zinc-100 ring-1 ring-zinc-300"
+                onBlur={async (value) => {
                   await saveProjectField({ name: value })
                 }}
                 value={projectName}
               />
               <ContentEditable
-                ariaLabel="Project description"
-                activeClassName="rounded-md bg-orange-50 px-2 py-1 ring-1 ring-orange-300 dark:bg-orange-950/30 dark:ring-orange-700"
-                className="min-w-0 rounded-md px-2 py-1 text-sm text-zinc-500 outline-none transition-colors dark:text-zinc-400"
-                inactiveClassName="hover:bg-black/5 dark:hover:bg-white/5"
+                aria-label="Project description"
+                className="min-w-0 rounded-md px-2 py-1 text-sm text-zinc-500 outline-none transition-colors hover:bg-zinc-100/80 dark:text-zinc-400 dark:hover:bg-zinc-800/70"
+                focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
                 multiline
-                onCommit={async (value) => {
+                onBlur={async (value) => {
                   await saveProjectField({ description: value })
                 }}
                 placeholder="Add project description"
                 value={project?.description ?? ""}
               />
             </div>
-            <Badge
+            {/* <Badge
               color={projectStatus === "active" ? "green" : "gray"}
               variant="light"
             >
               {projectStatus}
-            </Badge>
+            </Badge> */}
           </div>
         </div>
 
