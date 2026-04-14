@@ -5,9 +5,10 @@ export type ProjectClass = {
   projectId: string
   name: string
   description: string | null
+  order: number
   sampleCount: number
   createdAt: string
-  updatedAt: string
+  updatedAt?: string
 }
 
 type ProjectClassRow = {
@@ -16,8 +17,9 @@ type ProjectClassRow = {
   id: string
   name: string
   project_id: string
+  order: number
   sampleCount: number | string
-  updated_at: string
+  updated_at?: string
 }
 
 function mapProjectClass(row: ProjectClassRow): ProjectClass {
@@ -26,6 +28,7 @@ function mapProjectClass(row: ProjectClassRow): ProjectClass {
     projectId: row.project_id,
     name: row.name,
     description: row.description,
+    order: Number(row.order),
     sampleCount: Number(row.sampleCount),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -42,6 +45,7 @@ export async function listProjectClasses(projectId: string) {
       "c.project_id",
       "c.name",
       "c.description",
+      "c.order",
       "c.created_at",
       "c.updated_at",
       fn.count<string>(ref("s.id")).as("sampleCount"),
@@ -52,21 +56,24 @@ export async function listProjectClasses(projectId: string) {
       "c.project_id",
       "c.name",
       "c.description",
+      "c.order",
       "c.created_at",
       "c.updated_at",
     ])
-    .orderBy("c.created_at", "asc")
+    .orderBy("c.order", "asc")
     .execute()
 
   return rows.map((row) => mapProjectClass(row as ProjectClassRow))
 }
 
 export async function createClass({
+  order,
   id,
   projectId,
   name,
   description = null,
 }: {
+  order?: number
   id?: string
   projectId: string
   name: string
@@ -79,11 +86,21 @@ export async function createClass({
     throw new Error("Class name is required.")
   }
 
+  const nextOrder =
+    order ??
+    (await db
+      .selectFrom("classes")
+      .select(({ fn }) => [fn.max<number>("order").as("maxOrder")])
+      .where("project_id", "=", projectId)
+      .executeTakeFirst()
+      .then((row) => Number(row?.maxOrder ?? -1) + 1))
+
   const nextClass = {
     id: id ?? crypto.randomUUID(),
     project_id: projectId,
     name: trimmedName,
     description,
+    order: nextOrder,
   }
 
   await db.insertInto("classes").values(nextClass).execute()

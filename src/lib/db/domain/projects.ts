@@ -29,8 +29,8 @@ export type ProjectRecord = {
 }
 
 export type ProjectWorkspace = {
-  classes: ProjectClass[]
   project: ProjectRecord
+  classes: ProjectClass[]
   samples: ProjectSample[]
 }
 

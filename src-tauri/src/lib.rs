@@ -16,6 +16,12 @@ pub fn run() {
             sql: include_str!("../migrations/0001_create_image_classification_core.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 2,
+            description: "add_order_to_classes_and_samples",
+            sql: include_str!("../migrations/0002_add_order_to_classes_and_samples.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()

@@ -43,6 +43,7 @@ type ClassTable = {
   project_id: string
   name: string
   description: string | null
+  order: ColumnType<number, number | undefined, number>
   created_at: ColumnType<string, string | undefined, never>
   updated_at: ColumnType<string, string | undefined, string>
 }
@@ -53,6 +54,7 @@ type SampleTable = {
   class_id: string
   file_path: string
   source: "camera" | "upload"
+  order: ColumnType<number, number | undefined, number>
   created_at: ColumnType<string, string | undefined, never>
 }
 
