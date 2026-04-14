@@ -7,15 +7,15 @@ export const Route = createFileRoute("/projects/$projectId/label/")({
 })
 
 function ProjectLabelPage() {
-  const { projectQuery } = useProjectOne()
-  const data = projectQuery.data!
+  const { classes, samples } = useProjectOne()
 
   return (
     <Paper className="p-6" radius="xl" withBorder>
       <div className="space-y-3">
         <h2 className="text-2xl font-semibold tracking-tight">Label</h2>
         <Text c="dimmed" size="sm">
-          This project has {data.classes.length} classes and {data.samples.length} samples.
+          This project has {classes.length} classes and {samples.length}{" "}
+          samples.
         </Text>
       </div>
     </Paper>

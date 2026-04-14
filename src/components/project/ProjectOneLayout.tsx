@@ -3,19 +3,17 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Link, Outlet } from "@tanstack/react-router"
 import { FunctionComponent } from "react"
 import ContentEditable from "~/components/headless/ContentEditable"
-import {
-  type ProjectWorkspace,
-  updateProject,
-} from "~/lib/db/domain/projects"
+import { type ProjectWorkspace, updateProject } from "~/lib/db/domain/projects"
 import { useProjectOne } from "./ProjectOneProvider"
 
 interface ProjectOneLayoutProps {}
 
 const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
-  const { projectId, projectQuery } = useProjectOne()
+  const { projectId, classes, samples, project, projectName, projectStatus } =
+    useProjectOne()
   const queryClient = useQueryClient()
-  const data = projectQuery.data!
-  const totalImages = data.samples.length
+  const totalImages = samples.length
+
   const updateProjectMutation = useMutation({
     mutationFn: async ({
       description,
@@ -58,8 +56,8 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
     }
 
     if (
-      nextName === data.project.name &&
-      nextDescription === (data.project.description ?? null)
+      nextName === projectName &&
+      nextDescription === (project?.description ?? null)
     ) {
       return
     }
@@ -75,11 +73,11 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
           ...current,
           project: {
             ...current.project,
-            name: nextName ?? current.project.name,
+            name: nextName ?? current.project?.name,
             description:
               nextDescription !== undefined
                 ? nextDescription
-                : current.project.description,
+                : current.project?.description,
             updatedAt: new Date().toISOString(),
           },
         }
@@ -106,7 +104,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
                 onCommit={async (value) => {
                   await saveProjectField({ name: value })
                 }}
-                value={data.project.name}
+                value={projectName}
               />
               <ContentEditable
                 ariaLabel="Project description"
@@ -118,14 +116,14 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
                   await saveProjectField({ description: value })
                 }}
                 placeholder="Add project description"
-                value={data.project.description ?? ""}
+                value={project?.description ?? ""}
               />
             </div>
             <Badge
-              color={data.project.status === "active" ? "green" : "gray"}
+              color={projectStatus === "active" ? "green" : "gray"}
               variant="light"
             >
-              {data.project.status}
+              {projectStatus}
             </Badge>
           </div>
         </div>
@@ -150,7 +148,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
 
         <div className="space-y-3">
           <SidebarStat label="All Images" value={totalImages} />
-          {data.classes.map((projectClass) => (
+          {classes.map((projectClass) => (
             <SidebarStat
               key={projectClass.id}
               label={projectClass.name}
