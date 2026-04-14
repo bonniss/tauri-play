@@ -1,4 +1,4 @@
-import { NavLink, Text } from "@mantine/core"
+import { NavLink, Progress, Text } from "@mantine/core"
 import {
   IconBrain,
   IconCircleDot,
@@ -11,12 +11,27 @@ import { Link, Outlet, useRouterState } from "@tanstack/react-router"
 import { FunctionComponent, ReactNode } from "react"
 import ContentEditable from "~/components/headless/ContentEditable"
 import { type ProjectWorkspace, updateProject } from "~/lib/db/domain/projects"
-import { useProjectOne } from "./ProjectOneProvider"
+import {
+  MIN_CLASSES_FOR_TRAIN,
+  MIN_SAMPLES_PER_CLASS_FOR_TRAIN,
+  useProjectOne,
+} from "./ProjectOneProvider"
 
 interface ProjectOneLayoutProps {}
 
 const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
-  const { projectId, classes, totalSamples, project, projectName } = useProjectOne()
+  const {
+    projectId,
+    classes,
+    totalSamples,
+    project,
+    projectName,
+    classReadiness,
+    readySampleContribution,
+    requiredSamplesForTrain,
+    trainProgress,
+    isReadyForTrain,
+  } = useProjectOne()
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   })
@@ -155,20 +170,47 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
             <Text c="dimmed" fw={600} size="xs" tt="uppercase">
               Dataset
             </Text>
-            <div className="mt-3 space-y-1">
+            <div className="mt-3 space-y-2">
               <SidebarDatasetItem
-                count={totalSamples}
                 label="All Images"
                 leading={<IconFolder className="size-4" stroke={1.8} />}
+                progress={trainProgress}
+                status={
+                  isReadyForTrain
+                    ? "Ready to train"
+                    : `${readySampleContribution}/${requiredSamplesForTrain} ready images`
+                }
+                summary={`${totalSamples} images total`}
               />
-              {classes.map((projectClass) => (
+              {classes.map((projectClass) => {
+                const readiness = classReadiness.find(
+                  (item) => item.classId === projectClass.id,
+                )
+
+                return (
                 <SidebarDatasetItem
-                  count={projectClass.samples.length}
                   key={projectClass.id}
                   label={projectClass.name}
                   leading={<IconCircleDot className="size-3.5" stroke={2} />}
+                  progress={readiness?.progress ?? 0}
+                  status={`${projectClass.samples.length}/${MIN_SAMPLES_PER_CLASS_FOR_TRAIN} images`}
+                  summary={
+                    readiness?.isReady
+                      ? "Ready"
+                      : `${Math.max(
+                          MIN_SAMPLES_PER_CLASS_FOR_TRAIN - projectClass.samples.length,
+                          0,
+                        )} more needed`
+                  }
                 />
-              ))}
+                )
+              })}
+              {!classes.length ? (
+                <Text c="dimmed" size="xs">
+                  Need at least {MIN_CLASSES_FOR_TRAIN} classes and{" "}
+                  {MIN_SAMPLES_PER_CLASS_FOR_TRAIN} images per class.
+                </Text>
+              ) : null}
             </div>
           </div>
         </nav>
@@ -213,27 +255,46 @@ function ProjectNavItem({
 }
 
 function SidebarDatasetItem({
-  count,
   label,
   leading,
+  progress,
+  status,
+  summary,
 }: {
-  count: number
   label: string
   leading: ReactNode
+  progress: number
+  status: string
+  summary: string
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-md px-2 py-2 text-sm text-zinc-700 dark:text-zinc-300">
-      <div className="flex size-6 shrink-0 items-center justify-center text-zinc-400 dark:text-zinc-500">
+    <div className="rounded-md border border-zinc-200/80 px-3 py-2 dark:border-zinc-700/80">
+      <div className="flex items-center gap-3 text-sm text-zinc-700 dark:text-zinc-300">
+        <div className="flex size-6 shrink-0 items-center justify-center text-zinc-400 dark:text-zinc-500">
         {leading}
-      </div>
-      <div className="min-w-0 flex-1 truncate">
-        <Text fw={500} size="sm">
-          {label}
+        </div>
+        <div className="min-w-0 flex-1">
+          <Text fw={500} size="sm">
+            {label}
+          </Text>
+          <Text c="dimmed" size="xs">
+            {summary}
+          </Text>
+        </div>
+        <Text c="dimmed" size="xs">
+          {Math.round(progress * 100)}%
         </Text>
       </div>
-      <div className="text-xs font-medium text-zinc-400 dark:text-zinc-500">
-        {count}
-      </div>
+      <Progress
+        className="mt-2"
+        color={progress >= 1 ? "teal" : "blue"}
+        radius="xl"
+        size="sm"
+        value={progress * 100}
+      />
+      <Text c="dimmed" className="mt-1" size="xs">
+        {status}
+      </Text>
     </div>
   )
 }

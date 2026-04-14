@@ -5,6 +5,9 @@ import { getProjectWorkspace, ProjectRecord } from '~/lib/db/domain/projects';
 import { ProjectSample } from '~/lib/db/domain/samples';
 import { genClassId, genSampleId } from '~/lib/project/id-generator';
 
+export const MIN_CLASSES_FOR_TRAIN = 2;
+export const MIN_SAMPLES_PER_CLASS_FOR_TRAIN = 10;
+
 export type ProjectOneClass = Pick<
   ProjectClass,
   'id' | 'projectId' | 'name' | 'description' | 'order'
@@ -19,7 +22,7 @@ type ProjectOneSampleDraft = Pick<
   id?: string;
   createdAt?: string;
   order?: number;
- };
+};
 
 export const [useProjectOne, ProjectOneProvider] = createProvider(
   (defaultValue?: { projectId: string }) => {
@@ -67,8 +70,30 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       (acc, cls) => acc + cls.samples.length,
       0,
     );
+    const classReadiness = classes.map((cls) => ({
+      classId: cls.id,
+      sampleCount: cls.samples.length,
+      targetSampleCount: MIN_SAMPLES_PER_CLASS_FOR_TRAIN,
+      progress:
+        Math.min(cls.samples.length, MIN_SAMPLES_PER_CLASS_FOR_TRAIN) /
+        MIN_SAMPLES_PER_CLASS_FOR_TRAIN,
+      isReady: cls.samples.length >= MIN_SAMPLES_PER_CLASS_FOR_TRAIN,
+    }));
+    const requiredSamplesForTrain =
+      Math.max(totalClasses, MIN_CLASSES_FOR_TRAIN) *
+      MIN_SAMPLES_PER_CLASS_FOR_TRAIN;
+    const readySampleContribution = classReadiness.reduce(
+      (sum, item) => sum + Math.min(item.sampleCount, item.targetSampleCount),
+      0,
+    );
+    const trainProgress =
+      requiredSamplesForTrain > 0
+        ? readySampleContribution / requiredSamplesForTrain
+        : 0;
     const isEmptyClass = totalClasses === 0;
-    const isReadyForTrain = totalClasses > 1;
+    const isReadyForTrain =
+      totalClasses >= MIN_CLASSES_FOR_TRAIN &&
+      classReadiness.every((item) => item.isReady);
 
     const addClass = (payload: {
       name: string;
@@ -168,13 +193,19 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
     };
 
     const updateClassName = (indexOrClassId: number | string, name: string) => {
+      const trimmedName = name.trim();
+
+      if (!trimmedName) {
+        return;
+      }
+
       setClasses((prev) =>
         prev.map((cls) => {
           const classId =
             typeof indexOrClassId === 'number'
               ? prev[indexOrClassId]?.id
               : indexOrClassId;
-          return cls.id === classId ? { ...cls, name } : cls;
+          return cls.id === classId ? { ...cls, name: trimmedName } : cls;
         }),
       );
       renameClass({
@@ -182,7 +213,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
           typeof indexOrClassId === 'number'
             ? classes[indexOrClassId]?.id!
             : indexOrClassId,
-        name,
+        name: trimmedName,
       });
     };
 
@@ -203,6 +234,10 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       classes,
       totalClasses,
       totalSamples,
+      classReadiness,
+      requiredSamplesForTrain,
+      readySampleContribution,
+      trainProgress,
       isEmptyClass,
       isReadyForTrain,
     };

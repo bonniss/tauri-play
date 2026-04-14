@@ -2,6 +2,7 @@ import { Box, Button, Group, Loader, Paper, Text } from '@mantine/core';
 import { IconCamera } from '@tabler/icons-react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useMemo, useState } from 'react';
+import ContentEditable from '~/components/headless/ContentEditable';
 import { useProjectOne } from '~/components/project/ProjectOneProvider';
 import UploadSamplesButton from '~/components/project/UploadSamplesButton';
 import {
@@ -14,7 +15,7 @@ export const Route = createFileRoute('/projects/$projectId/label/')({
 });
 
 function ProjectLabelPage() {
-  const { classes } = useProjectOne();
+  const { classes, updateClassName } = useProjectOne();
   const hasClasses = classes.length > 0;
   const totalSamples = classes.reduce((count, item) => count + item.samples.length, 0);
   const samples = useMemo(
@@ -97,7 +98,22 @@ function ProjectLabelPage() {
             >
               <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">
                 <div className="flex items-center justify-between gap-4">
-                  <span>{item.name}</span>
+                  <ContentEditable
+                    as="span"
+                    aria-label={`Class name ${item.name}`}
+                    className="min-w-0 flex-1 truncate rounded px-1 py-0.5"
+                    focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
+                    onBlur={(value) => {
+                      updateClassName(item.id, value);
+                    }}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                    }}
+                    onKeyDown={(event) => {
+                      event.stopPropagation();
+                    }}
+                    value={item.name}
+                  />
                   <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
                     {item.samples.length} images
                   </span>
