@@ -275,3 +275,8 @@ export async function activateProject(projectId: string) {
     status: "active",
   })
 }
+
+export async function deleteProject(projectId: string) {
+  const db = getKysely()
+  await db.deleteFrom("projects").where("id", "=", projectId).execute()
+}

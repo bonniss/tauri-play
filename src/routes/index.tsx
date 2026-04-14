@@ -14,7 +14,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
 import { startTransition, useDeferredValue, useState } from "react"
 import { Form, defineConfig } from "~/components/form"
-import { createProject, listProjects } from "~/lib/db/domain/projects"
+import {
+  createProject,
+  deleteProject,
+  listProjects,
+} from "~/lib/db/domain/projects"
 import { generateRandomProjectName } from "~/lib/project/name"
 
 export const Route = createFileRoute("/")({
@@ -33,7 +37,7 @@ const createProjectForm = defineConfig<{
     },
     props: {
       autoFocus: true,
-    }
+    },
   },
   description: {
     type: "longText",
@@ -80,13 +84,21 @@ function HomePage() {
       })
     },
   })
+  const deleteProjectMutation = useMutation({
+    mutationFn: async (projectId: string) => {
+      await deleteProject(projectId)
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["projects"] })
+    },
+  })
 
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 py-4">
       <Modal
         onClose={createProjectHandlers.close}
         opened={createProjectOpened}
-        title="New Project"
+        withCloseButton={false}
       >
         <Form
           renderRoot={({ children, onSubmit }) => (
@@ -118,11 +130,11 @@ function HomePage() {
         </Form>
       </Modal>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <h1 className="text-3xl font-semibold tracking-tight">Projects</h1>
-        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-xl font-semibold tracking-tight">Projects</h1>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <TextInput
-            className="w-full sm:min-w-64"
+            className="w-full sm:w-48"
             onChange={(event) => setSearch(event.currentTarget.value)}
             placeholder="Search projects by name"
             value={search}
@@ -200,6 +212,21 @@ function HomePage() {
                 >
                   Open
                 </Button>
+                {import.meta.env.DEV ? (
+                  <Button
+                    color="red"
+                    loading={
+                      deleteProjectMutation.isPending &&
+                      deleteProjectMutation.variables === project.id
+                    }
+                    onClick={() => {
+                      deleteProjectMutation.mutate(project.id)
+                    }}
+                    variant="light"
+                  >
+                    Delete
+                  </Button>
+                ) : null}
               </Stack>
             </Paper>
           ))}
