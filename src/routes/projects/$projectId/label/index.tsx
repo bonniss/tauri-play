@@ -16,6 +16,7 @@ export const Route = createFileRoute('/projects/$projectId/label/')({
 function ProjectLabelPage() {
   const { classes } = useProjectOne();
   const hasClasses = classes.length > 0;
+  const totalSamples = classes.reduce((count, item) => count + item.samples.length, 0);
   const samples = useMemo(
     () => classes.flatMap((item) => item.samples),
     [classes],
@@ -70,28 +71,20 @@ function ProjectLabelPage() {
     <Paper className="p-6" withBorder>
       <div className="space-y-3">
         <h2 className="text-2xl font-semibold tracking-tight">Label</h2>
-        {!hasClasses ? (
-          <>
-            <Text c="dimmed" size="sm">
-              Create the first class to start collecting images for this
-              project.
-            </Text>
-            <Group>
-              <Button
-                leftSection={<IconCamera className="size-4" />}
-                variant="default"
-              >
-                Camera
-              </Button>
-              <UploadSamplesButton buttonLabel="Upload" />
-            </Group>
-          </>
-        ) : (
-          <Text c="dimmed" size="sm">
-            This project has {classes.length} classes and{' '}
-            {classes.reduce((a, b) => a + b.samples.length, 0)} samples.
-          </Text>
-        )}
+        <Text c="dimmed" size="sm">
+          {hasClasses
+            ? `This project has ${classes.length} classes and ${totalSamples} samples.`
+            : "Create the first class to start collecting images for this project."}
+        </Text>
+        <Group>
+          <Button
+            leftSection={<IconCamera className="size-4" />}
+            variant="default"
+          >
+            Camera
+          </Button>
+          <UploadSamplesButton buttonLabel="Upload" />
+        </Group>
       </div>
 
       {hasClasses ? (

@@ -1,7 +1,6 @@
-import { Button, Modal, Select, Stack, Text, TextInput } from "@mantine/core"
-import { useDisclosure } from "@mantine/hooks"
+import { Button } from "@mantine/core"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { ChangeEvent, FunctionComponent, useMemo, useRef, useState } from "react"
+import { ChangeEvent, FunctionComponent, useRef } from "react"
 import { createClass } from "~/lib/db/domain/classes"
 import { activateProject, updateProject } from "~/lib/db/domain/projects"
 import { createSample } from "~/lib/db/domain/samples"
@@ -13,96 +12,126 @@ interface UploadSamplesButtonProps {
   classId?: string
 }
 
+type UploadTargetClass =
+  | {
+      id: string
+      createdNow: false
+    }
+  | {
+      id: string
+      name: string
+      order: number
+      createdNow: true
+    }
+
 const UploadSamplesButton: FunctionComponent<UploadSamplesButtonProps> = ({
   buttonLabel = "Upload",
   classId,
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const [opened, handlers] = useDisclosure(false)
-  const [selectedClassId, setSelectedClassId] = useState<string | null>(
-    classId ?? null,
-  )
-  const [newClassName, setNewClassName] = useState("")
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
-  const { classes, projectId, projectStatus } = useProjectOne()
   const queryClient = useQueryClient()
-
-  const classOptions = useMemo(
-    () =>
-      classes.map((item) => ({
-        label: item.name,
-        value: item.id ?? "",
-      })),
-    [classes],
-  )
+  const {
+    projectId,
+    projectStatus,
+    seedClass,
+    removeClass,
+    addSamplesToClass,
+    removeSamplesFromClass,
+    setProjectStatus,
+  } = useProjectOne()
 
   const uploadMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (selectedFiles: File[]) => {
       if (!selectedFiles.length) {
         throw new Error("Choose at least one image.")
       }
 
-      const trimmedNewClassName = newClassName.trim()
-      let targetClassId = selectedClassId
+      const seededClass: UploadTargetClass =
+        classId != null
+          ? { id: classId, createdNow: false }
+          : (() => {
+              const nextClass = seedClass()
 
-      if (trimmedNewClassName) {
-        const existing = classes.find(
-          (item) => item.name.toLowerCase() === trimmedNewClassName.toLowerCase(),
+              return {
+                id: nextClass.id,
+                name: nextClass.name,
+                order: nextClass.order,
+                createdNow: true,
+              }
+            })()
+
+      const optimisticSamples = addSamplesToClass(
+        seededClass.id,
+        await Promise.all(
+          selectedFiles.map(async (file) => {
+            const sampleId = crypto.randomUUID()
+            const { filePath } = await saveUploadedSampleFile({
+              classId: seededClass.id,
+              file,
+              projectId,
+              sampleId,
+            })
+
+            return {
+              id: sampleId,
+              classId: seededClass.id,
+              filePath,
+              source: "upload" as const,
+            }
+          }),
+        ),
+      )
+
+      try {
+        if (seededClass.createdNow) {
+          await createClass({
+            id: seededClass.id,
+            projectId,
+            name: seededClass.name,
+            order: seededClass.order,
+          })
+        }
+
+        await Promise.all(
+          optimisticSamples.map((sample) =>
+            createSample({
+              id: sample.id,
+              projectId,
+              classId: sample.classId,
+              filePath: sample.filePath,
+              source: sample.source,
+              order: sample.order,
+            }),
+          ),
         )
 
-        targetClassId =
-          existing?.id ??
-          (await createClass({
+        if (projectStatus === "draft") {
+          setProjectStatus("active")
+          await activateProject(projectId)
+        } else {
+          await updateProject({
             projectId,
-            name: trimmedNewClassName,
-          }))
+          })
+        }
+      } catch (error) {
+        removeSamplesFromClass(
+          seededClass.id,
+          optimisticSamples.map((sample) => sample.id),
+        )
+
+        if (seededClass.createdNow) {
+          removeClass(seededClass.id)
+        }
+
+        throw error
       }
-
-      if (!targetClassId) {
-        throw new Error("Choose an existing class or enter a new class name.")
-      }
-
-      for (const file of selectedFiles) {
-        const sampleId = crypto.randomUUID()
-        const { filePath } = await saveUploadedSampleFile({
-          classId: targetClassId,
-          file,
-          projectId,
-          sampleId,
-        })
-
-        await createSample({
-          id: sampleId,
-          projectId,
-          classId: targetClassId,
-          filePath,
-          source: "upload",
-        })
-      }
-
-      if (projectStatus === "draft") {
-        await activateProject(projectId)
-      } else {
-        await updateProject({
-          projectId,
-        })
-      }
-
-      return targetClassId
     },
-    onSuccess: async (targetClassId) => {
-      handlers.close()
-      setSelectedFiles([])
-      setNewClassName("")
-      setSelectedClassId(targetClassId)
+    onSettled: async () => {
       if (fileInputRef.current) {
         fileInputRef.current.value = ""
       }
 
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["project-workspace", projectId] }),
-        queryClient.invalidateQueries({ queryKey: ["projects"] }),
-      ])
+      await queryClient.invalidateQueries({ queryKey: ["projects"] })
     },
   })
 
@@ -113,10 +142,7 @@ const UploadSamplesButton: FunctionComponent<UploadSamplesButtonProps> = ({
       return
     }
 
-    setSelectedFiles(nextFiles)
-    setSelectedClassId(classId ?? null)
-    setNewClassName("")
-    handlers.open()
+    uploadMutation.mutate(nextFiles)
   }
 
   return (
@@ -131,6 +157,7 @@ const UploadSamplesButton: FunctionComponent<UploadSamplesButtonProps> = ({
       />
 
       <Button
+        loading={uploadMutation.isPending}
         onClick={() => {
           fileInputRef.current?.click()
         }}
@@ -138,55 +165,6 @@ const UploadSamplesButton: FunctionComponent<UploadSamplesButtonProps> = ({
       >
         {buttonLabel}
       </Button>
-
-      <Modal
-        onClose={handlers.close}
-        opened={opened}
-        title={`Upload ${selectedFiles.length || ""} image${selectedFiles.length === 1 ? "" : "s"}`.trim()}
-      >
-        <Stack>
-          <Text c="dimmed" size="sm">
-            {classes.length
-              ? "Choose an existing class or enter a new class name."
-              : "Enter a class name for these images."}
-          </Text>
-
-          {classes.length ? (
-            <Select
-              data={classOptions}
-              label="Existing class"
-              onChange={(value) => setSelectedClassId(value ? String(value) : null)}
-              placeholder="Choose a class"
-              value={selectedClassId}
-            />
-          ) : null}
-
-          <TextInput
-            autoFocus={classes.length === 0}
-            label={classes.length ? "New class name" : "Class name"}
-            onChange={(event) => setNewClassName(event.currentTarget.value)}
-            placeholder="e.g. Drinking"
-            value={newClassName}
-          />
-
-          <div className="flex justify-end gap-3">
-            <Button onClick={handlers.close} type="button" variant="default">
-              Cancel
-            </Button>
-            <Button loading={uploadMutation.isPending} onClick={() => uploadMutation.mutate()}>
-              Save Images
-            </Button>
-          </div>
-
-          {uploadMutation.error ? (
-            <Text c="red.6" size="sm">
-              {uploadMutation.error instanceof Error
-                ? uploadMutation.error.message
-                : "Upload failed."}
-            </Text>
-          ) : null}
-        </Stack>
-      </Modal>
     </>
   )
 }

@@ -3,7 +3,7 @@ import { createProvider } from 'react-easy-provider';
 import { ProjectClass, renameClass } from '~/lib/db/domain/classes';
 import { getProjectWorkspace, ProjectRecord } from '~/lib/db/domain/projects';
 import { ProjectSample } from '~/lib/db/domain/samples';
-import { genClassId } from '~/lib/project/id-generator';
+import { genClassId, genSampleId } from '~/lib/project/id-generator';
 
 export type ProjectOneClass = Pick<
   ProjectClass,
@@ -11,6 +11,15 @@ export type ProjectOneClass = Pick<
 > & {
   samples: ProjectSample[];
 };
+
+type ProjectOneSampleDraft = Pick<
+  ProjectSample,
+  'classId' | 'filePath' | 'source'
+> & {
+  id?: string;
+  createdAt?: string;
+  order?: number;
+ };
 
 export const [useProjectOne, ProjectOneProvider] = createProvider(
   (defaultValue?: { projectId: string }) => {
@@ -79,20 +88,83 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       return newClass;
     };
 
-    const seedClass = () => {
-      if (!isReadyForTrain) {
-        const newClass = {
-          id: genClassId(),
-          projectId,
-          name: `Class ${totalClasses + 1}`,
-          description: null,
-          order: totalClasses,
-          samples: [],
-        };
-        setClasses((prev) => [...prev, newClass]);
+    const removeClass = (classId: string) => {
+      setClasses((prev) => prev.filter((item) => item.id !== classId));
+    };
 
-        return newClass;
-      }
+    const seedClass = () => {
+      const newClass = {
+        id: genClassId(),
+        projectId,
+        name: `Class ${totalClasses + 1}`,
+        description: null,
+        order: totalClasses,
+        samples: [],
+      };
+      setClasses((prev) => [...prev, newClass]);
+
+      return newClass;
+    };
+
+    const addSamplesToClass = (
+      classId: string,
+      nextSamples: ProjectOneSampleDraft[],
+    ) => {
+      let optimisticSamples: ProjectSample[] = [];
+
+      setClasses((prev) =>
+        prev.map((cls) => {
+          if (cls.id !== classId) {
+            return cls;
+          }
+
+          const startOrder = cls.samples.length;
+          optimisticSamples = nextSamples.map((sample, index) => ({
+            id: sample.id ?? genSampleId(),
+            projectId,
+            classId,
+            filePath: sample.filePath,
+            source: sample.source,
+            order: sample.order ?? startOrder + index,
+            className: cls.name,
+            createdAt: sample.createdAt ?? new Date().toISOString(),
+          }));
+
+          return {
+            ...cls,
+            samples: [...cls.samples, ...optimisticSamples],
+          };
+        }),
+      );
+
+      return optimisticSamples;
+    };
+
+    const removeSamplesFromClass = (classId: string, sampleIds: string[]) => {
+      const sampleIdSet = new Set(sampleIds);
+
+      setClasses((prev) =>
+        prev.map((cls) =>
+          cls.id === classId
+            ? {
+                ...cls,
+                samples: cls.samples.filter((sample) => !sampleIdSet.has(sample.id)),
+              }
+            : cls,
+        ),
+      );
+    };
+
+    const setProjectStatus = (status: ProjectRecord['status']) => {
+      setProject((current) =>
+        current
+          ? {
+              ...current,
+              status,
+              updatedAt: new Date().toISOString(),
+            }
+          : current,
+      );
     };
 
     const updateClassName = (indexOrClassId: number | string, name: string) => {
@@ -121,6 +193,10 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       projectStatus,
       seedClass,
       addClass,
+      removeClass,
+      addSamplesToClass,
+      removeSamplesFromClass,
+      setProjectStatus,
       updateClassName,
 
       project,
