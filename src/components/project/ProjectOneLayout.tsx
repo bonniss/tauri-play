@@ -1,4 +1,4 @@
-import { Badge, NavLink, Text } from "@mantine/core"
+import { NavLink, Text } from "@mantine/core"
 import {
   IconBrain,
   IconCircleDot,
@@ -102,7 +102,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
 
   return (
     <section className="min-h-[calc(100vh-6rem)] flex flex-col lg:flex-row gap-8">
-      <aside className="lg:flex lg:flex-col lg:w-80 overflow-y-auto border-r border-zinc-200 px-4 py-2">
+      <aside className="lg:flex lg:flex-col lg:w-80 overflow-y-auto border-r border-zinc-200 dark:border-zinc-600 px-4 py-2 bg-gray-50 dark:bg-gray-800/80 rounded-sm">
         <div className="space-y-2">
           <ContentEditable
             as="h1"
@@ -202,6 +202,7 @@ function ProjectNavItem({
 }) {
   return (
     <NavLink
+      variant="light"
       active={current}
       className="rounded-md"
       component={Link}
@@ -209,7 +210,6 @@ function ProjectNavItem({
       leftSection={<Icon className="size-4" stroke={1.8} />}
       params={{ projectId } as never}
       to={to}
-      variant="subtle"
     />
   )
 }

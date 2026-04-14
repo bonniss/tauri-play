@@ -29,6 +29,11 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
     const projectName = project?.name ?? ""
     const projectStatus = project?.status
 
+    const totalClasses = classes.length
+    const totalSamples = samples.length
+    const isEmptyClass = totalClasses === 0
+    const isReadyForTrain = totalClasses > 1
+
     return {
       projectId,
       projectName,
@@ -36,6 +41,12 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       project,
       classes,
       samples,
+      totalClasses,
+      totalSamples,
+      isEmptyClass,
+      isReadyForTrain,
+
+      // react query state
       refetch,
       isLoading,
       isFetching,
