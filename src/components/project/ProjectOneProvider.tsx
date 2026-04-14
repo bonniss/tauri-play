@@ -68,11 +68,26 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
         name: payload.name,
         description: payload.description,
         order: payload.order ?? totalClasses,
-        samples: [] as any,
+        samples: [],
       };
       setClasses((prev) => [...prev, newClass]);
 
       return newClass;
+    };
+
+    const seedClass = () => {
+      if (!isReadyForTrain) {
+        const newClass = {
+          id: genClassId(),
+          projectId,
+          name: `Class ${totalClasses + 1}`,
+          order: totalClasses,
+          samples: [],
+        };
+        setClasses((prev) => [...prev, newClass]);
+
+        return newClass;
+      }
     };
 
     const updateClassName = (indexOrClassId: number | string, name: string) => {
@@ -99,6 +114,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       projectId,
       projectName,
       projectStatus,
+      seedClass,
       addClass,
       updateClassName,
 

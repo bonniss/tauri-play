@@ -16,12 +16,11 @@ import { useProjectOne } from "./ProjectOneProvider"
 interface ProjectOneLayoutProps {}
 
 const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
-  const { projectId, classes, samples, project, projectName } = useProjectOne()
+  const { projectId, classes, totalSamples, project, projectName } = useProjectOne()
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   })
   const queryClient = useQueryClient()
-  const totalImages = samples.length
 
   const updateProjectMutation = useMutation({
     mutationFn: async ({
@@ -158,13 +157,13 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
             </Text>
             <div className="mt-3 space-y-1">
               <SidebarDatasetItem
-                count={totalImages}
+                count={totalSamples}
                 label="All Images"
                 leading={<IconFolder className="size-4" stroke={1.8} />}
               />
               {classes.map((projectClass) => (
                 <SidebarDatasetItem
-                  count={projectClass.sampleCount}
+                  count={projectClass.samples.length}
                   key={projectClass.id}
                   label={projectClass.name}
                   leading={<IconCircleDot className="size-3.5" stroke={2} />}

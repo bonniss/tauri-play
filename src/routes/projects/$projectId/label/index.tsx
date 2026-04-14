@@ -1,75 +1,21 @@
-import { Box, Button, Group, Loader, Paper, Text } from "@mantine/core"
-import { IconCamera } from "@tabler/icons-react"
-import { createFileRoute } from "@tanstack/react-router"
-import { useEffect, useState } from "react"
-import UploadSamplesButton from "~/components/project/UploadSamplesButton"
-import { useProjectOne } from "~/components/project/ProjectOneProvider"
-import {
-  createSamplePreviewUrl,
-  revokeSamplePreviewUrl,
-} from "~/lib/project/sample-preview"
+import { Box, Button, Group, Loader, Paper, Text } from '@mantine/core';
+import { IconCamera } from '@tabler/icons-react';
+import { createFileRoute } from '@tanstack/react-router';
+import { useState } from 'react';
+import { useProjectOne } from '~/components/project/ProjectOneProvider';
+import UploadSamplesButton from '~/components/project/UploadSamplesButton';
 
-export const Route = createFileRoute("/projects/$projectId/label/")({
+export const Route = createFileRoute('/projects/$projectId/label/')({
   component: ProjectLabelPage,
-})
+});
 
 function ProjectLabelPage() {
-  const { classes, samples } = useProjectOne()
-  const hasClasses = classes.length > 0
-  const [isLoadingPreviews, setIsLoadingPreviews] = useState(false)
-  const [samplePreviewMap, setSamplePreviewMap] = useState<Record<string, string>>({})
-
-  useEffect(() => {
-    let cancelled = false
-    let nextPreviewMap: Record<string, string> = {}
-
-    if (!samples.length) {
-      setSamplePreviewMap((currentMap) => {
-        Object.values(currentMap).forEach((url) => revokeSamplePreviewUrl(url))
-        return {}
-      })
-      setIsLoadingPreviews(false)
-      return
-    }
-
-    setIsLoadingPreviews(true)
-
-    void Promise.all(
-      samples.map(async (sample) => [
-        sample.id,
-        await createSamplePreviewUrl(sample.filePath),
-      ]),
-    )
-      .then((entries) => {
-        if (cancelled) {
-          entries.forEach(([, url]) => revokeSamplePreviewUrl(url))
-          return
-        }
-
-        nextPreviewMap = Object.fromEntries(entries)
-        setSamplePreviewMap((currentMap) => {
-          Object.values(currentMap).forEach((url) => revokeSamplePreviewUrl(url))
-          return nextPreviewMap
-        })
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setIsLoadingPreviews(false)
-        }
-      })
-
-    return () => {
-      cancelled = true
-      Object.values(nextPreviewMap).forEach((url) => revokeSamplePreviewUrl(url))
-    }
-  }, [samples])
-
-  const samplesByClass = classes.map((item) => ({
-    id: item.id,
-    name: item.name,
-    sampleCount: item.sampleCount,
-    samples: samples.filter((sample) => sample.classId === item.id),
-  }))
+  const { classes } = useProjectOne();
+  const hasClasses = classes.length > 0;
+  const [isLoadingPreviews, setIsLoadingPreviews] = useState(false);
+  const [samplePreviewMap, setSamplePreviewMap] = useState<
+    Record<string, string>
+  >({});
 
   return (
     <Paper className="p-6" withBorder>
@@ -93,15 +39,15 @@ function ProjectLabelPage() {
           </>
         ) : (
           <Text c="dimmed" size="sm">
-            This project has {classes.length} classes and {samples.length}{" "}
-            samples.
+            This project has {classes.length} classes and{' '}
+            {classes.reduce((a, b) => a + b.samples.length, 0)} samples.
           </Text>
         )}
       </div>
 
       {hasClasses ? (
         <div className="mt-6 space-y-4">
-          {samplesByClass.map((item, index) => (
+          {classes.map((item, index) => (
             <details
               className="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
               key={item.id}
@@ -111,7 +57,7 @@ function ProjectLabelPage() {
                 <div className="flex items-center justify-between gap-4">
                   <span>{item.name}</span>
                   <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                    {item.sampleCount} images
+                    {item.samples.length} images
                   </span>
                 </div>
               </summary>
@@ -135,7 +81,7 @@ function ProjectLabelPage() {
                           alt={item.name}
                           className="size-full object-cover"
                           loading="lazy"
-                          src={samplePreviewMap?.[sample.id]}
+                          src={samplePreviewMap?.[sample.id!]}
                         />
                       </div>
                     ))}
@@ -151,5 +97,5 @@ function ProjectLabelPage() {
         </div>
       ) : null}
     </Paper>
-  )
+  );
 }
