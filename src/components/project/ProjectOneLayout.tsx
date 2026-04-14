@@ -16,8 +16,7 @@ import { useProjectOne } from "./ProjectOneProvider"
 interface ProjectOneLayoutProps {}
 
 const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
-  const { projectId, classes, samples, project, projectName, projectStatus } =
-    useProjectOne()
+  const { projectId, classes, samples, project, projectName } = useProjectOne()
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   })
@@ -103,11 +102,11 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
   return (
     <section className="min-h-[calc(100vh-6rem)] flex flex-col lg:flex-row gap-8">
       <aside className="lg:flex lg:flex-col lg:w-80 overflow-y-auto border-r border-zinc-200 dark:border-zinc-600 px-4 py-2 bg-gray-50 dark:bg-gray-800/80 rounded-sm">
-        <div className="space-y-2">
+        <div className="space-y-1">
           <ContentEditable
-            as="h1"
+            as="h2"
             aria-label="Project name"
-            className="min-w-0 rounded-md px-2 py-1 text-xl font-semibold leading-tight text-zinc-950 outline-none transition-colors dark:text-zinc-50"
+            className="min-w-0 rounded-md px-2 py-1 text-lg font-semibold leading-tight text-zinc-950 outline-none transition-colors dark:text-zinc-50"
             focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
             onBlur={async (value) => {
               await saveProjectField({ name: value })
