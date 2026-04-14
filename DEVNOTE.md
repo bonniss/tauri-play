@@ -85,3 +85,17 @@ Tauri uses WebKit:
 
 - `WKWebView` on macOS
 - `webkit2gtk` on Linux
+
+## Issues
+
+### Gaining access to the camera and microphone after being blocked not working
+
+[#5042](https://github.com/tauri-apps/tauri/issues/5042)
+
+## Core flow
+
+### Create a project
+
+- From list page -> Create new project/app (suggest me)
+- UI create/edit page will match 
+

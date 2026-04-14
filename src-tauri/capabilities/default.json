@@ -18,6 +18,12 @@
       "allow": [
         {
           "path": "$APPDATA"
+        },
+        {
+          "path": "$APPLOCALDATA"
+        },
+        {
+          "path": "$APPLOG"
         }
       ]
     }

@@ -1,4 +1,4 @@
-import { Button, Group, Loader, Table, Text } from "@mantine/core"
+import { Button, Loader, Table, Text } from "@mantine/core"
 import { IconFolderOpen } from "@tabler/icons-react"
 import { useQuery } from "@tanstack/react-query"
 import {
@@ -7,7 +7,13 @@ import {
   getTauriVersion,
   getVersion,
 } from "@tauri-apps/api/app"
-import { appDataDir } from "@tauri-apps/api/path"
+import {
+  appCacheDir,
+  appConfigDir,
+  appDataDir,
+  appLocalDataDir,
+  appLogDir,
+} from "@tauri-apps/api/path"
 import { openPath } from "@tauri-apps/plugin-opener"
 import {
   arch,
@@ -17,7 +23,10 @@ import {
   version as osVersion,
   platform,
 } from "@tauri-apps/plugin-os"
+import { isDev } from "~/lib/env"
 import ColorSchemer from "./ColorSchemer"
+
+const { Tr, Td, Th, Tbody } = Table
 
 async function getAppInfo() {
   const [
@@ -25,25 +34,37 @@ async function getAppInfo() {
     appName,
     appVersion,
     identifier,
-    tauriVersion,
     systemArch,
     systemFamily,
     systemLocale,
     systemPlatform,
     systemType,
     systemVersion,
+
+    // development only
+    tauriVersion,
+    localDataDir,
+    cacheDir,
+    logDir,
+    configDir,
   ] = await Promise.all([
     appDataDir(),
     getName(),
     getVersion(),
     getIdentifier(),
-    getTauriVersion(),
     arch(),
     family(),
     locale(),
     platform(),
     osType(),
     osVersion(),
+
+    // development only
+    getTauriVersion(),
+    appLocalDataDir(),
+    appCacheDir(),
+    appLogDir(),
+    appConfigDir(),
   ])
 
   return {
@@ -56,7 +77,13 @@ async function getAppInfo() {
     systemPlatform,
     systemType: systemType || systemFamily,
     systemVersion: systemVersion || "Unknown",
+
+    // development only
     tauriVersion,
+    localDataDir,
+    cacheDir,
+    logDir,
+    configDir,
   }
 }
 
@@ -69,18 +96,18 @@ const AppInfo = () => {
 
   if (isLoading) {
     return (
-      <Group gap="xs">
+      <div className="flex items-center gap-2">
         <Loader size="sm" />
         <Text c="dimmed" size="sm">
           Loading app info...
         </Text>
-      </Group>
+      </div>
     )
   }
 
   if (error) {
     return (
-      <Text c="red.6" size="sm">
+      <Text c="red" size="sm">
         {error instanceof Error ? error.message : "Failed to load app info."}
       </Text>
     )
@@ -98,32 +125,70 @@ const AppInfo = () => {
     { label: "OS", value: `${data.systemType} ${data.systemVersion}`.trim() },
     { label: "Arch", value: data.systemArch },
     { label: "Locale", value: data.systemLocale },
-  ]
+  ].map((row) => (
+    <Tr key={row.label}>
+      <Th className="w-32">
+        <Text c="dimmed" fw={500} size="sm">
+          {row.label}
+        </Text>
+      </Th>
+      <Td className="font-mono">{row.value}</Td>
+    </Tr>
+  ))
 
-  if (import.meta.env.DEV) {
-    rows.push({ label: "Tauri", value: data.tauriVersion })
-  }
+  let devRows = isDev ? (
+    <>
+      <Tr>
+        <Th className="w-32">
+          <Text c="dimmed" fw={500} size="sm">
+            Tauri
+          </Text>
+        </Th>
+        <Td className="font-mono">{data.tauriVersion}</Td>
+      </Tr>
+
+      {[
+        { label: "LOCAL_DATA_DIR", value: data.localDataDir },
+        { label: "CACHE_DIR", value: data.cacheDir },
+        { label: "LOG_DIR", value: data.logDir },
+        { label: "CONFIG_DIR", value: data.configDir },
+      ].map((row) => (
+        <Tr key={row.label}>
+          <Th className="w-32 align-middle">
+            <Text c="dimmed" fw={500} size="sm">
+              {row.label}
+            </Text>
+          </Th>
+          <Td className="font-mono align-middle">
+            <Button
+              size="xs"
+              variant="light"
+              leftSection={<IconFolderOpen className="size-4" />}
+              onClick={() => {
+                void openPath(row.value)
+              }}
+            >
+              Open
+            </Button>
+          </Td>
+        </Tr>
+      ))}
+    </>
+  ) : (
+    []
+  )
 
   return (
     <Table withRowBorders layout="fixed">
-      <Table.Tbody>
-        {rows.map((row) => (
-          <Table.Tr key={row.label}>
-            <Table.Th className="w-28 align-top">
-              <Text c="dimmed" fw={500} size="sm">
-                {row.label}
-              </Text>
-            </Table.Th>
-            <Table.Td className="font-mono">{row.value}</Table.Td>
-          </Table.Tr>
-        ))}
-        <Table.Tr>
-          <Table.Th className="w-28 align-middle">
+      <Tbody>
+        {rows}
+        <Tr>
+          <Th className="w-32 align-middle">
             <Text c="dimmed" fw={500} size="sm">
               Data Folder
             </Text>
-          </Table.Th>
-          <Table.Td className="align-middle">
+          </Th>
+          <Td className="align-middle">
             <Button
               size="xs"
               variant="light"
@@ -134,19 +199,20 @@ const AppInfo = () => {
             >
               Open
             </Button>
-          </Table.Td>
-        </Table.Tr>
-        <Table.Tr>
-          <Table.Th className="w-28 align-middle">
+          </Td>
+        </Tr>
+        {devRows}
+        <Tr>
+          <Th className="w-32 align-middle">
             <Text c="dimmed" fw={500} size="sm">
               Theme
             </Text>
-          </Table.Th>
-          <Table.Td className="align-middle">
+          </Th>
+          <Td className="align-middle">
             <ColorSchemer size="sm" />
-          </Table.Td>
-        </Table.Tr>
-      </Table.Tbody>
+          </Td>
+        </Tr>
+      </Tbody>
     </Table>
   )
 }

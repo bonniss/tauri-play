@@ -27,7 +27,50 @@ type TodoTable = {
   created_at: ColumnType<string, string | undefined, never>
 }
 
+type ProjectTable = {
+  id: string
+  name: string
+  status: "draft" | "active" | "archived"
+  task_type: string
+  description: string | null
+  settings: string
+  created_at: ColumnType<string, string | undefined, never>
+  updated_at: ColumnType<string, string | undefined, string>
+}
+
+type ClassTable = {
+  id: string
+  project_id: string
+  name: string
+  description: string | null
+  created_at: ColumnType<string, string | undefined, never>
+  updated_at: ColumnType<string, string | undefined, string>
+}
+
+type SampleTable = {
+  id: string
+  project_id: string
+  class_id: string
+  file_path: string
+  source: "camera" | "upload"
+  created_at: ColumnType<string, string | undefined, never>
+}
+
+type ModelTable = {
+  id: string
+  project_id: string
+  artifact_path: string
+  trained_at: string
+  accuracy: number | null
+  created_at: ColumnType<string, string | undefined, never>
+  updated_at: ColumnType<string, string | undefined, string>
+}
+
 export interface DatabaseSchema {
+  classes: ClassTable
+  models: ModelTable
+  projects: ProjectTable
+  samples: SampleTable
   todos: TodoTable
 }
 

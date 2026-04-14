@@ -22,11 +22,7 @@
     }
   },
   "plugins": {
-    "sql": {
-      "preload": [
-        "sqlite:todo.db"
-      ]
-    }
+    "sql": {}
   },
   "bundle": {
     "active": true,

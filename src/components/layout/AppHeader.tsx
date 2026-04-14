@@ -23,10 +23,10 @@ const AppHeader: FunctionComponent<AppHeaderProps> = () => {
         <Button
           component={Link}
           size="compact-sm"
-          to="/todos"
-          variant="outline"
+          to="/ml-lab"
+          variant="subtle"
         >
-          Todo Sample
+          ML Lab
         </Button>
       </div>
       <AppSettings />

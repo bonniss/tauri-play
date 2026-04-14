@@ -114,6 +114,14 @@ const Component: FunctionComponent<ComponentProps> = () => {
 export default Component
 ```
 
+### UI
+
+- Use Tailwind for layout, spacing, flex/grid, sizing, positioning, and basic text styling.
+- Use Mantine for functional UI components: forms, buttons, overlays, cards, navigation, inputs, app shell, and feedback states.
+- For quick text color that needs to work across light and dark themes, prefer Mantine props like `c`, for example `Box c="dimmed"` or `Text c="orange.4"`.
+- For quick animation and transition, prefer utility classes from `tailwindcss-motion`.
+- Keep theme concerns in the layout provider and theme module, not scattered across route files.
+
 ### Routing
 
 - Keep routes file-based under `src/routes`.
@@ -122,13 +130,42 @@ export default Component
 - Prefer route params and nested routes over ad-hoc URL parsing.
 - If routing types look stale, run `corepack pnpm routes:gen`.
 
-### UI
+#### Route Tree Providers
 
-- Use Tailwind for layout, spacing, flex/grid, sizing, positioning, and basic text styling.
-- Use Mantine for functional UI components: forms, buttons, overlays, cards, navigation, inputs, app shell, and feedback states.
-- For quick text color that needs to work across light and dark themes, prefer Mantine props like `c`, for example `Box c="dimmed"` or `Text c="orange.4"`.
-- For quick animation and transition, prefer utility classes from `tailwindcss-motion`.
-- Keep theme concerns in the layout provider and theme module, not scattered across route files.
+- For a route tree that shares one business entity or workspace context, lift all shared business data, derived state, and business actions into the highest practical provider in that tree.
+- Do not duplicate child-route queries or repeat the same business shaping across the subtree.
+- If the same calculation or rule appears more than once, consider to move it into the route-tree provider.
+
+#### Route Tree Gating
+
+- In a route tree, wrap the subtree with the provider at the route wrapper level, then gate critical loading, error, and missing-data states from a child component inside that provider.
+- This usually means the route wrapper renders:
+  1. the provider
+  2. an inner gate component that consumes the provider
+  3. the shared layout or child routes only after the critical data is ready
+- Child pages inside that route tree should not reimplement loading or error handling for the same critical data.
+
+#### Provider Output Shape
+
+- Providers should expose normalized consumer-ready values for shared data.
+- Prefer returning stable fallback values from the provider, for example:
+  - strings as `""`
+  - collections as `[]`
+  - derived booleans as explicit `true` or `false`
+- Child pages and nested components should consume provider values directly instead of repeatedly reading `query.data`.
+- If a value is still optional by design, keep the fallback or optional access local, but prefer provider-level normalization first.
+
+```mermaid
+flowchart TD
+  A["route.tsx"] --> B["Provider"]
+  B --> C["Inner gate"]
+  B --> D["shared business data + normalized values + actions"]
+  C --> E{"critical data ready?"}
+  E -- no --> F["render loading / error / missing state"]
+  E -- yes --> G["shared layout + child routes"]
+  D --> C
+  D --> G
+```
 
 ## Database
 

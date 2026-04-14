@@ -10,12 +10,25 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TodosRouteImport } from './routes/todos'
+import { Route as MlLabRouteImport } from './routes/ml-lab'
 import { Route as CameraRouteImport } from './routes/camera'
+import { Route as ProjectsRouteRouteImport } from './routes/projects/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProjectsProjectIdRouteRouteImport } from './routes/projects/$projectId/route'
+import { Route as ProjectsProjectIdIndexRouteImport } from './routes/projects/$projectId/index'
+import { Route as ProjectsProjectIdTrainRouteImport } from './routes/projects/$projectId/train'
+import { Route as ProjectsProjectIdPlayRouteImport } from './routes/projects/$projectId/play'
+import { Route as ProjectsProjectIdLabelIndexRouteImport } from './routes/projects/$projectId/label/index'
+import { Route as ProjectsProjectIdLabelClassIdRouteImport } from './routes/projects/$projectId/label/$classId'
 
 const TodosRoute = TodosRouteImport.update({
   id: '/todos',
   path: '/todos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MlLabRoute = MlLabRouteImport.update({
+  id: '/ml-lab',
+  path: '/ml-lab',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CameraRoute = CameraRouteImport.update({
@@ -23,39 +36,134 @@ const CameraRoute = CameraRouteImport.update({
   path: '/camera',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProjectsRouteRoute = ProjectsRouteRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProjectsProjectIdRouteRoute = ProjectsProjectIdRouteRouteImport.update({
+  id: '/$projectId',
+  path: '/$projectId',
+  getParentRoute: () => ProjectsRouteRoute,
+} as any)
+const ProjectsProjectIdIndexRoute = ProjectsProjectIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ProjectsProjectIdRouteRoute,
+} as any)
+const ProjectsProjectIdTrainRoute = ProjectsProjectIdTrainRouteImport.update({
+  id: '/train',
+  path: '/train',
+  getParentRoute: () => ProjectsProjectIdRouteRoute,
+} as any)
+const ProjectsProjectIdPlayRoute = ProjectsProjectIdPlayRouteImport.update({
+  id: '/play',
+  path: '/play',
+  getParentRoute: () => ProjectsProjectIdRouteRoute,
+} as any)
+const ProjectsProjectIdLabelIndexRoute =
+  ProjectsProjectIdLabelIndexRouteImport.update({
+    id: '/label/',
+    path: '/label/',
+    getParentRoute: () => ProjectsProjectIdRouteRoute,
+  } as any)
+const ProjectsProjectIdLabelClassIdRoute =
+  ProjectsProjectIdLabelClassIdRouteImport.update({
+    id: '/label/$classId',
+    path: '/label/$classId',
+    getParentRoute: () => ProjectsProjectIdRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/projects': typeof ProjectsRouteRouteWithChildren
   '/camera': typeof CameraRoute
+  '/ml-lab': typeof MlLabRoute
   '/todos': typeof TodosRoute
+  '/projects/$projectId': typeof ProjectsProjectIdRouteRouteWithChildren
+  '/projects/$projectId/play': typeof ProjectsProjectIdPlayRoute
+  '/projects/$projectId/train': typeof ProjectsProjectIdTrainRoute
+  '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
+  '/projects/$projectId/label/$classId': typeof ProjectsProjectIdLabelClassIdRoute
+  '/projects/$projectId/label/': typeof ProjectsProjectIdLabelIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/projects': typeof ProjectsRouteRouteWithChildren
   '/camera': typeof CameraRoute
+  '/ml-lab': typeof MlLabRoute
   '/todos': typeof TodosRoute
+  '/projects/$projectId/play': typeof ProjectsProjectIdPlayRoute
+  '/projects/$projectId/train': typeof ProjectsProjectIdTrainRoute
+  '/projects/$projectId': typeof ProjectsProjectIdIndexRoute
+  '/projects/$projectId/label/$classId': typeof ProjectsProjectIdLabelClassIdRoute
+  '/projects/$projectId/label': typeof ProjectsProjectIdLabelIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/projects': typeof ProjectsRouteRouteWithChildren
   '/camera': typeof CameraRoute
+  '/ml-lab': typeof MlLabRoute
   '/todos': typeof TodosRoute
+  '/projects/$projectId': typeof ProjectsProjectIdRouteRouteWithChildren
+  '/projects/$projectId/play': typeof ProjectsProjectIdPlayRoute
+  '/projects/$projectId/train': typeof ProjectsProjectIdTrainRoute
+  '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
+  '/projects/$projectId/label/$classId': typeof ProjectsProjectIdLabelClassIdRoute
+  '/projects/$projectId/label/': typeof ProjectsProjectIdLabelIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/camera' | '/todos'
+  fullPaths:
+    | '/'
+    | '/projects'
+    | '/camera'
+    | '/ml-lab'
+    | '/todos'
+    | '/projects/$projectId'
+    | '/projects/$projectId/play'
+    | '/projects/$projectId/train'
+    | '/projects/$projectId/'
+    | '/projects/$projectId/label/$classId'
+    | '/projects/$projectId/label/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/camera' | '/todos'
-  id: '__root__' | '/' | '/camera' | '/todos'
+  to:
+    | '/'
+    | '/projects'
+    | '/camera'
+    | '/ml-lab'
+    | '/todos'
+    | '/projects/$projectId/play'
+    | '/projects/$projectId/train'
+    | '/projects/$projectId'
+    | '/projects/$projectId/label/$classId'
+    | '/projects/$projectId/label'
+  id:
+    | '__root__'
+    | '/'
+    | '/projects'
+    | '/camera'
+    | '/ml-lab'
+    | '/todos'
+    | '/projects/$projectId'
+    | '/projects/$projectId/play'
+    | '/projects/$projectId/train'
+    | '/projects/$projectId/'
+    | '/projects/$projectId/label/$classId'
+    | '/projects/$projectId/label/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ProjectsRouteRoute: typeof ProjectsRouteRouteWithChildren
   CameraRoute: typeof CameraRoute
+  MlLabRoute: typeof MlLabRoute
   TodosRoute: typeof TodosRoute
 }
 
@@ -68,11 +176,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TodosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ml-lab': {
+      id: '/ml-lab'
+      path: '/ml-lab'
+      fullPath: '/ml-lab'
+      preLoaderRoute: typeof MlLabRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/camera': {
       id: '/camera'
       path: '/camera'
       fullPath: '/camera'
       preLoaderRoute: typeof CameraRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects': {
+      id: '/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof ProjectsRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -82,12 +204,90 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/projects/$projectId': {
+      id: '/projects/$projectId'
+      path: '/$projectId'
+      fullPath: '/projects/$projectId'
+      preLoaderRoute: typeof ProjectsProjectIdRouteRouteImport
+      parentRoute: typeof ProjectsRouteRoute
+    }
+    '/projects/$projectId/': {
+      id: '/projects/$projectId/'
+      path: '/'
+      fullPath: '/projects/$projectId/'
+      preLoaderRoute: typeof ProjectsProjectIdIndexRouteImport
+      parentRoute: typeof ProjectsProjectIdRouteRoute
+    }
+    '/projects/$projectId/train': {
+      id: '/projects/$projectId/train'
+      path: '/train'
+      fullPath: '/projects/$projectId/train'
+      preLoaderRoute: typeof ProjectsProjectIdTrainRouteImport
+      parentRoute: typeof ProjectsProjectIdRouteRoute
+    }
+    '/projects/$projectId/play': {
+      id: '/projects/$projectId/play'
+      path: '/play'
+      fullPath: '/projects/$projectId/play'
+      preLoaderRoute: typeof ProjectsProjectIdPlayRouteImport
+      parentRoute: typeof ProjectsProjectIdRouteRoute
+    }
+    '/projects/$projectId/label/': {
+      id: '/projects/$projectId/label/'
+      path: '/label'
+      fullPath: '/projects/$projectId/label/'
+      preLoaderRoute: typeof ProjectsProjectIdLabelIndexRouteImport
+      parentRoute: typeof ProjectsProjectIdRouteRoute
+    }
+    '/projects/$projectId/label/$classId': {
+      id: '/projects/$projectId/label/$classId'
+      path: '/label/$classId'
+      fullPath: '/projects/$projectId/label/$classId'
+      preLoaderRoute: typeof ProjectsProjectIdLabelClassIdRouteImport
+      parentRoute: typeof ProjectsProjectIdRouteRoute
+    }
   }
 }
 
+interface ProjectsProjectIdRouteRouteChildren {
+  ProjectsProjectIdPlayRoute: typeof ProjectsProjectIdPlayRoute
+  ProjectsProjectIdTrainRoute: typeof ProjectsProjectIdTrainRoute
+  ProjectsProjectIdIndexRoute: typeof ProjectsProjectIdIndexRoute
+  ProjectsProjectIdLabelClassIdRoute: typeof ProjectsProjectIdLabelClassIdRoute
+  ProjectsProjectIdLabelIndexRoute: typeof ProjectsProjectIdLabelIndexRoute
+}
+
+const ProjectsProjectIdRouteRouteChildren: ProjectsProjectIdRouteRouteChildren =
+  {
+    ProjectsProjectIdPlayRoute: ProjectsProjectIdPlayRoute,
+    ProjectsProjectIdTrainRoute: ProjectsProjectIdTrainRoute,
+    ProjectsProjectIdIndexRoute: ProjectsProjectIdIndexRoute,
+    ProjectsProjectIdLabelClassIdRoute: ProjectsProjectIdLabelClassIdRoute,
+    ProjectsProjectIdLabelIndexRoute: ProjectsProjectIdLabelIndexRoute,
+  }
+
+const ProjectsProjectIdRouteRouteWithChildren =
+  ProjectsProjectIdRouteRoute._addFileChildren(
+    ProjectsProjectIdRouteRouteChildren,
+  )
+
+interface ProjectsRouteRouteChildren {
+  ProjectsProjectIdRouteRoute: typeof ProjectsProjectIdRouteRouteWithChildren
+}
+
+const ProjectsRouteRouteChildren: ProjectsRouteRouteChildren = {
+  ProjectsProjectIdRouteRoute: ProjectsProjectIdRouteRouteWithChildren,
+}
+
+const ProjectsRouteRouteWithChildren = ProjectsRouteRoute._addFileChildren(
+  ProjectsRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ProjectsRouteRoute: ProjectsRouteRouteWithChildren,
   CameraRoute: CameraRoute,
+  MlLabRoute: MlLabRoute,
   TodosRoute: TodosRoute,
 }
 export const routeTree = rootRouteImport

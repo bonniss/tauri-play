@@ -1,0 +1,50 @@
+import * as mobilenet from "@tensorflow-models/mobilenet"
+import * as tf from "@tensorflow/tfjs"
+
+let mobilenetPromise: Promise<mobilenet.MobileNet> | null = null
+
+export function loadMobilenetModel() {
+  if (!mobilenetPromise) {
+    mobilenetPromise = mobilenet.load({
+      version: 2,
+      alpha: 1,
+    })
+  }
+
+  return mobilenetPromise
+}
+
+export const MOBILENET_VERSION = 2
+export const MOBILENET_ALPHA = 1
+
+export function createMobilenetClassifierHead(
+  inputShape: number[],
+  numClasses: number,
+) {
+  const model = tf.sequential()
+
+  model.add(
+    tf.layers.dense({
+      inputShape,
+      units: 128,
+      activation: "relu",
+    }),
+  )
+
+  model.add(tf.layers.dropout({ rate: 0.2 }))
+
+  model.add(
+    tf.layers.dense({
+      units: numClasses,
+      activation: "softmax",
+    }),
+  )
+
+  model.compile({
+    optimizer: tf.train.adam(0.001),
+    loss: "categoricalCrossentropy",
+    metrics: ["accuracy"],
+  })
+
+  return model
+}
