@@ -1,7 +1,14 @@
-import { Badge, Button, Paper, Text } from "@mantine/core"
+import { Badge, NavLink, Text } from "@mantine/core"
+import {
+  IconBrain,
+  IconCircleDot,
+  IconFolder,
+  IconPencil,
+  IconPlayerPlay,
+} from "@tabler/icons-react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Link, Outlet } from "@tanstack/react-router"
-import { FunctionComponent } from "react"
+import { Link, Outlet, useRouterState } from "@tanstack/react-router"
+import { FunctionComponent, ReactNode } from "react"
 import ContentEditable from "~/components/headless/ContentEditable"
 import { type ProjectWorkspace, updateProject } from "~/lib/db/domain/projects"
 import { useProjectOne } from "./ProjectOneProvider"
@@ -11,6 +18,9 @@ interface ProjectOneLayoutProps {}
 const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
   const { projectId, classes, samples, project, projectName, projectStatus } =
     useProjectOne()
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  })
   const queryClient = useQueryClient()
   const totalImages = samples.length
 
@@ -91,84 +101,97 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
   }
 
   return (
-    <section className="mx-auto grid w-full max-w-7xl gap-6 py-4 lg:grid-cols-[17rem_minmax(0,1fr)]">
-      <Paper className="flex h-fit flex-col gap-6 p-4" radius="xl" withBorder>
+    <section className="min-h-[calc(100vh-6rem)] flex flex-col lg:flex-row gap-8">
+      <aside className="lg:flex lg:flex-col lg:w-80 overflow-y-auto border-r border-zinc-200 px-4 py-2">
         <div className="space-y-2">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1 space-y-1">
-              <ContentEditable
-                as="h2"
-                aria-label="Project name"
-                className="min-w-0 rounded-md px-2 py-1 text-xl font-semibold leading-tight outline-none transition-colors"
-                focusedClassName="dark:bg-zinc-800 dark:text-zinc-100 bg-zinc-100 ring-1 ring-zinc-300"
-                onBlur={async (value) => {
-                  await saveProjectField({ name: value })
-                }}
-                value={projectName}
-              />
-              <ContentEditable
-                aria-label="Project description"
-                className="min-w-0 rounded-md px-2 py-1 text-sm text-zinc-500 outline-none transition-colors hover:bg-zinc-100/80 dark:text-zinc-400 dark:hover:bg-zinc-800/70"
-                focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
-                multiline
-                onBlur={async (value) => {
-                  await saveProjectField({ description: value })
-                }}
-                placeholder="Add project description"
-                value={project?.description ?? ""}
-              />
-            </div>
-            {/* <Badge
-              color={projectStatus === "active" ? "green" : "gray"}
-              variant="light"
-            >
-              {projectStatus}
-            </Badge> */}
-          </div>
+          <ContentEditable
+            as="h1"
+            aria-label="Project name"
+            className="min-w-0 rounded-md px-2 py-1 text-xl font-semibold leading-tight text-zinc-950 outline-none transition-colors dark:text-zinc-50"
+            focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
+            onBlur={async (value) => {
+              await saveProjectField({ name: value })
+            }}
+            value={projectName}
+          />
+          <ContentEditable
+            as="p"
+            aria-label="Project description"
+            className="min-w-0 rounded-md px-2 py-1 text-sm leading-6 text-zinc-500 outline-none transition-colors dark:text-zinc-400"
+            focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
+            multiline
+            onBlur={async (value) => {
+              await saveProjectField({ description: value })
+            }}
+            placeholder="Add project description"
+            value={project?.description ?? ""}
+          />
         </div>
 
-        <nav className="space-y-2">
-          <ProjectNavButton
-            label="Label"
-            projectId={projectId}
-            to="/projects/$projectId/label"
-          />
-          <ProjectNavButton
-            label="Train"
-            projectId={projectId}
-            to="/projects/$projectId/train"
-          />
-          <ProjectNavButton
-            label="Play"
-            projectId={projectId}
-            to="/projects/$projectId/play"
-          />
-        </nav>
-
-        <div className="space-y-3">
-          <SidebarStat label="All Images" value={totalImages} />
-          {classes.map((projectClass) => (
-            <SidebarStat
-              key={projectClass.id}
-              label={projectClass.name}
-              value={projectClass.sampleCount}
+        <nav className="mt-8 flex flex-1 flex-col">
+          <div className="space-y-1">
+            <ProjectNavItem
+              current={pathname === `/projects/${projectId}/label`}
+              icon={IconPencil}
+              label="Label"
+              projectId={projectId}
+              to="/projects/$projectId/label"
             />
-          ))}
-        </div>
-      </Paper>
+            <ProjectNavItem
+              current={pathname === `/projects/${projectId}/train`}
+              icon={IconBrain}
+              label="Train"
+              projectId={projectId}
+              to="/projects/$projectId/train"
+            />
+            <ProjectNavItem
+              current={pathname === `/projects/${projectId}/play`}
+              icon={IconPlayerPlay}
+              label="Play"
+              projectId={projectId}
+              to="/projects/$projectId/play"
+            />
+          </div>
 
-      <div className="min-w-0">
+          <div className="mt-8">
+            <Text c="dimmed" fw={600} size="xs" tt="uppercase">
+              Dataset
+            </Text>
+            <div className="mt-3 space-y-1">
+              <SidebarDatasetItem
+                count={totalImages}
+                label="All Images"
+                leading={<IconFolder className="size-4" stroke={1.8} />}
+              />
+              {classes.map((projectClass) => (
+                <SidebarDatasetItem
+                  count={projectClass.sampleCount}
+                  key={projectClass.id}
+                  label={projectClass.name}
+                  leading={<IconCircleDot className="size-3.5" stroke={2} />}
+                />
+              ))}
+            </div>
+          </div>
+        </nav>
+      </aside>
+
+      <div className="mx-auto w-full">
         <Outlet />
       </div>
     </section>
   )
 }
 
-function ProjectNavButton({
+function ProjectNavItem({
+  current,
+  icon: Icon,
   label,
   projectId,
   to,
 }: {
+  current: boolean
+  icon: typeof IconPencil
   label: string
   projectId: string
   to:
@@ -178,29 +201,41 @@ function ProjectNavButton({
     | "/projects/$projectId/play"
 }) {
   return (
-    <Button
-      className="justify-start"
+    <NavLink
+      active={current}
+      className="rounded-md"
       component={Link}
-      fullWidth
+      label={label}
+      leftSection={<Icon className="size-4" stroke={1.8} />}
       params={{ projectId } as never}
       to={to}
       variant="subtle"
-    >
-      {label}
-    </Button>
+    />
   )
 }
 
-function SidebarStat({ label, value }: { label: string; value: number }) {
+function SidebarDatasetItem({
+  count,
+  label,
+  leading,
+}: {
+  count: number
+  label: string
+  leading: ReactNode
+}) {
   return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between gap-3 text-sm">
-        <Text size="sm">{label}</Text>
-        <Text c="dimmed" size="sm">
-          {value}
+    <div className="flex items-center gap-3 rounded-md px-2 py-2 text-sm text-zinc-700 dark:text-zinc-300">
+      <div className="flex size-6 shrink-0 items-center justify-center text-zinc-400 dark:text-zinc-500">
+        {leading}
+      </div>
+      <div className="min-w-0 flex-1 truncate">
+        <Text fw={500} size="sm">
+          {label}
         </Text>
       </div>
-      <div className="h-2 rounded-full bg-zinc-100 dark:bg-white/10" />
+      <div className="text-xs font-medium text-zinc-400 dark:text-zinc-500">
+        {count}
+      </div>
     </div>
   )
 }
