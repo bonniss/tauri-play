@@ -1,31 +1,47 @@
-import { ActionIcon, Box, Button, Group, Loader, Paper } from '@mantine/core';
+import { ActionIcon, Box, Button, Group, Paper } from '@mantine/core';
 import { IconCamera, IconChevronRight } from '@tabler/icons-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import ContentEditable from '~/components/headless/ContentEditable';
+import SampleGrid from '~/components/project/SampleGrid';
 import { useProjectOne } from '~/components/project/ProjectOneProvider';
 import UploadSamplesButton from '~/components/project/UploadSamplesButton';
-import {
-  createSamplePreviewUrl,
-  revokeSamplePreviewUrl,
-} from '~/lib/project/sample-preview';
+import { deleteSample } from '~/lib/db/domain/samples';
+import { deleteSampleFile } from '~/lib/project/sample-storage';
 
 export const Route = createFileRoute('/projects/$projectId/label/')({
   component: ProjectLabelPage,
 });
 
 function ProjectLabelPage() {
-  const { classes, updateClassName } = useProjectOne();
+  const { addSamplesToClass, classes, removeSamplesFromClass, updateClassName } =
+    useProjectOne();
   const hasClasses = classes.length > 0;
   const [openClassMap, setOpenClassMap] = useState<Record<string, boolean>>({});
-  const samples = useMemo(
-    () => classes.flatMap((item) => item.samples),
-    [classes],
-  );
-  const [isLoadingPreviews, setIsLoadingPreviews] = useState(false);
-  const [samplePreviewMap, setSamplePreviewMap] = useState<
-    Record<string, string>
-  >({});
+  const queryClient = useQueryClient();
+  const deleteSampleMutation = useMutation({
+    mutationFn: async ({
+      filePath,
+      sampleId,
+    }: {
+      filePath: string;
+      sampleId: string;
+    }) => {
+      await deleteSample(sampleId);
+
+      try {
+        await deleteSampleFile(filePath);
+      } catch (error) {
+        console.warn('Failed to delete sample file.', error);
+        toast.warning('Deleted sample record, but failed to remove local file.');
+      }
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+  });
 
   useEffect(() => {
     setOpenClassMap((current) => {
@@ -39,46 +55,19 @@ function ProjectLabelPage() {
     });
   }, [classes]);
 
-  useEffect(() => {
-    let cancelled = false;
-    let nextPreviewMap: Record<string, string> = {};
+  async function handleDeleteSample(sample: (typeof classes)[number]['samples'][number]) {
+    removeSamplesFromClass(sample.classId, [sample.id]);
 
-    if (!samples.length) {
-      setSamplePreviewMap({});
-      setIsLoadingPreviews(false);
-      return;
-    }
-
-    setIsLoadingPreviews(true);
-
-    void Promise.all(
-      samples
-        .filter((sample) => sample.id)
-        .map(async (sample) => [
-          sample.id!,
-          await createSamplePreviewUrl(sample.filePath),
-        ] as const),
-    )
-      .then((entries) => {
-        if (cancelled) {
-          entries.forEach(([, url]) => revokeSamplePreviewUrl(url));
-          return;
-        }
-
-        nextPreviewMap = Object.fromEntries(entries);
-        setSamplePreviewMap(nextPreviewMap);
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setIsLoadingPreviews(false);
-        }
+    try {
+      await deleteSampleMutation.mutateAsync({
+        filePath: sample.filePath,
+        sampleId: sample.id,
       });
-
-    return () => {
-      cancelled = true;
-      Object.values(nextPreviewMap).forEach((url) => revokeSamplePreviewUrl(url));
-    };
-  }, [samples]);
+    } catch (error) {
+      addSamplesToClass(sample.classId, [sample]);
+      throw error;
+    }
+  }
 
   return (
     <Paper className="p-6" withBorder>
@@ -145,32 +134,10 @@ function ProjectLabelPage() {
 
               {openClassMap[item.id] ? (
               <Box className="border-t border-zinc-200 px-4 py-4 dark:border-zinc-800">
-                {isLoadingPreviews ? (
-                  <div className="flex items-center gap-2">
-                    <Loader size="sm" />
-                  </div>
-                ) : item.samples.length ? (
-                  <div
-                    className="grid gap-3"
-                    style={{
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
-                    }}
-                  >
-                    {item.samples.map((sample) => (
-                      <div
-                        className="aspect-square overflow-hidden rounded-md border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950"
-                        key={sample.id}
-                      >
-                        <img
-                          alt={item.name}
-                          className="size-full object-cover"
-                          loading="lazy"
-                          src={samplePreviewMap?.[sample.id!]}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
+                <SampleGrid
+                  onDeleteSample={handleDeleteSample}
+                  samples={item.samples}
+                />
               </Box>
               ) : null}
             </div>

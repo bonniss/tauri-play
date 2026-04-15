@@ -1,4 +1,4 @@
-import { BaseDirectory, mkdir, writeFile } from "@tauri-apps/plugin-fs"
+import { BaseDirectory, exists, mkdir, remove, writeFile } from "@tauri-apps/plugin-fs"
 
 function inferExtension(file: File) {
   const byName = file.name.split(".").pop()?.trim().toLowerCase()
@@ -116,4 +116,18 @@ export async function saveUploadedSampleFile({
       extraMetadata: null,
     },
   }
+}
+
+export async function deleteSampleFile(filePath: string) {
+  const hasSampleFile = await exists(filePath, {
+    baseDir: BaseDirectory.AppData,
+  })
+
+  if (!hasSampleFile) {
+    return
+  }
+
+  await remove(filePath, {
+    baseDir: BaseDirectory.AppData,
+  })
 }
