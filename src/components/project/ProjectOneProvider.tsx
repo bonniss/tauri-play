@@ -11,11 +11,14 @@ import { ProjectSample } from '~/lib/db/domain/samples';
 import { genClassId, genSampleId } from '~/lib/project/id-generator';
 import {
   parseProjectLabelSettingsFormValues,
+  parseProjectPlaySettingsFormValues,
   parseProjectSettings,
   parseProjectTrainSettingsFormValues,
   ProjectLabelSettingsFormValues,
+  ProjectPlaySettingsFormValues,
   ProjectTrainSettingsFormValues,
   projectLabelSettingsToFormValues,
+  projectPlaySettingsToFormValues,
   projectTrainSettingsToFormValues,
   stringifyProjectSettings,
 } from '~/lib/project/settings';
@@ -70,6 +73,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
 
     const [isInitialized, setIsInitialized] = useState(false);
     const [isApplyingLabelSettings, setIsApplyingLabelSettings] = useState(false);
+    const [isApplyingPlaySettings, setIsApplyingPlaySettings] = useState(false);
     const [isApplyingTrainSettings, setIsApplyingTrainSettings] = useState(false);
     const [project, setProject] = useState<ProjectRecord | undefined>();
     const [classes, setClasses] = useState<ProjectOneClass[]>([]);
@@ -105,9 +109,11 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
     }
 
     const projectName = project?.name ?? '';
+    const projectDescription = project?.description ?? '';
     const projectStatus = project?.status;
     const projectSettings = parseProjectSettings(project?.settings);
     const labelSettings = projectSettings.label;
+    const playSettings = projectSettings.play;
     const trainSettings = projectSettings.train;
 
     const totalClasses = classes.length;
@@ -288,6 +294,9 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
     const getTrainSettingsFormValues = (): ProjectTrainSettingsFormValues =>
       projectTrainSettingsToFormValues(trainSettings);
 
+    const getPlaySettingsFormValues = (): ProjectPlaySettingsFormValues =>
+      projectPlaySettingsToFormValues(playSettings);
+
     const applyLabelSettings = async (
       values: ProjectLabelSettingsFormValues,
     ) => {
@@ -394,12 +403,67 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       }
     };
 
+    const applyPlaySettings = async (
+      values: ProjectPlaySettingsFormValues,
+    ) => {
+      const nextPlaySettings = parseProjectPlaySettingsFormValues(values);
+      const nextProjectSettings = {
+        ...projectSettings,
+        play: nextPlaySettings,
+      };
+      const nextSettings = stringifyProjectSettings(nextProjectSettings);
+
+      if (nextSettings === (project?.settings ?? '')) {
+        return;
+      }
+
+      setIsApplyingPlaySettings(true);
+
+      try {
+        setProject((current) =>
+          current
+            ? {
+                ...current,
+                settings: nextSettings,
+                updatedAt: new Date().toISOString(),
+              }
+            : current,
+        );
+
+        await updateProject({
+          projectId,
+          settings: nextSettings,
+        });
+        await queryClient.invalidateQueries({ queryKey: ['projects'] });
+      } catch (error) {
+        const workspace = await getProjectWorkspace(projectId);
+        setProject(workspace.project);
+        setClasses(
+          workspace.classes.map((cls) => ({
+            id: cls.id,
+            projectId: cls.projectId,
+            name: cls.name,
+            description: cls.description,
+            order: cls.order,
+            samples: workspace.samples.filter(
+              (sample) => sample.classId === cls.id,
+            ),
+          })),
+        );
+        throw error;
+      } finally {
+        setIsApplyingPlaySettings(false);
+      }
+    };
+
     return {
       isLoading: !isInitialized,
       isApplyingLabelSettings,
+      isApplyingPlaySettings,
       isApplyingTrainSettings,
       projectId,
       projectName,
+      projectDescription,
       projectStatus,
       seedClass,
       addClass,
@@ -409,13 +473,16 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       setProjectStatus,
       updateClassName,
       getLabelSettingsFormValues,
+      getPlaySettingsFormValues,
       getTrainSettingsFormValues,
       applyLabelSettings,
+      applyPlaySettings,
       applyTrainSettings,
 
       project,
       projectSettings,
       labelSettings,
+      playSettings,
       trainSettings,
       classes,
       totalClasses,

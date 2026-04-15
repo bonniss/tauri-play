@@ -17,7 +17,14 @@ export interface ProjectTrainSettings {
   validationSplit: number
 }
 
-export interface ProjectPlaySettings {}
+export interface ProjectPlaySettings {
+  autoPredictOnUpload: boolean
+  confidenceThreshold: number
+  mode: "upload" | "camera"
+  showAllClasses: boolean
+  showConfidenceScores: boolean
+  topK: number
+}
 
 export interface ProjectSettings {
   label: ProjectLabelSettings
@@ -42,6 +49,15 @@ export interface ProjectTrainSettingsFormValues {
   validationSplit: string
 }
 
+export interface ProjectPlaySettingsFormValues {
+  autoPredictOnUpload: boolean
+  confidenceThreshold: string
+  mode: "upload" | "camera"
+  showAllClasses: boolean
+  showConfidenceScores: boolean
+  topK: string
+}
+
 export const DEFAULT_PROJECT_LABEL_SETTINGS: ProjectLabelSettings = {
   maxClasses: null,
   maxSamplesPerClass: null,
@@ -59,9 +75,18 @@ export const DEFAULT_PROJECT_TRAIN_SETTINGS: ProjectTrainSettings = {
   validationSplit: 0.2,
 }
 
+export const DEFAULT_PROJECT_PLAY_SETTINGS: ProjectPlaySettings = {
+  autoPredictOnUpload: true,
+  confidenceThreshold: 0,
+  mode: "upload",
+  showAllClasses: true,
+  showConfidenceScores: true,
+  topK: 3,
+}
+
 export const DEFAULT_PROJECT_SETTINGS: ProjectSettings = {
   label: DEFAULT_PROJECT_LABEL_SETTINGS,
-  play: {},
+  play: DEFAULT_PROJECT_PLAY_SETTINGS,
   train: DEFAULT_PROJECT_TRAIN_SETTINGS,
 }
 
@@ -82,13 +107,23 @@ const trainSettingsInputSchema = type({
   validationSplit: "number > 0 | undefined",
 })
 
+const playSettingsInputSchema = type({
+  autoPredictOnUpload: "boolean | undefined",
+  confidenceThreshold: "number >= 0 | undefined",
+  mode: "'upload' | 'camera' | undefined",
+  showAllClasses: "boolean | undefined",
+  showConfidenceScores: "boolean | undefined",
+  topK: "number.integer >= 1 | undefined",
+})
+
 const projectSettingsInputSchema = type({
   label: labelSettingsInputSchema.or("undefined"),
-  play: "object | undefined",
+  play: playSettingsInputSchema.or("undefined"),
   train: trainSettingsInputSchema.or("undefined"),
 })
 
 type ProjectLabelSettingsInput = typeof labelSettingsInputSchema.infer
+type ProjectPlaySettingsInput = typeof playSettingsInputSchema.infer
 type ProjectTrainSettingsInput = typeof trainSettingsInputSchema.infer
 type ProjectSettingsInput = typeof projectSettingsInputSchema.infer
 
@@ -136,8 +171,37 @@ export function normalizeProjectSettings(
 
   return {
     label: normalizeProjectLabelSettings(source.label),
-    play: {},
+    play: normalizeProjectPlaySettings(source.play),
     train: normalizeProjectTrainSettings(source.train),
+  }
+}
+
+export function normalizeProjectPlaySettings(
+  value: ProjectPlaySettingsInput | undefined,
+): ProjectPlaySettings {
+  const source = value ?? {
+    autoPredictOnUpload: undefined,
+    confidenceThreshold: undefined,
+    mode: undefined,
+    showAllClasses: undefined,
+    showConfidenceScores: undefined,
+    topK: undefined,
+  }
+
+  return {
+    autoPredictOnUpload:
+      source.autoPredictOnUpload ??
+      DEFAULT_PROJECT_PLAY_SETTINGS.autoPredictOnUpload,
+    confidenceThreshold:
+      source.confidenceThreshold ??
+      DEFAULT_PROJECT_PLAY_SETTINGS.confidenceThreshold,
+    mode: source.mode ?? DEFAULT_PROJECT_PLAY_SETTINGS.mode,
+    showAllClasses:
+      source.showAllClasses ?? DEFAULT_PROJECT_PLAY_SETTINGS.showAllClasses,
+    showConfidenceScores:
+      source.showConfidenceScores ??
+      DEFAULT_PROJECT_PLAY_SETTINGS.showConfidenceScores,
+    topK: source.topK ?? DEFAULT_PROJECT_PLAY_SETTINGS.topK,
   }
 }
 
@@ -270,5 +334,36 @@ export function parseProjectTrainSettingsFormValues(
     validationSplit: Number.isFinite(nextValidationSplit)
       ? nextValidationSplit
       : undefined,
+  })
+}
+
+export function projectPlaySettingsToFormValues(
+  settings: ProjectPlaySettings,
+): ProjectPlaySettingsFormValues {
+  return {
+    autoPredictOnUpload: settings.autoPredictOnUpload,
+    confidenceThreshold: String(settings.confidenceThreshold),
+    mode: settings.mode,
+    showAllClasses: settings.showAllClasses,
+    showConfidenceScores: settings.showConfidenceScores,
+    topK: String(settings.topK),
+  }
+}
+
+export function parseProjectPlaySettingsFormValues(
+  values: ProjectPlaySettingsFormValues,
+): ProjectPlaySettings {
+  const nextConfidenceThreshold = Number(values.confidenceThreshold.trim())
+  const nextTopK = Number(values.topK.trim())
+
+  return normalizeProjectPlaySettings({
+    autoPredictOnUpload: values.autoPredictOnUpload,
+    confidenceThreshold: Number.isFinite(nextConfidenceThreshold)
+      ? nextConfidenceThreshold
+      : undefined,
+    mode: values.mode,
+    showAllClasses: values.showAllClasses,
+    showConfidenceScores: values.showConfidenceScores,
+    topK: Number.isFinite(nextTopK) ? nextTopK : undefined,
   })
 }
