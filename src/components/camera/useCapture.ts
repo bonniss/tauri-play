@@ -3,6 +3,7 @@ import type {
   CaptureMode,
   CapturedFrame,
   CaptureSettings,
+  CaptureSession,
   CaptureSource,
 } from "./types"
 import { useCaptureSound } from "./useCaptureSound"
@@ -21,6 +22,7 @@ interface UseCaptureOptions {
   flashRef: React.RefObject<HTMLDivElement | null>
   cameraReady: boolean
   onCapture?: (frame: CapturedFrame) => void
+  onCaptureSession?: (session: CaptureSession) => void
   defaultSettings?: Partial<CaptureSettings>
 }
 
@@ -30,6 +32,7 @@ export function useCapture({
   flashRef,
   cameraReady,
   onCapture,
+  onCaptureSession,
   defaultSettings,
 }: UseCaptureOptions) {
   const [mode, setMode] = useState<CaptureMode>("photo")
@@ -50,6 +53,7 @@ export function useCapture({
   const isBurstingRef = useRef(false)
   const isRecActiveRef = useRef(false)
   const isDownRef = useRef(false)
+  const sessionFramesRef = useRef<CapturedFrame[]>([])
 
   function triggerFlash() {
     const el = flashRef.current
@@ -87,6 +91,16 @@ export function useCapture({
     playTick()
     triggerFlash()
     onCapture?.(frame)
+
+    if (frame.source === "single") {
+      onCaptureSession?.({
+        frames: [frame],
+        source: frame.source,
+      })
+      return
+    }
+
+    sessionFramesRef.current = [...sessionFramesRef.current, frame]
   }
 
   function captureOne(source: CaptureSource) {
@@ -103,12 +117,21 @@ export function useCapture({
     }
     setIsCapturing(false)
     playPositive()
+
+    if (sessionFramesRef.current.length) {
+      onCaptureSession?.({
+        frames: sessionFramesRef.current,
+        source: "burst",
+      })
+      sessionFramesRef.current = []
+    }
   }
 
   function startBurst() {
     if (isBurstingRef.current) return
     isBurstingRef.current = true
     setIsCapturing(true)
+    sessionFramesRef.current = []
 
     captureOne("burst")
 
@@ -122,6 +145,7 @@ export function useCapture({
     if (isRecActiveRef.current) return
     isRecActiveRef.current = true
     setIsCapturing(true)
+    sessionFramesRef.current = []
 
     recDelayTimeoutRef.current = setTimeout(() => {
       captureOne("rec")
@@ -139,6 +163,14 @@ export function useCapture({
         isRecActiveRef.current = false
         setIsCapturing(false)
         playPositive()
+
+        if (sessionFramesRef.current.length) {
+          onCaptureSession?.({
+            frames: sessionFramesRef.current,
+            source: "rec",
+          })
+          sessionFramesRef.current = []
+        }
       }, settings.recDuration)
     }, settings.recDelay)
   }
@@ -185,6 +217,7 @@ export function useCapture({
   function clear() {
     setFrames([])
     setCaptureCount(0)
+    sessionFramesRef.current = []
   }
 
   return {

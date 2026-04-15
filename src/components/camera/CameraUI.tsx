@@ -2,6 +2,7 @@ import { useState, type FunctionComponent } from "react"
 import CameraCapture, {
   type CameraCaptureContext,
   type CapturedFrame,
+  type CaptureSession,
   type CaptureSettings,
 } from "./CameraCapture"
 
@@ -9,19 +10,27 @@ interface CameraUIProps {
   className?: string
   defaultSettings?: Partial<CaptureSettings>
   onCapture?: (frame: CapturedFrame) => void
+  onCaptureSession?: (session: CaptureSession) => void
   children?: (frames: CapturedFrame[]) => React.ReactNode
+  viewportOverlay?: (context: CameraCaptureContext) => React.ReactNode
 }
 
 const CameraUI: FunctionComponent<CameraUIProps> = ({
   className = "",
   defaultSettings,
   onCapture,
+  onCaptureSession,
   children,
+  viewportOverlay,
 }) => {
   return (
-    <CameraCapture defaultSettings={defaultSettings} onCapture={onCapture}>
+    <CameraCapture
+      defaultSettings={defaultSettings}
+      onCapture={onCapture}
+      onCaptureSession={onCaptureSession}
+    >
       {(ctx) => (
-        <CameraUIInner ctx={ctx} className={className}>
+        <CameraUIInner ctx={ctx} className={className} viewportOverlay={viewportOverlay}>
           {children}
         </CameraUIInner>
       )}
@@ -33,12 +42,14 @@ interface CameraUIInnerProps {
   ctx: CameraCaptureContext
   className?: string
   children?: (frames: CapturedFrame[]) => React.ReactNode
+  viewportOverlay?: (context: CameraCaptureContext) => React.ReactNode
 }
 
 const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
   ctx,
   className = "",
   children,
+  viewportOverlay,
 }) => {
   const {
     cameraState,
@@ -187,6 +198,12 @@ const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
             />
           </div>
         )}
+
+        {isReady && viewportOverlay ? (
+          <div className="pointer-events-none absolute inset-0">
+            {viewportOverlay(ctx)}
+          </div>
+        ) : null}
       </div>
 
       {/* frames — render prop */}

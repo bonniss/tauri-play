@@ -1,4 +1,6 @@
 import { BaseDirectory, exists, mkdir, remove, writeFile } from "@tauri-apps/plugin-fs"
+import { CapturedFrame } from "~/components/camera/types"
+import { genSampleId } from "./id-generator"
 
 function inferExtension(file: File) {
   const byName = file.name.split(".").pop()?.trim().toLowerCase()
@@ -18,6 +20,18 @@ function inferExtension(file: File) {
   return "jpg"
 }
 
+function inferExtensionFromMimeType(mimeType: string | null | undefined) {
+  if (mimeType === "image/png") {
+    return "png"
+  }
+
+  if (mimeType === "image/webp") {
+    return "webp"
+  }
+
+  return "jpg"
+}
+
 function bytesToHex(bytes: Uint8Array) {
   return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("")
 }
@@ -27,19 +41,19 @@ async function hashBytes(bytes: Uint8Array) {
   return bytesToHex(new Uint8Array(digest))
 }
 
-async function readImageDimensions(file: File) {
-  if (!file.type.startsWith("image/")) {
+async function readBlobImageDimensions(blob: Blob) {
+  if (!blob.type.startsWith("image/")) {
     return {
       height: null,
       width: null,
     }
   }
 
-  const objectUrl = URL.createObjectURL(file)
+  const objectUrl = URL.createObjectURL(blob)
 
   try {
     if ("createImageBitmap" in window) {
-      const bitmap = await createImageBitmap(file)
+      const bitmap = await createImageBitmap(blob)
       const dimensions = {
         height: bitmap.height,
         width: bitmap.width,
@@ -68,24 +82,52 @@ async function readImageDimensions(file: File) {
   }
 }
 
-export async function saveUploadedSampleFile({
+function dataUrlToBlob(dataUrl: string) {
+  const [header = "", base64 = ""] = dataUrl.split(",", 2)
+  const mimeMatch = header.match(/^data:(.*?);base64$/)
+  const mimeType = mimeMatch?.[1] ?? "image/jpeg"
+  const binary = window.atob(base64)
+  const bytes = new Uint8Array(binary.length)
+
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index)
+  }
+
+  return new Blob([bytes], { type: mimeType })
+}
+
+async function saveSampleBlob({
+  blob,
   classId,
-  file,
+  extraMetadata = null,
+  originalFileName = null,
+  originalFilePath = null,
+  lastModifiedAt = null,
   projectId,
   sampleId,
 }: {
+  blob: Blob
   classId: string
-  file: File
+  extraMetadata?: string | null
+  originalFileName?: string | null
+  originalFilePath?: string | null
+  lastModifiedAt?: string | null
   projectId: string
   sampleId: string
 }) {
-  const extension = inferExtension(file)
+  const mimeType = blob.type || null
+  const extension = originalFileName
+    ? inferExtension({
+        name: originalFileName,
+        type: mimeType ?? "",
+      } as File)
+    : inferExtensionFromMimeType(mimeType)
   const directoryPath = `projects/${projectId}/samples/${classId}`
   const fileName = `${sampleId}.${extension}`
   const filePath = `${directoryPath}/${fileName}`
-  const bytes = new Uint8Array(await file.arrayBuffer())
+  const bytes = new Uint8Array(await blob.arrayBuffer())
   const contentHash = await hashBytes(bytes)
-  const dimensions = await readImageDimensions(file)
+  const dimensions = await readBlobImageDimensions(blob)
 
   await mkdir(directoryPath, {
     baseDir: BaseDirectory.AppData,
@@ -100,22 +142,84 @@ export async function saveUploadedSampleFile({
     fileName,
     filePath,
     metadata: {
-      mimeType: file.type || null,
+      mimeType,
       width: dimensions.width,
       height: dimensions.height,
       contentHash,
-      fileSize: file.size,
-      lastModifiedAt: file.lastModified
-        ? new Date(file.lastModified).toISOString()
-        : null,
-      originalFileName: file.name || null,
-      originalFilePath:
-        "webkitRelativePath" in file && file.webkitRelativePath
-          ? file.webkitRelativePath
-          : null,
-      extraMetadata: null,
+      fileSize: blob.size,
+      lastModifiedAt,
+      originalFileName,
+      originalFilePath,
+      extraMetadata,
     },
   }
+}
+
+export async function saveUploadedSampleFile({
+  classId,
+  file,
+  projectId,
+  sampleId,
+}: {
+  classId: string
+  file: File
+  projectId: string
+  sampleId: string
+}) {
+  return saveSampleBlob({
+    blob: file,
+    classId,
+    lastModifiedAt: file.lastModified
+      ? new Date(file.lastModified).toISOString()
+      : null,
+    originalFileName: file.name || null,
+    originalFilePath:
+      "webkitRelativePath" in file && file.webkitRelativePath
+        ? file.webkitRelativePath
+        : null,
+    projectId,
+    sampleId,
+  })
+}
+
+export async function saveCapturedSampleFrames({
+  classId,
+  frames,
+  projectId,
+}: {
+  classId: string
+  frames: CapturedFrame[]
+  projectId: string
+}) {
+  return Promise.all(
+    frames.map(async (frame) => {
+      const sampleId = genSampleId()
+      const { filePath, metadata } = await saveSampleBlob({
+        blob: dataUrlToBlob(frame.dataUrl),
+        classId,
+        lastModifiedAt: new Date(frame.capturedAt).toISOString(),
+        projectId,
+        sampleId,
+      })
+
+      return {
+        id: sampleId,
+        classId,
+        createdAt: new Date(frame.capturedAt).toISOString(),
+        extraMetadata: metadata.extraMetadata,
+        filePath,
+        fileSize: metadata.fileSize,
+        height: metadata.height,
+        lastModifiedAt: metadata.lastModifiedAt,
+        mimeType: metadata.mimeType,
+        originalFileName: metadata.originalFileName,
+        originalFilePath: metadata.originalFilePath,
+        source: "camera" as const,
+        width: metadata.width,
+        contentHash: metadata.contentHash,
+      }
+    }),
+  )
 }
 
 export async function deleteSampleFile(filePath: string) {

@@ -11,6 +11,11 @@ export interface CapturedFrame {
   source: CaptureSource
 }
 
+export interface CaptureSession {
+  frames: CapturedFrame[]
+  source: CaptureSource
+}
+
 export interface CaptureSettings {
   fps: number
   recDelay: number
