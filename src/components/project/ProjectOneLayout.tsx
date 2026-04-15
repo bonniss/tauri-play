@@ -12,7 +12,6 @@ import { FunctionComponent, ReactNode } from "react"
 import ContentEditable from "~/components/headless/ContentEditable"
 import { type ProjectWorkspace, updateProject } from "~/lib/db/domain/projects"
 import {
-  MIN_CLASSES_FOR_TRAIN,
   MIN_SAMPLES_PER_CLASS_FOR_TRAIN,
   useProjectOne,
 } from "./ProjectOneProvider"
@@ -27,10 +26,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
     project,
     projectName,
     classReadiness,
-    readySampleContribution,
-    requiredSamplesForTrain,
     trainProgress,
-    isReadyForTrain,
   } = useProjectOne()
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
@@ -175,12 +171,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
                 label="All Images"
                 leading={<IconFolder className="size-4" stroke={1.8} />}
                 progress={trainProgress}
-                status={
-                  isReadyForTrain
-                    ? "Ready to train"
-                    : `${readySampleContribution}/${requiredSamplesForTrain} ready images`
-                }
-                summary={`${totalSamples} images total`}
+                trailing={`${totalSamples}`}
               />
               {classes.map((projectClass) => {
                 const readiness = classReadiness.find(
@@ -193,24 +184,10 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
                   label={projectClass.name}
                   leading={<IconCircleDot className="size-3.5" stroke={2} />}
                   progress={readiness?.progress ?? 0}
-                  status={`${projectClass.samples.length}/${MIN_SAMPLES_PER_CLASS_FOR_TRAIN} images`}
-                  summary={
-                    readiness?.isReady
-                      ? "Ready"
-                      : `${Math.max(
-                          MIN_SAMPLES_PER_CLASS_FOR_TRAIN - projectClass.samples.length,
-                          0,
-                        )} more needed`
-                  }
+                  trailing={`${projectClass.samples.length}`}
                 />
                 )
               })}
-              {!classes.length ? (
-                <Text c="dimmed" size="xs">
-                  Need at least {MIN_CLASSES_FOR_TRAIN} classes and{" "}
-                  {MIN_SAMPLES_PER_CLASS_FOR_TRAIN} images per class.
-                </Text>
-              ) : null}
             </div>
           </div>
         </nav>
@@ -258,14 +235,12 @@ function SidebarDatasetItem({
   label,
   leading,
   progress,
-  status,
-  summary,
+  trailing,
 }: {
   label: string
   leading: ReactNode
   progress: number
-  status: string
-  summary: string
+  trailing: string
 }) {
   return (
     <div className="rounded-md border border-zinc-200/80 px-3 py-2 dark:border-zinc-700/80">
@@ -277,12 +252,9 @@ function SidebarDatasetItem({
           <Text fw={500} size="sm">
             {label}
           </Text>
-          <Text c="dimmed" size="xs">
-            {summary}
-          </Text>
         </div>
         <Text c="dimmed" size="xs">
-          {Math.round(progress * 100)}%
+          {trailing}
         </Text>
       </div>
       <Progress
@@ -292,9 +264,6 @@ function SidebarDatasetItem({
         size="sm"
         value={progress * 100}
       />
-      <Text c="dimmed" className="mt-1" size="xs">
-        {status}
-      </Text>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { Box, Button, Group, Loader, Paper, Text } from '@mantine/core';
+import { Box, Button, Group, Loader, Paper } from '@mantine/core';
 import { IconCamera } from '@tabler/icons-react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useMemo, useState } from 'react';
@@ -17,7 +17,6 @@ export const Route = createFileRoute('/projects/$projectId/label/')({
 function ProjectLabelPage() {
   const { classes, updateClassName } = useProjectOne();
   const hasClasses = classes.length > 0;
-  const totalSamples = classes.reduce((count, item) => count + item.samples.length, 0);
   const samples = useMemo(
     () => classes.flatMap((item) => item.samples),
     [classes],
@@ -72,11 +71,6 @@ function ProjectLabelPage() {
     <Paper className="p-6" withBorder>
       <div className="space-y-3">
         <h2 className="text-2xl font-semibold tracking-tight">Label</h2>
-        <Text c="dimmed" size="sm">
-          {hasClasses
-            ? `This project has ${classes.length} classes and ${totalSamples} samples.`
-            : "Create the first class to start collecting images for this project."}
-        </Text>
         <Group>
           <Button
             leftSection={<IconCamera className="size-4" />}
@@ -115,7 +109,7 @@ function ProjectLabelPage() {
                     value={item.name}
                   />
                   <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                    {item.samples.length} images
+                    {item.samples.length}
                   </span>
                 </div>
               </summary>
@@ -124,9 +118,6 @@ function ProjectLabelPage() {
                 {isLoadingPreviews ? (
                   <div className="flex items-center gap-2">
                     <Loader size="sm" />
-                    <Text c="dimmed" size="sm">
-                      Loading images...
-                    </Text>
                   </div>
                 ) : item.samples.length ? (
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
@@ -144,11 +135,7 @@ function ProjectLabelPage() {
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <Text c="dimmed" size="sm">
-                    No images in this class yet.
-                  </Text>
-                )}
+                ) : null}
               </Box>
             </details>
           ))}
