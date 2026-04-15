@@ -61,6 +61,9 @@ function ProjectLabelPage() {
   const [isOpeningCamera, setIsOpeningCamera] = useState(false);
   const [isPersistingCameraFrames, setIsPersistingCameraFrames] = useState(false);
   const [deleteClassId, setDeleteClassId] = useState<string | null>(null);
+  const [uploadingClassMap, setUploadingClassMap] = useState<
+    Record<string, { fileCount: number; isPending: boolean }>
+  >({});
   const visibleClasses = useMemo(
     () =>
       classes.filter((item) => {
@@ -313,8 +316,36 @@ function ProjectLabelPage() {
     }
   }
 
+  function handleUploadStateChange(state: {
+    classId: string | null;
+    fileCount: number;
+    isPending: boolean;
+  }) {
+    if (!state.classId) {
+      return;
+    }
+
+    const classId = state.classId;
+
+    setUploadingClassMap((current) => {
+      if (!state.isPending) {
+        const next = { ...current };
+        delete next[classId];
+        return next;
+      }
+
+      return {
+        ...current,
+        [classId]: {
+          fileCount: state.fileCount,
+          isPending: state.isPending,
+        },
+      };
+    });
+  }
+
   return (
-    <Paper className="p-6" withBorder>
+    <Paper className="p-4">
       <div className="space-y-3">
         <h2 className="text-2xl font-semibold tracking-tight">Label</h2>
         <Group grow wrap="nowrap">
@@ -418,9 +449,10 @@ function ProjectLabelPage() {
                         ? 'Close'
                         : 'Camera'}
                     </ProjectActionButton>
-                    <UploadSamplesButton
+                  <UploadSamplesButton
                       buttonLabel="Upload"
                       classId={item.id}
+                      onUploadStateChange={handleUploadStateChange}
                       size="xs"
                     />
                     <Menu position="bottom-end" shadow="md" withinPortal>
@@ -466,6 +498,7 @@ function ProjectLabelPage() {
                     </div>
                   ) : null}
                   <SampleGrid
+                    loading={uploadingClassMap[item.id]?.isPending ?? false}
                     onDeleteSample={handleDeleteSample}
                     samples={item.samples}
                   />

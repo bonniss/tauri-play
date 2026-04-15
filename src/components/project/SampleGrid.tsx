@@ -4,6 +4,8 @@ import {
   Loader,
   Modal,
   Popover,
+  ScrollArea,
+  Skeleton,
   Table,
   Text,
 } from "@mantine/core"
@@ -31,6 +33,7 @@ interface SampleGridProps {
   activeSampleId?: string
   defaultActiveSampleId?: string
   emptyState?: ReactNode
+  loading?: boolean
   minItemSize?: number
   onActiveSampleChange?: (sampleId: string | null) => void
   onDeleteSample?: (sample: ProjectSample) => Promise<void> | void
@@ -43,6 +46,7 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
   activeSampleId,
   defaultActiveSampleId,
   emptyState = null,
+  loading = false,
   minItemSize = 80,
   onActiveSampleChange,
   onDeleteSample,
@@ -325,17 +329,17 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
     }
   }
 
-  if (!samples.length) {
+  if (!samples.length && !loading) {
     return <>{emptyState}</>
   }
 
   return (
     <>
-      {isLoadingPreviews ? (
-        <div className="flex items-center gap-2">
-          <Loader size="sm" />
-        </div>
-      ) : (
+      <ScrollArea.Autosize
+        mah={samples.length > 120 ? 520 : undefined}
+        offsetScrollbars={samples.length > 120}
+        scrollbarSize={4}
+      >
         <div
           className="grid gap-3"
           ref={gridRef}
@@ -376,6 +380,7 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
                   <img
                     alt={sample.originalFileName ?? sample.className ?? "Sample"}
                     className="size-full object-cover"
+                    decoding="async"
                     loading="lazy"
                     src={previewMap[sample.id]}
                   />
@@ -387,8 +392,15 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
               </button>
             )
           })}
+
+          {loading ? (
+            <SampleGridSkeleton
+              columnCount={columnCount}
+              isLoadingPreviews={isLoadingPreviews}
+            />
+          ) : null}
         </div>
-      )}
+      </ScrollArea.Autosize>
 
       <Modal
         centered
@@ -580,6 +592,29 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
       </Modal>
     </>
   )
+}
+
+function SampleGridSkeleton({
+  columnCount,
+  isLoadingPreviews,
+}: {
+  columnCount: number
+  isLoadingPreviews: boolean
+}) {
+  const skeletonCount = Math.max(columnCount * 3, 12)
+
+  return Array.from({ length: skeletonCount }, (_, index) => (
+    <div
+      className="aspect-square overflow-hidden rounded-md border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950"
+      key={`sample-skeleton-${index}`}
+    >
+      <Skeleton
+        animate={isLoadingPreviews}
+        className="size-full"
+        radius="md"
+      />
+    </div>
+  ))
 }
 
 function MetadataRow({

@@ -13,6 +13,11 @@ interface UploadSamplesButtonProps {
   buttonLabel?: string
   classId?: string
   className?: string
+  onUploadStateChange?: (state: {
+    classId: string | null
+    fileCount: number
+    isPending: boolean
+  }) => void
   size?: ButtonProps["size"]
   variant?: ButtonProps["variant"]
 }
@@ -33,6 +38,7 @@ const UploadSamplesButton: FunctionComponent<UploadSamplesButtonProps> = ({
   buttonLabel = "Upload",
   className,
   classId,
+  onUploadStateChange,
   size,
   variant = "light",
 }) => {
@@ -67,6 +73,12 @@ const UploadSamplesButton: FunctionComponent<UploadSamplesButtonProps> = ({
                 createdNow: true,
               }
             })()
+
+      onUploadStateChange?.({
+        classId: seededClass.id,
+        fileCount: selectedFiles.length,
+        isPending: true,
+      })
 
       const optimisticSamples = addSamplesToClass(
         seededClass.id,
@@ -156,6 +168,12 @@ const UploadSamplesButton: FunctionComponent<UploadSamplesButtonProps> = ({
       if (fileInputRef.current) {
         fileInputRef.current.value = ""
       }
+
+      onUploadStateChange?.({
+        classId: classId ?? null,
+        fileCount: 0,
+        isPending: false,
+      })
 
       await queryClient.invalidateQueries({ queryKey: ["projects"] })
     },
