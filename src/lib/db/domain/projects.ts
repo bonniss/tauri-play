@@ -1,4 +1,6 @@
 import { getKysely } from "../kysely"
+import { deleteProjectStorage } from "~/lib/project/project-storage"
+import { DEFAULT_PROJECT_SETTINGS } from "~/lib/project/settings"
 import { listProjectClasses, type ProjectClass } from "./classes"
 import { listProjectSamples, type ProjectSample } from "./samples"
 
@@ -28,8 +30,8 @@ export type ProjectRecord = {
 }
 
 export type ProjectWorkspace = {
-  classes: ProjectClass[]
   project: ProjectRecord
+  classes: ProjectClass[]
   samples: ProjectSample[]
 }
 
@@ -178,7 +180,7 @@ export async function createProject({
   description = null,
   id,
   name,
-  settings = "{}",
+  settings = JSON.stringify(DEFAULT_PROJECT_SETTINGS),
   status = "draft",
   taskType = "image_classification",
 }: {
@@ -278,5 +280,7 @@ export async function activateProject(projectId: string) {
 
 export async function deleteProject(projectId: string) {
   const db = getKysely()
+
+  await deleteProjectStorage(projectId)
   await db.deleteFrom("projects").where("id", "=", projectId).execute()
 }

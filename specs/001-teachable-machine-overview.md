@@ -29,10 +29,13 @@ Based on official sources, Teachable Machine is built around these ideas:
 - browser-based training and inference
 - on-device processing for core training flows
 - TensorFlow.js as the core ML runtime in the browser
+- transfer learning on top of a pretrained base model
 - export paths for downstream use in websites, apps, and devices
 - support for image, audio, and pose inputs[1][2][3][4][5]
 
 Google's older and newer Teachable Machine materials consistently describe local, in-browser training. The original version trained locally in the browser using `deeplearn.js`, while Teachable Machine 2.0 is described as being powered by TensorFlow.js.[2][3][4]
+
+For image classification, the most important technical pattern is transfer learning. A pretrained visual backbone such as MobileNet can act as a feature extractor, while the project-specific classifier head is trained on the user's examples. This is a key reason the product can train quickly on consumer hardware with relatively small datasets. This exact internal shape should still be treated as a product-level inference for our app unless we decide to lock it in as an implementation constraint.[1][4][6]
 
 ### UI/UX
 
@@ -68,6 +71,25 @@ From the official materials, the core Teachable Machine feature set includes:
 - project saving, including Google Drive in Teachable Machine 2.0[1][2][3][5]
 
 The community repository also shows that exported models are intended to be used through helper libraries and snippets for multiple runtimes and languages, including JavaScript, Java, and Python.[5]
+
+Advanced training controls are also part of the broader Teachable Machine mental model. Common knobs exposed to users include:
+
+- epochs
+- batch size
+- learning rate
+
+These are standard ML training parameters, but they are presented in a lightweight way so users can stay in a fast experimental loop rather than a full research workflow.
+
+### Evaluation Shape
+
+Teachable Machine follows a simplified evaluation model that prioritizes immediacy over strict scientific rigor.
+
+- most user examples are used for training
+- validation-style feedback is part of the product experience
+- live preview acts as an informal real-world check
+- a dedicated blind test set is not central to the core product story
+
+The exact internal validation split behavior should be treated carefully unless we capture a stronger direct source for it. It is reasonable to infer that Teachable Machine uses some form of validation feedback during training, because the product surfaces training-oriented metrics and encourages quick iteration, but this document should avoid hard-coding an exact percentage without stronger evidence.
 
 ## Inferred Implications For Our App
 
@@ -168,6 +190,46 @@ If the goal is to support non-experts, our app can add:
 - live quality checks
 - warnings when classes are visually or acoustically too similar
 - suggested next actions after poor model performance
+
+## Practical Technical Takeaways
+
+The product ideas above translate into a few concrete technical patterns that are especially relevant for our app.
+
+### 1. Small Trainable Head Over A Pretrained Backbone
+
+A useful reference shape for image classification is:
+
+- a pretrained backbone such as MobileNet
+- frozen or mostly frozen feature extraction layers
+- a small project-specific classification head
+
+This keeps training fast, reduces hardware demands, and fits the beginner-friendly product loop well. For our app, this is a strong candidate for the default v1 training architecture.
+
+### 2. Fast Iteration Matters More Than Perfect Evaluation In V1
+
+Teachable Machine is optimized for:
+
+- short training times
+- immediate feedback
+- easy retraining after more samples are added
+
+For our app, that suggests:
+
+- one-click training by default
+- simple validation feedback during training
+- live "play" or preview as a practical qualitative check
+
+It does not require a full train/validation/test workflow in v1, though a formal validation split is a strong candidate for our own product.
+
+### 3. Export Should Be Treated As Part Of The Core Loop
+
+Export is not an afterthought in Teachable Machine. It is part of the main value proposition.
+
+For our app, that suggests we should plan for:
+
+- a current model artifact per project
+- labels and metadata exported alongside model files
+- at least one practical deployment path early, even if broader format support comes later
 
 ## Product Principles Worth Reusing
 

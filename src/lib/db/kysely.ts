@@ -43,6 +43,7 @@ type ClassTable = {
   project_id: string
   name: string
   description: string | null
+  order: ColumnType<number, number | undefined, number>
   created_at: ColumnType<string, string | undefined, never>
   updated_at: ColumnType<string, string | undefined, string>
 }
@@ -52,7 +53,17 @@ type SampleTable = {
   project_id: string
   class_id: string
   file_path: string
+  mime_type: string | null
+  width: number | null
+  height: number | null
+  original_file_name: string | null
+  original_file_path: string | null
+  file_size: number | null
+  last_modified_at: string | null
+  content_hash: string | null
+  extra_metadata: string | null
   source: "camera" | "upload"
+  order: ColumnType<number, number | undefined, number>
   created_at: ColumnType<string, string | undefined, never>
 }
 

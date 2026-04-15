@@ -1,4 +1,4 @@
-import { Badge, NavLink, Text } from "@mantine/core"
+import { NavLink, Progress, Text } from "@mantine/core"
 import {
   IconBrain,
   IconCircleDot,
@@ -16,13 +16,20 @@ import { useProjectOne } from "./ProjectOneProvider"
 interface ProjectOneLayoutProps {}
 
 const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
-  const { projectId, classes, samples, project, projectName, projectStatus } =
-    useProjectOne()
+  const {
+    projectId,
+    classes,
+    totalSamples,
+    project,
+    projectName,
+    classReadiness,
+    trainProgress,
+    updateClassName,
+  } = useProjectOne()
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   })
   const queryClient = useQueryClient()
-  const totalImages = samples.length
 
   const updateProjectMutation = useMutation({
     mutationFn: async ({
@@ -102,12 +109,12 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
 
   return (
     <section className="min-h-[calc(100vh-6rem)] flex flex-col lg:flex-row gap-8">
-      <aside className="lg:flex lg:flex-col lg:w-80 overflow-y-auto border-r border-zinc-200 px-4 py-2">
-        <div className="space-y-2">
+      <aside className="lg:flex lg:flex-col lg:w-80 overflow-y-auto border-r border-zinc-200 dark:border-zinc-600 px-4 py-2 bg-gray-50 dark:bg-gray-800/80 rounded-sm">
+        <div className="space-y-1">
           <ContentEditable
-            as="h1"
+            as="h2"
             aria-label="Project name"
-            className="min-w-0 rounded-md px-2 py-1 text-xl font-semibold leading-tight text-zinc-950 outline-none transition-colors dark:text-zinc-50"
+            className="min-w-0 rounded-md px-2 py-1 text-lg font-semibold leading-tight text-zinc-950 outline-none transition-colors dark:text-zinc-50"
             focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
             onBlur={async (value) => {
               await saveProjectField({ name: value })
@@ -157,20 +164,39 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
             <Text c="dimmed" fw={600} size="xs" tt="uppercase">
               Dataset
             </Text>
-            <div className="mt-3 space-y-1">
+            <div className="mt-3 space-y-2">
               <SidebarDatasetItem
-                count={totalImages}
                 label="All Images"
                 leading={<IconFolder className="size-4" stroke={1.8} />}
+                progress={trainProgress}
+                trailing={`${totalSamples}`}
               />
-              {classes.map((projectClass) => (
+              {classes.map((projectClass) => {
+                const readiness = classReadiness.find(
+                  (item) => item.classId === projectClass.id,
+                )
+
+                return (
                 <SidebarDatasetItem
-                  count={projectClass.sampleCount}
                   key={projectClass.id}
-                  label={projectClass.name}
+                  editableLabel={
+                    <ContentEditable
+                      as="span"
+                      aria-label={`Class name ${projectClass.name}`}
+                      className="inline-block w-fit max-w-full truncate rounded px-1 py-0.5"
+                      focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
+                      onBlur={(value) => {
+                        updateClassName(projectClass.id, value)
+                      }}
+                      value={projectClass.name}
+                    />
+                  }
                   leading={<IconCircleDot className="size-3.5" stroke={2} />}
+                  progress={readiness?.progress ?? 0}
+                  trailing={`${projectClass.samples.length}`}
                 />
-              ))}
+                )
+              })}
             </div>
           </div>
         </nav>
@@ -202,6 +228,7 @@ function ProjectNavItem({
 }) {
   return (
     <NavLink
+      variant="light"
       active={current}
       className="rounded-md"
       component={Link}
@@ -209,33 +236,45 @@ function ProjectNavItem({
       leftSection={<Icon className="size-4" stroke={1.8} />}
       params={{ projectId } as never}
       to={to}
-      variant="subtle"
     />
   )
 }
 
 function SidebarDatasetItem({
-  count,
   label,
+  editableLabel,
   leading,
+  progress,
+  trailing,
 }: {
-  count: number
-  label: string
+  label?: string
+  editableLabel?: ReactNode
   leading: ReactNode
+  progress: number
+  trailing: string
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-md px-2 py-2 text-sm text-zinc-700 dark:text-zinc-300">
-      <div className="flex size-6 shrink-0 items-center justify-center text-zinc-400 dark:text-zinc-500">
-        {leading}
-      </div>
-      <div className="min-w-0 flex-1 truncate">
-        <Text fw={500} size="sm">
-          {label}
+    <div className="rounded-md border border-zinc-200/80 px-3 py-2 dark:border-zinc-700/80">
+      <div className="flex items-center gap-3 text-sm text-zinc-700 dark:text-zinc-300">
+        <div className="flex size-6 shrink-0 items-center justify-center text-zinc-400 dark:text-zinc-500">
+          {leading}
+        </div>
+        <div className="min-w-0 flex-1">
+          <Text fw={500} size="sm">
+            {editableLabel ?? label}
+          </Text>
+        </div>
+        <Text c="dimmed" size="xs">
+          {trailing}
         </Text>
       </div>
-      <div className="text-xs font-medium text-zinc-400 dark:text-zinc-500">
-        {count}
-      </div>
+      <Progress
+        className="mt-2"
+        color={progress >= 1 ? "teal" : "blue"}
+        radius="xl"
+        size="sm"
+        value={progress * 100}
+      />
     </div>
   )
 }

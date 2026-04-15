@@ -8,18 +8,19 @@ import {
   Stack,
   Text,
   TextInput,
-} from "@mantine/core"
-import { useDisclosure } from "@mantine/hooks"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
-import { startTransition, useDeferredValue, useState } from "react"
-import { Form, defineConfig } from "~/components/form"
+} from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { startTransition, useDeferredValue, useState } from "react";
+import { Form, defineConfig } from "~/components/form";
 import {
   createProject,
   deleteProject,
   listProjects,
-} from "~/lib/db/domain/projects"
-import { generateRandomProjectName } from "~/lib/project/name"
+} from "~/lib/db/domain/projects";
+import { genProjectId } from "~/lib/project/id-generator";
+import { generateRandomProjectName } from "~/lib/project/name";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -67,6 +68,7 @@ function HomePage() {
       name: string
     }) => {
       return createProject({
+        id: genProjectId(),
         description: description.trim() || null,
         name,
         status: "draft",

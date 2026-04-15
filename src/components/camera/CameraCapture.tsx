@@ -1,18 +1,25 @@
 import { useRef, type FunctionComponent } from 'react'
 import { useCamera } from './useCamera'
 import { useCapture } from './useCapture'
-import type { CameraCaptureContext, CapturedFrame, CaptureSettings } from './types'
+import type {
+  CameraCaptureContext,
+  CapturedFrame,
+  CaptureSession,
+  CaptureSettings,
+} from './types'
 
 interface CameraCaptureProps {
   children: (context: CameraCaptureContext) => React.ReactNode
   defaultSettings?: Partial<CaptureSettings>
   onCapture?: (frame: CapturedFrame) => void
+  onCaptureSession?: (session: CaptureSession) => void
 }
 
 const CameraCapture: FunctionComponent<CameraCaptureProps> = ({
   children,
   defaultSettings,
   onCapture,
+  onCaptureSession,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const flashRef = useRef<HTMLDivElement>(null)
@@ -36,6 +43,7 @@ const CameraCapture: FunctionComponent<CameraCaptureProps> = ({
     flashRef,
     cameraReady: cameraState === 'ready',
     onCapture,
+    onCaptureSession,
     defaultSettings,
   })
 
@@ -67,4 +75,4 @@ const CameraCapture: FunctionComponent<CameraCaptureProps> = ({
 }
 
 export default CameraCapture
-export type { CameraCaptureContext, CapturedFrame, CaptureSettings }
+export type { CameraCaptureContext, CapturedFrame, CaptureSession, CaptureSettings }

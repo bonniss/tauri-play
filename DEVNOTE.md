@@ -92,10 +92,65 @@ Tauri uses WebKit:
 
 [#5042](https://github.com/tauri-apps/tauri/issues/5042)
 
-## Core flow
+## Core Flow
 
-### Create a project
+### Create a Project
 
-- From list page -> Create new project/app (suggest me)
-- UI create/edit page will match 
+- From list page -> create new project/app
+- UI create/edit page should align with that flow
 
+## Label Image Grid Plan
+
+- Split the thumbnail grid into a self-contained `ImageGrid` component that receives `samples` via props.
+- `ImageGrid` should support Windows Explorer style a11y:
+  - active item state
+  - `ArrowLeft`, `ArrowRight`, `ArrowUp`, `ArrowDown`
+  - `Home`, `End`
+  - `Enter` or `Space` to open lightbox
+  - `Escape` to close lightbox
+  - when lightbox closes, restore focus to the active thumbnail
+- Lightbox should support previous/next navigation via keyboard and UI controls.
+- Lightbox should expose an image delete action, but actual delete logic stays in the parent via prop callback.
+- Delete callback should receive the full `sample`, not just `id`.
+- `ImageGrid` props should likely include:
+  - `samples`
+  - `activeSampleId?`
+  - `defaultActiveSampleId?`
+  - `onActiveSampleChange?`
+  - `onDeleteSample?`
+  - `getPreviewUrl?` or sample-level `previewUrl`
+  - `emptyState?`
+- Lightbox delete behavior:
+  - after delete, move to next image or previous image
+  - if the deleted image was the last one, close lightbox
+- Open decisions to finalize later:
+  - whether arrow key navigation wraps
+  - whether delete in lightbox requires confirmation
+  - whether duplicate upload should block, warn, or still allow upload
+
+## Sample Metadata Plan
+
+- Add metadata to `sample` for duplicate detection preparation:
+  - `originalFileName?: string | null`
+  - `originalFilePath?: string | null`
+  - `fileSize?: number | null`
+  - `lastModifiedAt?: string | null`
+  - `contentHash?: string | null`
+- If duplicate detection needs to be reliable, `contentHash` is the main signal.
+- `originalFileName` and `originalFilePath` are mainly for source visibility and heuristics.
+
+## Sample Media Metadata Decision
+
+- Keep these sample fields as flat columns:
+  - `mimeType`
+  - `width`
+  - `height`
+  - `fileSize`
+  - `contentHash`
+  - `originalFileName`
+  - `originalFilePath`
+  - `lastModifiedAt`
+- Keep experimental or loosely structured metadata in JSON:
+  - `extraMetadata`
+- Use flat columns for values that UI, filtering, validation, or dedup logic will read often.
+- Use JSON for EXIF, device info, capture settings, import batch info, and other non-core metadata.
