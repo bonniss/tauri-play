@@ -1,4 +1,4 @@
-import { Button } from "@mantine/core"
+import { type ButtonProps } from "@mantine/core"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { ChangeEvent, FunctionComponent, useRef } from "react"
 import { createClass } from "~/lib/db/domain/classes"
@@ -6,11 +6,15 @@ import { activateProject, updateProject } from "~/lib/db/domain/projects"
 import { createSample } from "~/lib/db/domain/samples"
 import { genSampleId } from "~/lib/project/id-generator"
 import { saveUploadedSampleFile } from "~/lib/project/sample-storage"
+import ProjectActionButton from "./ProjectActionButton"
 import { useProjectOne } from "./ProjectOneProvider"
 
 interface UploadSamplesButtonProps {
   buttonLabel?: string
   classId?: string
+  className?: string
+  size?: ButtonProps["size"]
+  variant?: ButtonProps["variant"]
 }
 
 type UploadTargetClass =
@@ -27,7 +31,10 @@ type UploadTargetClass =
 
 const UploadSamplesButton: FunctionComponent<UploadSamplesButtonProps> = ({
   buttonLabel = "Upload",
+  className,
   classId,
+  size,
+  variant = "light",
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const queryClient = useQueryClient()
@@ -175,15 +182,18 @@ const UploadSamplesButton: FunctionComponent<UploadSamplesButtonProps> = ({
         type="file"
       />
 
-      <Button
+      <ProjectActionButton
+        action="upload"
+        className={className}
         loading={uploadMutation.isPending}
         onClick={() => {
           fileInputRef.current?.click()
         }}
-        variant="light"
+        size={size}
+        variant={variant}
       >
         {buttonLabel}
-      </Button>
+      </ProjectActionButton>
     </>
   )
 }

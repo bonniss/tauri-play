@@ -1,12 +1,27 @@
-import { ActionIcon, Box, Button, Group, Paper } from '@mantine/core';
-import { IconCamera, IconChevronRight } from '@tabler/icons-react';
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Group,
+  Menu,
+  Modal,
+  Paper,
+  Text,
+} from '@mantine/core';
+import {
+  IconChevronRight,
+  IconDots,
+  IconDownload,
+  IconTrash,
+} from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import CameraUI from '~/components/camera/CameraUI';
 import { CaptureSession } from '~/components/camera/types';
 import ContentEditable from '~/components/headless/ContentEditable';
+import ProjectActionButton from '~/components/project/ProjectActionButton';
 import SampleGrid from '~/components/project/SampleGrid';
 import { useProjectOne } from '~/components/project/ProjectOneProvider';
 import UploadSamplesButton from '~/components/project/UploadSamplesButton';
@@ -22,6 +37,12 @@ export const Route = createFileRoute('/projects/$projectId/label/')({
   component: ProjectLabelPage,
 });
 
+type CameraTargetState = {
+  classId: string;
+  createdNow: boolean;
+  slot: 'class' | 'top';
+};
+
 function ProjectLabelPage() {
   const {
     addSamplesToClass,
@@ -36,12 +57,23 @@ function ProjectLabelPage() {
   } = useProjectOne();
   const hasClasses = classes.length > 0;
   const [openClassMap, setOpenClassMap] = useState<Record<string, boolean>>({});
-  const [cameraClassState, setCameraClassState] = useState<{
-    classId: string;
-    createdNow: boolean;
-  } | null>(null);
+  const [cameraTargetState, setCameraTargetState] = useState<CameraTargetState | null>(null);
   const [isOpeningCamera, setIsOpeningCamera] = useState(false);
   const [isPersistingCameraFrames, setIsPersistingCameraFrames] = useState(false);
+  const [deleteClassId, setDeleteClassId] = useState<string | null>(null);
+  const visibleClasses = useMemo(
+    () =>
+      classes.filter((item) => {
+        if (cameraTargetState?.slot !== 'top' || !cameraTargetState.createdNow) {
+          return true;
+        }
+
+        return !(
+          item.id === cameraTargetState.classId && item.samples.length === 0
+        );
+      }),
+    [cameraTargetState, classes],
+  );
   const queryClient = useQueryClient();
   const deleteSampleMutation = useMutation({
     mutationFn: async ({
@@ -64,10 +96,14 @@ function ProjectLabelPage() {
       await queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
   });
-  const currentCameraClass = cameraClassState
-    ? classes.find((item) => item.id === cameraClassState.classId) ?? null
+  const currentCameraClass = cameraTargetState
+    ? classes.find((item) => item.id === cameraTargetState.classId) ?? null
     : null;
-  const isCameraOpen = currentCameraClass != null;
+  const pendingDeleteClass = deleteClassId
+    ? classes.find((item) => item.id === deleteClassId) ?? null
+    : null;
+  const isTopCameraOpen =
+    currentCameraClass != null && cameraTargetState?.slot === 'top';
 
   useEffect(() => {
     setOpenClassMap((current) => {
@@ -95,21 +131,46 @@ function ProjectLabelPage() {
     }
   }
 
-  async function openInlineCamera() {
-    if (cameraClassState || isOpeningCamera || isPersistingCameraFrames) {
+  async function openInlineCamera(target: { classId?: string; slot: 'class' | 'top' }) {
+    if (isOpeningCamera || isPersistingCameraFrames) {
       return;
     }
 
+    const targetClassId = target.classId;
+    const isSameTarget =
+      cameraTargetState?.slot === target.slot &&
+      cameraTargetState.classId === targetClassId;
+
+    if (isSameTarget) {
+      return;
+    }
+
+    if (cameraTargetState) {
+      await closeInlineCamera();
+    }
+
     setIsOpeningCamera(true);
+
+    if (target.slot === 'class' && targetClassId) {
+      setCameraTargetState({
+        classId: targetClassId,
+        createdNow: false,
+        slot: 'class',
+      });
+      setOpenClassMap((current) => ({
+        ...current,
+        [targetClassId]: true,
+      }));
+      setIsOpeningCamera(false);
+      return;
+    }
+
     const seededClass = seedClass();
-    setCameraClassState({
+    setCameraTargetState({
       classId: seededClass.id,
       createdNow: true,
+      slot: 'top',
     });
-    setOpenClassMap((current) => ({
-      ...current,
-      [seededClass.id]: true,
-    }));
 
     try {
       await createClass({
@@ -121,7 +182,7 @@ function ProjectLabelPage() {
       await queryClient.invalidateQueries({ queryKey: ['projects'] });
     } catch (error) {
       removeClass(seededClass.id);
-      setCameraClassState(null);
+      setCameraTargetState(null);
       toast.error('Failed to create camera class.');
     } finally {
       setIsOpeningCamera(false);
@@ -129,29 +190,50 @@ function ProjectLabelPage() {
   }
 
   async function closeInlineCamera() {
-    if (!cameraClassState || isOpeningCamera || isPersistingCameraFrames) {
+    if (!cameraTargetState || isOpeningCamera || isPersistingCameraFrames) {
       return;
     }
 
-    const cameraClass = classes.find((item) => item.id === cameraClassState.classId);
+    const cameraClass = classes.find((item) => item.id === cameraTargetState.classId);
     const shouldDeleteEmptySeededClass =
-      cameraClassState.createdNow && cameraClass != null && cameraClass.samples.length === 0;
+      cameraTargetState.createdNow && cameraClass != null && cameraClass.samples.length === 0;
 
     if (shouldDeleteEmptySeededClass) {
       try {
-        await deleteClass(cameraClassState.classId);
-        removeClass(cameraClassState.classId);
+        await deleteClass(cameraTargetState.classId);
+        removeClass(cameraTargetState.classId);
         await queryClient.invalidateQueries({ queryKey: ['projects'] });
       } catch (error) {
         toast.error('Failed to clean up empty camera class.');
       }
     }
 
-    setCameraClassState(null);
+    setCameraTargetState(null);
+  }
+
+  async function handleDeleteClass() {
+    if (!pendingDeleteClass || isPersistingCameraFrames || isOpeningCamera) {
+      return;
+    }
+
+    try {
+      await deleteClass(pendingDeleteClass.id);
+
+      if (cameraTargetState?.classId === pendingDeleteClass.id) {
+        setCameraTargetState(null);
+      }
+
+      removeClass(pendingDeleteClass.id);
+      setDeleteClassId(null);
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast.success('Class deleted.');
+    } catch (error) {
+      toast.error('Failed to delete class.');
+    }
   }
 
   async function persistCameraFrames(session: CaptureSession) {
-    if (!cameraClassState) {
+    if (!cameraTargetState) {
       return;
     }
 
@@ -159,11 +241,11 @@ function ProjectLabelPage() {
 
     try {
       const nextSamples = await saveCapturedSampleFrames({
-        classId: cameraClassState.classId,
+        classId: cameraTargetState.classId,
         frames: session.frames,
         projectId,
       });
-      const optimisticSamples = addSamplesToClass(cameraClassState.classId, nextSamples);
+      const optimisticSamples = addSamplesToClass(cameraTargetState.classId, nextSamples);
       const insertedSampleIds: string[] = [];
 
       try {
@@ -198,7 +280,7 @@ function ProjectLabelPage() {
         await queryClient.invalidateQueries({ queryKey: ['projects'] });
       } catch (error) {
         removeSamplesFromClass(
-          cameraClassState.classId,
+          cameraTargetState.classId,
           optimisticSamples.map((sample) => sample.id),
         );
         await Promise.allSettled(
@@ -235,70 +317,45 @@ function ProjectLabelPage() {
     <Paper className="p-6" withBorder>
       <div className="space-y-3">
         <h2 className="text-2xl font-semibold tracking-tight">Label</h2>
-        <Group>
-          <Button
+        <Group grow wrap="nowrap">
+          <ProjectActionButton
+            action="camera"
+            className="flex-1"
             loading={isOpeningCamera}
-            leftSection={<IconCamera className="size-4" />}
             onClick={() => {
-              if (isCameraOpen) {
+              if (isTopCameraOpen) {
                 void closeInlineCamera();
                 return;
               }
 
-              void openInlineCamera();
+              void openInlineCamera({ slot: 'top' });
             }}
-            variant="default"
           >
-            {isCameraOpen ? 'Close Camera' : 'Camera'}
-          </Button>
-          <UploadSamplesButton buttonLabel="Upload" />
+            {isTopCameraOpen ? 'Close Camera' : 'Camera'}
+          </ProjectActionButton>
+          <UploadSamplesButton
+            buttonLabel="Upload"
+            className="flex-1"
+          />
         </Group>
       </div>
 
-      {isCameraOpen && currentCameraClass ? (
+      {isTopCameraOpen && currentCameraClass ? (
         <div className="mt-6 space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-sm text-zinc-500 dark:text-zinc-400">
-              {isPersistingCameraFrames ? 'Saving captures...' : 'Camera capture'}
-            </div>
-            <Button
-              disabled={isPersistingCameraFrames || isOpeningCamera}
-              onClick={() => {
-                void closeInlineCamera();
-              }}
-              size="xs"
-              variant="default"
-            >
-              Done
-            </Button>
-          </div>
-
-          <CameraUI
-            className="w-full"
-            onCaptureSession={(session) => {
-              void handleCameraCaptureSession(session);
-            }}
-            viewportOverlay={() => (
-              <div className="absolute bottom-4 left-4 pointer-events-auto">
-                <ContentEditable
-                  as="span"
-                  aria-label={`Camera class name ${currentCameraClass.name}`}
-                  className="inline-block w-fit max-w-full rounded-lg bg-black/45 px-3 py-2 text-xl font-semibold text-white shadow-sm backdrop-blur-sm"
-                  focusedClassName="bg-black/60 ring-1 ring-white/40"
-                  onBlur={(value) => {
-                    updateClassName(currentCameraClass.id, value);
-                  }}
-                  value={currentCameraClass.name}
-                />
-              </div>
-            )}
+          <CameraCapturePanel
+            currentCameraClass={currentCameraClass}
+            isBusy={isPersistingCameraFrames || isOpeningCamera}
+            isPersisting={isPersistingCameraFrames}
+            onCaptureSession={handleCameraCaptureSession}
+            onClose={closeInlineCamera}
+            onRenameClass={updateClassName}
           />
         </div>
       ) : null}
 
       {hasClasses ? (
         <div className="mt-6 space-y-4">
-          {classes.map((item) => (
+          {visibleClasses.map((item) => (
             <div
               className="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
               key={item.id}
@@ -337,25 +394,189 @@ function ProjectLabelPage() {
                     {item.samples.length}
                   </span>
                   </div>
-                  <UploadSamplesButton
-                    buttonLabel="Upload"
-                    classId={item.id}
-                  />
+                  <Group gap="xs">
+                    <ProjectActionButton
+                      action="camera"
+                      onClick={() => {
+                        if (
+                          cameraTargetState?.slot === 'class' &&
+                          cameraTargetState.classId === item.id
+                        ) {
+                          void closeInlineCamera();
+                          return;
+                        }
+
+                        void openInlineCamera({ classId: item.id, slot: 'class' });
+                      }}
+                      size="xs"
+                      variant={
+                        cameraTargetState?.slot === 'class' &&
+                        cameraTargetState.classId === item.id
+                          ? 'filled'
+                          : undefined
+                      }
+                    >
+                      {cameraTargetState?.slot === 'class' &&
+                      cameraTargetState.classId === item.id
+                        ? 'Close'
+                        : 'Camera'}
+                    </ProjectActionButton>
+                    <UploadSamplesButton
+                      buttonLabel="Upload"
+                      classId={item.id}
+                      size="xs"
+                    />
+                    <Menu position="bottom-end" shadow="md" withinPortal>
+                      <Menu.Target>
+                        <ActionIcon aria-label="Class actions" size="sm" variant="subtle">
+                          <IconDots size={16} stroke={1.8} />
+                        </ActionIcon>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        <Menu.Item
+                          color="red"
+                          leftSection={<IconTrash size={14} />}
+                          onClick={() => {
+                            setDeleteClassId(item.id);
+                          }}
+                        >
+                          Delete
+                        </Menu.Item>
+                        <Menu.Item
+                          leftSection={<IconDownload size={14} />}
+                          onClick={() => {
+                            toast.message('Export will come next.');
+                          }}
+                        >
+                          Export
+                        </Menu.Item>
+                      </Menu.Dropdown>
+                    </Menu>
+                  </Group>
                 </div>
               </div>
 
               {openClassMap[item.id] ? (
-              <Box className="border-t border-zinc-200 px-4 py-4 dark:border-zinc-800">
-                <SampleGrid
-                  onDeleteSample={handleDeleteSample}
-                  samples={item.samples}
-                />
-              </Box>
+                <Box className="border-t border-zinc-200 px-4 py-4 dark:border-zinc-800">
+                  {cameraTargetState?.slot === 'class' &&
+                  currentCameraClass?.id === item.id ? (
+                    <div className="mb-4">
+                      <CameraCapturePanel
+                        currentCameraClass={currentCameraClass}
+                        isBusy={isPersistingCameraFrames || isOpeningCamera}
+                        isPersisting={isPersistingCameraFrames}
+                        onCaptureSession={handleCameraCaptureSession}
+                        onClose={closeInlineCamera}
+                        onRenameClass={updateClassName}
+                      />
+                    </div>
+                  ) : null}
+                  <SampleGrid
+                    onDeleteSample={handleDeleteSample}
+                    samples={item.samples}
+                  />
+                  {!item.samples.length ? (
+                    <Text c="dimmed" className="mt-3" size="sm">
+                      No images in this class yet.
+                    </Text>
+                  ) : null}
+                </Box>
               ) : null}
             </div>
           ))}
         </div>
       ) : null}
+
+      <Modal
+        centered
+        onClose={() => {
+          setDeleteClassId(null);
+        }}
+        opened={pendingDeleteClass != null}
+        title="Delete class?"
+      >
+        <div className="space-y-4">
+          <Text c="dimmed" size="sm">
+            {pendingDeleteClass
+              ? `Delete "${pendingDeleteClass.name}" and all of its samples? This cannot be undone.`
+              : ''}
+          </Text>
+          <Group justify="flex-end">
+            <Button
+              onClick={() => {
+                setDeleteClassId(null);
+              }}
+              variant="default"
+            >
+              Cancel
+            </Button>
+            <Button color="red" onClick={() => void handleDeleteClass()}>
+              Delete
+            </Button>
+          </Group>
+        </div>
+      </Modal>
     </Paper>
+  );
+}
+
+function CameraCapturePanel({
+  currentCameraClass,
+  isBusy,
+  isPersisting,
+  onCaptureSession,
+  onClose,
+  onRenameClass,
+}: {
+  currentCameraClass: NonNullable<ReturnType<typeof useProjectOne>['classes'][number]> | null;
+  isBusy: boolean;
+  isPersisting: boolean;
+  onCaptureSession: (session: CaptureSession) => Promise<void>;
+  onClose: () => Promise<void>;
+  onRenameClass: (indexOrClassId: number | string, name: string) => void;
+}) {
+  if (!currentCameraClass) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="text-sm text-zinc-500 dark:text-zinc-400">
+          {isPersisting ? 'Saving captures...' : 'Camera capture'}
+        </div>
+        <Button
+          disabled={isBusy}
+          onClick={() => {
+            void onClose();
+          }}
+          size="xs"
+          variant="default"
+        >
+          Done
+        </Button>
+      </div>
+
+      <CameraUI
+        className="w-full"
+        onCaptureSession={(session) => {
+          void onCaptureSession(session);
+        }}
+        viewportOverlay={() => (
+          <div className="absolute bottom-4 left-4 pointer-events-auto">
+            <ContentEditable
+              as="span"
+              aria-label={`Camera class name ${currentCameraClass.name}`}
+              className="inline-block w-fit max-w-full rounded-lg bg-black/45 px-3 py-2 text-xl font-semibold text-white shadow-sm backdrop-blur-sm"
+              focusedClassName="bg-black/60 ring-1 ring-white/40"
+              onBlur={(value) => {
+                onRenameClass(currentCameraClass.id, value);
+              }}
+              value={currentCameraClass.name}
+            />
+          </div>
+        )}
+      />
+    </div>
   );
 }
