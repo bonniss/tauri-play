@@ -43,33 +43,37 @@ export const Route = createFileRoute('/projects/$projectId/label/')({
 
 const labelSettingsForm = defineConfig<ProjectLabelSettingsFormValues>({
   minClasses: {
-    type: 'text',
+    type: 'numeric',
     label: 'Min classes',
     props: {
-      inputMode: 'numeric',
+      allowDecimal: false,
+      min: 2,
     },
   },
   maxClasses: {
-    type: 'text',
+    type: 'numeric',
     label: 'Max classes',
     props: {
+      allowDecimal: false,
+      min: 2,
       placeholder: 'Unlimited',
-      inputMode: 'numeric',
     },
   },
   minSamplesPerClass: {
-    type: 'text',
+    type: 'numeric',
     label: 'Min samples per class',
     props: {
-      inputMode: 'numeric',
+      allowDecimal: false,
+      min: 10,
     },
   },
   maxSamplesPerClass: {
-    type: 'text',
+    type: 'numeric',
     label: 'Max samples per class',
     props: {
+      allowDecimal: false,
+      min: 10,
       placeholder: 'Unlimited',
-      inputMode: 'numeric',
     },
   },
 });
@@ -388,27 +392,8 @@ function ProjectLabelPage() {
   return (
     <Paper className="p-4">
       <div className="space-y-3">
-        <h2 className="text-2xl font-semibold tracking-tight">Label</h2>
-        <Group grow wrap="nowrap">
-          <ProjectActionButton
-            action="camera"
-            className="flex-1"
-            loading={isOpeningCamera}
-            onClick={() => {
-              if (isTopCameraOpen) {
-                void closeInlineCamera();
-                return;
-              }
-
-              void openInlineCamera({ slot: 'top' });
-            }}
-          >
-            {isTopCameraOpen ? 'Close Camera' : 'Camera'}
-          </ProjectActionButton>
-          <UploadSamplesButton
-            buttonLabel="Upload"
-            className="flex-1"
-          />
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-2xl font-semibold tracking-tight">Label</h2>
           <Popover
             onDismiss={() => {
               setLabelSettingsOpened(false);
@@ -427,7 +412,7 @@ function ProjectLabelPage() {
                 }}
                 variant="default"
               >
-                Label Settings
+                Settings
               </Button>
             </Popover.Target>
             <Popover.Dropdown>
@@ -464,6 +449,27 @@ function ProjectLabelPage() {
               />
             </Popover.Dropdown>
           </Popover>
+        </div>
+        <Group grow wrap="nowrap">
+          <ProjectActionButton
+            action="camera"
+            className="flex-1"
+            loading={isOpeningCamera}
+            onClick={() => {
+              if (isTopCameraOpen) {
+                void closeInlineCamera();
+                return;
+              }
+
+              void openInlineCamera({ slot: 'top' });
+            }}
+          >
+            {isTopCameraOpen ? 'Close Camera' : 'Camera'}
+          </ProjectActionButton>
+          <UploadSamplesButton
+            buttonLabel="Upload"
+            className="flex-1"
+          />
         </Group>
       </div>
 
