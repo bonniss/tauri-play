@@ -20,3 +20,11 @@ export function genClassId() {
 export function genSampleId() {
   return `${+new Date()}_${randomBase36(8)}`
 }
+
+export function genModelId() {
+  return `${+new Date()}_model_${randomBase36(6)}`
+}
+
+export function genTrainLogId() {
+  return `${+new Date()}_train_${randomBase36(6)}`
+}

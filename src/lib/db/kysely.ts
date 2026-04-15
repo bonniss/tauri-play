@@ -73,6 +73,26 @@ type ModelTable = {
   artifact_path: string
   trained_at: string
   accuracy: number | null
+  validation_accuracy: number | null
+  loss: number | null
+  validation_loss: number | null
+  settings_snapshot: string | null
+  dataset_snapshot: string | null
+  created_at: ColumnType<string, string | undefined, never>
+  updated_at: ColumnType<string, string | undefined, string>
+}
+
+type ModelTrainLogTable = {
+  id: string
+  project_id: string
+  model_id: string | null
+  status: "started" | "completed" | "failed" | "cancelled"
+  started_at: string
+  ended_at: string | null
+  settings_snapshot: string
+  dataset_snapshot: string
+  summary_json: string | null
+  log_json: string
   created_at: ColumnType<string, string | undefined, never>
   updated_at: ColumnType<string, string | undefined, string>
 }
@@ -80,6 +100,7 @@ type ModelTable = {
 export interface DatabaseSchema {
   classes: ClassTable
   models: ModelTable
+  model_train_logs: ModelTrainLogTable
   projects: ProjectTable
   samples: SampleTable
   todos: TodoTable
