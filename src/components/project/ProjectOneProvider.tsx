@@ -4,9 +4,7 @@ import { ProjectClass, renameClass } from '~/lib/db/domain/classes';
 import { getProjectWorkspace, ProjectRecord } from '~/lib/db/domain/projects';
 import { ProjectSample } from '~/lib/db/domain/samples';
 import { genClassId, genSampleId } from '~/lib/project/id-generator';
-
-export const MIN_CLASSES_FOR_TRAIN = 2;
-export const MIN_SAMPLES_PER_CLASS_FOR_TRAIN = 10;
+import { parseProjectSettings } from '~/lib/project/settings';
 
 function getSampleIdFromFilePath(filePath: string) {
   const fileName = filePath.split('/').pop();
@@ -91,6 +89,9 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
 
     const projectName = project?.name ?? '';
     const projectStatus = project?.status;
+    const projectSettings = parseProjectSettings(project?.settings);
+    const labelSettings = projectSettings.label;
+    console.log("🚀 ~ labelSettings:", labelSettings)
 
     const totalClasses = classes.length;
     const totalSamples = classes.reduce(
@@ -99,16 +100,24 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
     );
     const classReadiness = classes.map((cls) => ({
       classId: cls.id,
+      isOverLimit:
+        labelSettings.maxSamplesPerClass != null &&
+        cls.samples.length > labelSettings.maxSamplesPerClass,
       sampleCount: cls.samples.length,
-      targetSampleCount: MIN_SAMPLES_PER_CLASS_FOR_TRAIN,
+      targetMaxSampleCount: labelSettings.maxSamplesPerClass,
+      targetSampleCount: labelSettings.minSamplesPerClass,
       progress:
-        Math.min(cls.samples.length, MIN_SAMPLES_PER_CLASS_FOR_TRAIN) /
-        MIN_SAMPLES_PER_CLASS_FOR_TRAIN,
-      isReady: cls.samples.length >= MIN_SAMPLES_PER_CLASS_FOR_TRAIN,
+        Math.min(cls.samples.length, labelSettings.minSamplesPerClass) /
+        labelSettings.minSamplesPerClass,
+      isReady: cls.samples.length >= labelSettings.minSamplesPerClass,
     }));
+    const hasReachedMaxClasses =
+      labelSettings.maxClasses != null && totalClasses >= labelSettings.maxClasses;
+    const isOverClassLimit =
+      labelSettings.maxClasses != null && totalClasses > labelSettings.maxClasses;
     const requiredSamplesForTrain =
-      Math.max(totalClasses, MIN_CLASSES_FOR_TRAIN) *
-      MIN_SAMPLES_PER_CLASS_FOR_TRAIN;
+      Math.max(totalClasses, labelSettings.minClasses) *
+      labelSettings.minSamplesPerClass;
     const readySampleContribution = classReadiness.reduce(
       (sum, item) => sum + Math.min(item.sampleCount, item.targetSampleCount),
       0,
@@ -119,8 +128,9 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
         : 0;
     const isEmptyClass = totalClasses === 0;
     const isReadyForTrain =
-      totalClasses >= MIN_CLASSES_FOR_TRAIN &&
-      classReadiness.every((item) => item.isReady);
+      totalClasses >= labelSettings.minClasses &&
+      !isOverClassLimit &&
+      classReadiness.every((item) => item.isReady && !item.isOverLimit);
 
     const addClass = (payload: {
       name: string;
@@ -269,10 +279,14 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       updateClassName,
 
       project,
+      projectSettings,
+      labelSettings,
       classes,
       totalClasses,
       totalSamples,
       classReadiness,
+      hasReachedMaxClasses,
+      isOverClassLimit,
       requiredSamplesForTrain,
       readySampleContribution,
       trainProgress,

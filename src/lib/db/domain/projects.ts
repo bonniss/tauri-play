@@ -1,5 +1,6 @@
 import { getKysely } from "../kysely"
 import { deleteProjectStorage } from "~/lib/project/project-storage"
+import { DEFAULT_PROJECT_SETTINGS } from "~/lib/project/settings"
 import { listProjectClasses, type ProjectClass } from "./classes"
 import { listProjectSamples, type ProjectSample } from "./samples"
 
@@ -179,7 +180,7 @@ export async function createProject({
   description = null,
   id,
   name,
-  settings = "{}",
+  settings = JSON.stringify(DEFAULT_PROJECT_SETTINGS),
   status = "draft",
   taskType = "image_classification",
 }: {
