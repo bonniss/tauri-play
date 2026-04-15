@@ -1,18 +1,12 @@
-import { Badge, NavLink, Progress, Text } from "@mantine/core"
-import {
-  IconBrain,
-  IconCircleDot,
-  IconFolder,
-  IconPencil,
-  IconPlayerPlay,
-} from "@tabler/icons-react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Link, Outlet, useRouterState } from "@tanstack/react-router"
-import { FunctionComponent, ReactNode } from "react"
-import ContentEditable from "~/components/headless/ContentEditable"
-import { type ProjectWorkspace, updateProject } from "~/lib/db/domain/projects"
-import { useProjectOne } from "./ProjectOneProvider"
-import { IconDataLabel } from "../icon/semantic"
+import { Badge, NavLink, Progress, Text } from '@mantine/core';
+import { IconBrain, IconPencil, IconPlayerPlay } from '@tabler/icons-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Link, Outlet, useRouterState } from '@tanstack/react-router';
+import { FunctionComponent, ReactNode } from 'react';
+import ContentEditable from '~/components/headless/ContentEditable';
+import { type ProjectWorkspace, updateProject } from '~/lib/db/domain/projects';
+import { IconDataLabel } from '../icon/semantic';
+import { useProjectOne } from './ProjectOneProvider';
 
 interface ProjectOneLayoutProps {}
 
@@ -31,65 +25,65 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
     trainStatusLabel,
     updateClassName,
     canPlay,
-  } = useProjectOne()
+  } = useProjectOne();
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
-  })
-  const queryClient = useQueryClient()
+  });
+  const queryClient = useQueryClient();
 
   const updateProjectMutation = useMutation({
     mutationFn: async ({
       description,
       name,
     }: {
-      description?: string | null
-      name?: string
+      description?: string | null;
+      name?: string;
     }) => {
       await updateProject({
         projectId,
         description,
         name,
-      })
+      });
     },
     onError: async () => {
       await queryClient.invalidateQueries({
-        queryKey: ["project-workspace", projectId],
-      })
+        queryKey: ['project-workspace', projectId],
+      });
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["projects"] })
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
-  })
+  });
 
   async function saveProjectField(next: {
-    description?: string | null
-    name?: string
+    description?: string | null;
+    name?: string;
   }) {
-    const nextName = next.name?.trim()
+    const nextName = next.name?.trim();
     const nextDescription =
       next.description !== undefined
         ? next.description?.trim() || null
-        : undefined
+        : undefined;
 
     if (next.name !== undefined && !nextName) {
       await queryClient.invalidateQueries({
-        queryKey: ["project-workspace", projectId],
-      })
-      return
+        queryKey: ['project-workspace', projectId],
+      });
+      return;
     }
 
     if (
       nextName === projectName &&
       nextDescription === (project?.description ?? null)
     ) {
-      return
+      return;
     }
 
     queryClient.setQueryData<ProjectWorkspace>(
-      ["project-workspace", projectId],
+      ['project-workspace', projectId],
       (current) => {
         if (!current) {
-          return current
+          return current;
         }
 
         return {
@@ -103,14 +97,14 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
                 : current.project?.description,
             updatedAt: new Date().toISOString(),
           },
-        }
+        };
       },
-    )
+    );
 
     await updateProjectMutation.mutateAsync({
       description: nextDescription,
       name: nextName,
-    })
+    });
   }
 
   return (
@@ -128,7 +122,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
               className="min-w-0 rounded-md py-1 text-lg font-semibold leading-tight text-zinc-950 outline-none transition-colors dark:text-zinc-50"
               focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
               onBlur={async (value) => {
-                await saveProjectField({ name: value })
+                await saveProjectField({ name: value });
               }}
               value={projectName}
             />
@@ -140,10 +134,10 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
             focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
             multiline
             onBlur={async (value) => {
-              await saveProjectField({ description: value })
+              await saveProjectField({ description: value });
             }}
             placeholder="Add project description"
-            value={project?.description ?? ""}
+            value={project?.description ?? ''}
           />
         </div>
 
@@ -180,38 +174,36 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
             <Text c="dimmed" fw={600} size="xs" tt="uppercase">
               Dataset
             </Text>
-            <div className="mt-3 space-y-2">
+            <div className="mt-3 space-y-3">
               <SidebarDatasetItem
                 label="All Images"
-                leading={<IconFolder className="size-4" stroke={1.8} />}
                 progress={trainProgress}
                 trailing={`${totalSamples}`}
               />
               {classes.map((projectClass) => {
                 const readiness = classReadiness.find(
                   (item) => item.classId === projectClass.id,
-                )
+                );
 
                 return (
-                <SidebarDatasetItem
-                  key={projectClass.id}
-                  editableLabel={
-                    <ContentEditable
-                      as="span"
-                      aria-label={`Class name ${projectClass.name}`}
-                      className="inline-block w-fit max-w-full truncate rounded px-1 py-0.5"
-                      focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
-                      onBlur={(value) => {
-                        updateClassName(projectClass.id, value)
-                      }}
-                      value={projectClass.name}
-                    />
-                  }
-                  leading={<IconCircleDot className="size-3.5" stroke={2} />}
-                  progress={readiness?.progress ?? 0}
-                  trailing={`${projectClass.samples.length}`}
-                />
-                )
+                  <SidebarDatasetItem
+                    key={projectClass.id}
+                    editableLabel={
+                      <ContentEditable
+                        as="span"
+                        aria-label={`Class name ${projectClass.name}`}
+                        className="font-semibold hover:ring-1 ring-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/75 inline-block w-fit max-w-full truncate rounded px-1 py-0.5"
+                        focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
+                        onBlur={(value) => {
+                          updateClassName(projectClass.id, value);
+                        }}
+                        value={projectClass.name}
+                      />
+                    }
+                    progress={readiness?.progress ?? 0}
+                    trailing={`${projectClass.samples.length}`}
+                  />
+                );
               })}
             </div>
           </div>
@@ -222,8 +214,8 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
         <Outlet />
       </div>
     </section>
-  )
-}
+  );
+};
 
 function ProjectNavItem({
   current,
@@ -236,19 +228,19 @@ function ProjectNavItem({
   statusLabel,
   to,
 }: {
-  current: boolean
-  disabled?: boolean
-  icon: typeof IconPencil
-  label: string
-  progress?: number
-  projectId: string
-  statusColor?: string
-  statusLabel?: string
+  current: boolean;
+  disabled?: boolean;
+  icon: typeof IconPencil;
+  label: string;
+  progress?: number;
+  projectId: string;
+  statusColor?: string;
+  statusLabel?: string;
   to:
-    | "/projects/$projectId"
-    | "/projects/$projectId/label"
-    | "/projects/$projectId/train"
-    | "/projects/$projectId/play"
+    | '/projects/$projectId'
+    | '/projects/$projectId/label'
+    | '/projects/$projectId/train'
+    | '/projects/$projectId/play';
 }) {
   return (
     <NavLink
@@ -267,7 +259,7 @@ function ProjectNavItem({
             </div>
             {progress != null ? (
               <Progress
-                color={progress >= 1 ? "teal" : "blue"}
+                color={progress >= 1 ? 'teal' : 'blue'}
                 radius="xl"
                 size="xs"
                 value={progress * 100}
@@ -286,7 +278,7 @@ function ProjectNavItem({
       params={{ projectId } as never}
       to={to}
     />
-  )
+  );
 }
 
 function SidebarDatasetItem({
@@ -296,36 +288,35 @@ function SidebarDatasetItem({
   progress,
   trailing,
 }: {
-  label?: string
-  editableLabel?: ReactNode
-  leading: ReactNode
-  progress: number
-  trailing: string
+  label?: string;
+  editableLabel?: ReactNode;
+  leading?: ReactNode;
+  progress: number;
+  trailing?: string;
 }) {
   return (
-    <div className="rounded-md border border-zinc-200/80 px-3 py-2 dark:border-zinc-700/80">
+    <div className="flex flex-col gap-1">
       <div className="flex items-center gap-3 text-sm text-zinc-700 dark:text-zinc-300">
-        <div className="flex size-6 shrink-0 items-center justify-center text-zinc-400 dark:text-zinc-500">
-          {leading}
-        </div>
+        {leading && (
+          <div className="flex size-6 shrink-0 items-center justify-center text-zinc-400 dark:text-zinc-500">
+            {leading}
+          </div>
+        )}
         <div className="min-w-0 flex-1">
-          <Text fw={500} size="sm">
-            {editableLabel ?? label}
-          </Text>
+          <span className="text-sm">{editableLabel ?? label}</span>
         </div>
         <Text c="dimmed" size="xs">
           {trailing}
         </Text>
       </div>
       <Progress
-        className="mt-2"
-        color={progress >= 1 ? "teal" : "blue"}
+        color={progress >= 1 ? 'teal' : 'blue'}
         radius="xl"
         size="sm"
         value={progress * 100}
       />
     </div>
-  )
+  );
 }
 
-export default ProjectOneLayout
+export default ProjectOneLayout;
