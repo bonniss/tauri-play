@@ -64,11 +64,24 @@ const ContentEditable: FunctionComponent<ContentEditableProps> = ({
   }, [autoFocus])
 
   function flushBlur() {
+    const trimmedValue = draftValueRef.current.trim()
+
+    if (!trimmedValue) {
+      draftValueRef.current = value
+      setIsEmpty(value.trim().length === 0)
+
+      if (elementRef.current) {
+        elementRef.current.textContent = value
+      }
+
+      return
+    }
+
     if (!onBlur) {
       return
     }
 
-    void onBlur(draftValueRef.current)
+    void onBlur(trimmedValue)
   }
 
   function handleInput(event: FormEvent<HTMLDivElement>) {

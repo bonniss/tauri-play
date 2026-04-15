@@ -1,5 +1,5 @@
-import { Box, Button, Group, Loader, Paper } from '@mantine/core';
-import { IconCamera } from '@tabler/icons-react';
+import { ActionIcon, Box, Button, Group, Loader, Paper } from '@mantine/core';
+import { IconCamera, IconChevronRight } from '@tabler/icons-react';
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useMemo, useState } from 'react';
 import ContentEditable from '~/components/headless/ContentEditable';
@@ -17,6 +17,7 @@ export const Route = createFileRoute('/projects/$projectId/label/')({
 function ProjectLabelPage() {
   const { classes, updateClassName } = useProjectOne();
   const hasClasses = classes.length > 0;
+  const [openClassMap, setOpenClassMap] = useState<Record<string, boolean>>({});
   const samples = useMemo(
     () => classes.flatMap((item) => item.samples),
     [classes],
@@ -25,6 +26,18 @@ function ProjectLabelPage() {
   const [samplePreviewMap, setSamplePreviewMap] = useState<
     Record<string, string>
   >({});
+
+  useEffect(() => {
+    setOpenClassMap((current) => {
+      const next: Record<string, boolean> = {};
+
+      classes.forEach((item, index) => {
+        next[item.id] = current[item.id] ?? index === 0;
+      });
+
+      return next;
+    });
+  }, [classes]);
 
   useEffect(() => {
     let cancelled = false;
@@ -84,36 +97,53 @@ function ProjectLabelPage() {
 
       {hasClasses ? (
         <div className="mt-6 space-y-4">
-          {classes.map((item, index) => (
-            <details
+          {classes.map((item) => (
+            <div
               className="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
               key={item.id}
-              open={index === 0}
             >
-              <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+              <div className="px-4 py-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">
                 <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0 flex items-center gap-2">
+                    <ActionIcon
+                      aria-label={openClassMap[item.id] ? 'Collapse class' : 'Expand class'}
+                      onClick={() => {
+                        setOpenClassMap((current) => ({
+                          ...current,
+                          [item.id]: !current[item.id],
+                        }));
+                      }}
+                      size="sm"
+                      variant="subtle"
+                    >
+                      <IconChevronRight
+                        className={openClassMap[item.id] ? 'rotate-90 transition-transform' : 'transition-transform'}
+                        size={16}
+                        stroke={1.8}
+                      />
+                    </ActionIcon>
                   <ContentEditable
                     as="span"
                     aria-label={`Class name ${item.name}`}
-                    className="min-w-0 flex-1 truncate rounded px-1 py-0.5"
+                    className="inline-block w-fit max-w-full truncate rounded px-1 py-0.5"
                     focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
                     onBlur={(value) => {
                       updateClassName(item.id, value);
-                    }}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                    }}
-                    onKeyDown={(event) => {
-                      event.stopPropagation();
                     }}
                     value={item.name}
                   />
                   <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
                     {item.samples.length}
                   </span>
+                  </div>
+                  <UploadSamplesButton
+                    buttonLabel="Upload"
+                    classId={item.id}
+                  />
                 </div>
-              </summary>
+              </div>
 
+              {openClassMap[item.id] ? (
               <Box className="border-t border-zinc-200 px-4 py-4 dark:border-zinc-800">
                 {isLoadingPreviews ? (
                   <div className="flex items-center gap-2">
@@ -142,7 +172,8 @@ function ProjectLabelPage() {
                   </div>
                 ) : null}
               </Box>
-            </details>
+              ) : null}
+            </div>
           ))}
         </div>
       ) : null}

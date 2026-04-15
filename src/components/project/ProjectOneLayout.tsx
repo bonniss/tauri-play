@@ -11,10 +11,7 @@ import { Link, Outlet, useRouterState } from "@tanstack/react-router"
 import { FunctionComponent, ReactNode } from "react"
 import ContentEditable from "~/components/headless/ContentEditable"
 import { type ProjectWorkspace, updateProject } from "~/lib/db/domain/projects"
-import {
-  MIN_SAMPLES_PER_CLASS_FOR_TRAIN,
-  useProjectOne,
-} from "./ProjectOneProvider"
+import { useProjectOne } from "./ProjectOneProvider"
 
 interface ProjectOneLayoutProps {}
 
@@ -27,6 +24,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
     projectName,
     classReadiness,
     trainProgress,
+    updateClassName,
   } = useProjectOne()
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
@@ -181,7 +179,18 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
                 return (
                 <SidebarDatasetItem
                   key={projectClass.id}
-                  label={projectClass.name}
+                  editableLabel={
+                    <ContentEditable
+                      as="span"
+                      aria-label={`Class name ${projectClass.name}`}
+                      className="inline-block w-fit max-w-full truncate rounded px-1 py-0.5"
+                      focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
+                      onBlur={(value) => {
+                        updateClassName(projectClass.id, value)
+                      }}
+                      value={projectClass.name}
+                    />
+                  }
                   leading={<IconCircleDot className="size-3.5" stroke={2} />}
                   progress={readiness?.progress ?? 0}
                   trailing={`${projectClass.samples.length}`}
@@ -233,11 +242,13 @@ function ProjectNavItem({
 
 function SidebarDatasetItem({
   label,
+  editableLabel,
   leading,
   progress,
   trailing,
 }: {
-  label: string
+  label?: string
+  editableLabel?: ReactNode
   leading: ReactNode
   progress: number
   trailing: string
@@ -246,11 +257,11 @@ function SidebarDatasetItem({
     <div className="rounded-md border border-zinc-200/80 px-3 py-2 dark:border-zinc-700/80">
       <div className="flex items-center gap-3 text-sm text-zinc-700 dark:text-zinc-300">
         <div className="flex size-6 shrink-0 items-center justify-center text-zinc-400 dark:text-zinc-500">
-        {leading}
+          {leading}
         </div>
         <div className="min-w-0 flex-1">
           <Text fw={500} size="sm">
-            {label}
+            {editableLabel ?? label}
           </Text>
         </div>
         <Text c="dimmed" size="xs">
