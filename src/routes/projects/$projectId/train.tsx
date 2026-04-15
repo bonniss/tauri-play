@@ -12,7 +12,7 @@ import {
   Text,
 } from "@mantine/core"
 import { IconPlayerPlay, IconSettings } from "@tabler/icons-react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
@@ -22,8 +22,6 @@ import { useProjectOne } from "~/components/project/ProjectOneProvider"
 import {
   appendModelTrainLogEvent,
   createModelTrainLog,
-  getLatestProjectTrainLog,
-  getProjectModel,
   ModelTrainLogDatasetSnapshot,
   ModelTrainLogEvent,
   ModelTrainLogSummary,
@@ -173,7 +171,9 @@ function ProjectTrainPage() {
     getTrainSettingsFormValues,
     isApplyingTrainSettings,
     isReadyForTrain,
+    latestTrainLog,
     projectId,
+    projectModel,
     projectSettings,
     totalSamples,
     trainSettings,
@@ -184,15 +184,6 @@ function ProjectTrainPage() {
   const [trainDataView, setTrainDataView] = useState<TrainDataView>("train")
   const [now, setNow] = useState(() => Date.now())
   const activeTrainLogIdRef = useRef<string | null>(null)
-
-  const latestModelQuery = useQuery({
-    queryKey: ["project-model", projectId],
-    queryFn: () => getProjectModel(projectId),
-  })
-  const latestTrainLogQuery = useQuery({
-    queryKey: ["project-train-log", projectId],
-    queryFn: () => getLatestProjectTrainLog(projectId),
-  })
 
   const trainMutation = useMutation({
     mutationFn: async () => {
@@ -425,8 +416,8 @@ function ProjectTrainPage() {
     },
   })
 
-  const displayedTrainLog = activeSession ?? latestTrainLogQuery.data
-  const displayedModel = latestModelQuery.data
+  const displayedTrainLog = activeSession ?? latestTrainLog
+  const displayedModel = projectModel
   const runSettings = useMemo(() => {
     if (!displayedTrainLog?.settingsSnapshot) {
       return null

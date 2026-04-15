@@ -1,10 +1,8 @@
 import { Alert, Button, Group, Paper, Stack, Text } from "@mantine/core"
 import { IconPlayerPlay } from "@tabler/icons-react"
-import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { Form, defineConfig } from "~/components/form"
 import { useProjectOne } from "~/components/project/ProjectOneProvider"
-import { getProjectModel } from "~/lib/db/domain/models"
 import { ProjectPlaySettingsFormValues } from "~/lib/project/settings"
 
 export const Route = createFileRoute("/projects/$projectId/play")({
@@ -64,18 +62,17 @@ const playSettingsForm = defineConfig<ProjectPlaySettingsFormValues>({
 function ProjectPlayPage() {
   const {
     applyPlaySettings,
+    canPlay,
     getPlaySettingsFormValues,
     isApplyingPlaySettings,
+    playGuardDescription,
+    playGuardTitle,
     playSettings,
     projectDescription,
     projectId,
     projectName,
   } = useProjectOne()
   const navigate = useNavigate()
-  const projectModelQuery = useQuery({
-    queryKey: ["project-model", projectId],
-    queryFn: () => getProjectModel(projectId),
-  })
 
   return (
     <Paper className="p-6" radius="xl" withBorder>
@@ -93,9 +90,14 @@ function ProjectPlayPage() {
           ) : null}
         </div>
 
-        {!projectModelQuery.data ? (
+        {!canPlay && playGuardTitle ? (
           <Alert color="yellow" variant="light">
-            Train this project first before launching the play page.
+            <Stack gap={4}>
+              <Text fw={600} size="sm">
+                {playGuardTitle}
+              </Text>
+              <Text size="sm">{playGuardDescription}</Text>
+            </Stack>
           </Alert>
         ) : null}
 
@@ -118,7 +120,7 @@ function ProjectPlayPage() {
                   Current mode: {playSettings.mode}
                 </Text>
                 <Button
-                  disabled={!projectModelQuery.data}
+                  disabled={!canPlay}
                   leftSection={<IconPlayerPlay className="size-4" />}
                   loading={isApplyingPlaySettings}
                   type="submit"

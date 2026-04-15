@@ -1,4 +1,4 @@
-import { NavLink, Progress, Text } from "@mantine/core"
+import { Badge, NavLink, Progress, Text } from "@mantine/core"
 import {
   IconBrain,
   IconCircleDot,
@@ -12,6 +12,7 @@ import { FunctionComponent, ReactNode } from "react"
 import ContentEditable from "~/components/headless/ContentEditable"
 import { type ProjectWorkspace, updateProject } from "~/lib/db/domain/projects"
 import { useProjectOne } from "./ProjectOneProvider"
+import { IconDataLabel } from "../icon/semantic"
 
 interface ProjectOneLayoutProps {}
 
@@ -25,7 +26,11 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
     projectName,
     classReadiness,
     trainProgress,
+    trainNavProgress,
+    trainStatusColor,
+    trainStatusLabel,
     updateClassName,
+    canPlay,
   } = useProjectOne()
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
@@ -146,7 +151,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
           <div className="space-y-1">
             <ProjectNavItem
               current={pathname === `/projects/${projectId}/label`}
-              icon={IconPencil}
+              icon={IconDataLabel}
               label="Label"
               projectId={projectId}
               to="/projects/$projectId/label"
@@ -155,11 +160,15 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
               current={pathname === `/projects/${projectId}/train`}
               icon={IconBrain}
               label="Train"
+              progress={trainNavProgress}
               projectId={projectId}
+              statusColor={trainStatusColor}
+              statusLabel={trainStatusLabel}
               to="/projects/$projectId/train"
             />
             <ProjectNavItem
               current={pathname === `/projects/${projectId}/play`}
+              disabled={!canPlay}
               icon={IconPlayerPlay}
               label="Play"
               projectId={projectId}
@@ -218,15 +227,23 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
 
 function ProjectNavItem({
   current,
+  disabled = false,
   icon: Icon,
   label,
+  progress,
   projectId,
+  statusColor,
+  statusLabel,
   to,
 }: {
   current: boolean
+  disabled?: boolean
   icon: typeof IconPencil
   label: string
+  progress?: number
   projectId: string
+  statusColor?: string
+  statusLabel?: string
   to:
     | "/projects/$projectId"
     | "/projects/$projectId/label"
@@ -235,12 +252,37 @@ function ProjectNavItem({
 }) {
   return (
     <NavLink
+      description={
+        statusLabel ? (
+          <div className="space-y-2 py-1">
+            <div className="flex items-center justify-between gap-2">
+              <Badge color={statusColor} size="xs" variant="light">
+                {statusLabel}
+              </Badge>
+              {progress != null ? (
+                <Text c="dimmed" size="xs">
+                  {Math.round(progress * 100)}%
+                </Text>
+              ) : null}
+            </div>
+            {progress != null ? (
+              <Progress
+                color={progress >= 1 ? "teal" : "blue"}
+                radius="xl"
+                size="xs"
+                value={progress * 100}
+              />
+            ) : null}
+          </div>
+        ) : undefined
+      }
+      disabled={disabled}
       variant="light"
       active={current}
       className="rounded-md"
       component={Link}
       label={label}
-      leftSection={<Icon className="size-4" stroke={1.8} />}
+      leftSection={<Icon className="size-5" stroke={1.8} />}
       params={{ projectId } as never}
       to={to}
     />
