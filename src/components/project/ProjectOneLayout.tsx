@@ -1,5 +1,10 @@
-import { Badge, NavLink, Progress, Text } from '@mantine/core';
-import { IconPencil } from '@tabler/icons-react';
+import { NavLink, Progress, Text } from '@mantine/core';
+import {
+  IconCircleCheck,
+  IconLoader2,
+  IconPencil,
+  IconX,
+} from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, Outlet, useRouterState } from '@tanstack/react-router';
 import { FunctionComponent, ReactNode } from 'react';
@@ -21,8 +26,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
     classReadiness,
     trainProgress,
     trainNavProgress,
-    trainStatusColor,
-    trainStatusLabel,
+    trainStatus,
     updateClassName,
     canPlay,
   } = useProjectOne();
@@ -156,8 +160,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
               label="Train"
               progress={trainNavProgress}
               projectId={projectId}
-              statusColor={trainStatusColor}
-              statusLabel={trainStatusLabel}
+              trainStatus={trainStatus}
               to="/projects/$projectId/train"
             />
             <ProjectNavItem
@@ -224,8 +227,7 @@ function ProjectNavItem({
   label,
   progress,
   projectId,
-  statusColor,
-  statusLabel,
+  trainStatus,
   to,
 }: {
   current: boolean;
@@ -234,40 +236,29 @@ function ProjectNavItem({
   label: string;
   progress?: number;
   projectId: string;
-  statusColor?: string;
-  statusLabel?: string;
+  trainStatus?: string;
   to:
     | '/projects/$projectId'
     | '/projects/$projectId/label'
     | '/projects/$projectId/train'
     | '/projects/$projectId/play';
 }) {
+  const rightSection =
+    trainStatus === 'training' ? (
+      <div className="flex items-center gap-1.5">
+        <IconLoader2 className="size-4 animate-spin text-blue-500" stroke={1.8} />
+        <Text c="dimmed" size="xs">
+          {Math.round((progress ?? 0) * 100)}%
+        </Text>
+      </div>
+    ) : trainStatus === 'trained' ? (
+      <IconCircleCheck className="size-4 text-teal-500" stroke={1.8} />
+    ) : trainStatus === 'failed' ? (
+      <IconX className="size-4 text-red-500" stroke={1.8} />
+    ) : undefined;
+
   return (
     <NavLink
-      description={
-        statusLabel ? (
-          <div className="space-y-2 py-1">
-            <div className="flex items-center justify-between gap-2">
-              <Badge color={statusColor} size="xs" variant="light">
-                {statusLabel}
-              </Badge>
-              {progress != null ? (
-                <Text c="dimmed" size="xs">
-                  {Math.round(progress * 100)}%
-                </Text>
-              ) : null}
-            </div>
-            {progress != null ? (
-              <Progress
-                color={progress >= 1 ? 'teal' : 'blue'}
-                radius="xl"
-                size="xs"
-                value={progress * 100}
-              />
-            ) : null}
-          </div>
-        ) : undefined
-      }
       disabled={disabled}
       variant="light"
       active={current}
@@ -276,6 +267,7 @@ function ProjectNavItem({
       label={label}
       leftSection={<Icon className="size-5" stroke={1.8} />}
       params={{ projectId } as never}
+      rightSection={rightSection}
       to={to}
     />
   );
