@@ -120,10 +120,15 @@ function ProjectLabelPage() {
                     <Loader size="sm" />
                   </div>
                 ) : item.samples.length ? (
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                  <div
+                    className="grid gap-3"
+                    style={{
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+                    }}
+                  >
                     {item.samples.map((sample) => (
                       <div
-                        className="size-16 overflow-hidden rounded-md border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950"
+                        className="aspect-square overflow-hidden rounded-md border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950"
                         key={sample.id}
                       >
                         <img
