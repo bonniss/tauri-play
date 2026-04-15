@@ -154,3 +154,71 @@ Tauri uses WebKit:
   - `extraMetadata`
 - Use flat columns for values that UI, filtering, validation, or dedup logic will read often.
 - Use JSON for EXIF, device info, capture settings, import batch info, and other non-core metadata.
+
+## Train Flow Decisions
+
+- Project train settings live under `project.settings.train`.
+- Current default train settings:
+  - `validationSplit: 0.2`
+  - `epochs: 20`
+  - `batchSize: 16`
+  - `learningRate: 0.001`
+  - `imageSize: 224`
+  - `earlyStopping: true`
+  - `earlyStoppingPatience: 3`
+- Train settings are edited from the `Train` route via a `Settings` popover, following the same UI pattern as `Label`.
+- Train settings save logic stays in `ProjectOneProvider`.
+
+### Dataset Split
+
+- v1 training uses automatic per-class validation splitting.
+- Split is done independently per class, not on the dataset as one flat pool.
+- User adjusts only the validation ratio, not individual sample membership.
+- Current implementation stores which samples were used for each split in the train log dataset snapshot:
+  - `trainSampleIds`
+  - `validationSampleIds`
+- The `Train` route can reconstruct the train and validation sample sets and display them with `SampleGrid`.
+
+### Training Architecture
+
+- v1 uses a transfer learning shape:
+  - pretrained MobileNet as feature extractor
+  - small classifier head trained on project classes
+- The classifier head is the main trainable part for v1 because it keeps local training fast and predictable.
+- Current project model artifact is saved under:
+  - `projects/<projectId>/model/latest`
+
+### Logging And Persistence
+
+- `models` stores the current model summary for a project.
+- `model_train_logs` stores structured logs for each training run.
+- We keep all train logs in DB, even though v1 UI mainly focuses on the latest run.
+- Train logs store:
+  - run status
+  - settings snapshot
+  - dataset snapshot
+  - structured events
+  - final summary
+- Structured events currently include:
+  - `phase`
+  - `split`
+  - `epoch`
+- UI logs should feel technical and compact, closer to a terminal/log console than nested card UIs.
+
+### Progress And Summary Rules
+
+- Progress should use the latest observed epoch number, not the count of epoch log rows.
+- Completed runs should render `100%` even if the current route settings differ from the settings used by the saved run.
+- Progress and epoch counts should use the run's own settings snapshot, not the current editable settings.
+- While a run is active, header metrics should prefer the latest epoch event over stale DB summary values.
+
+### Model Identity Rule
+
+- A project has one current model in v1.
+- Retraining should update that model in place rather than changing the `models.id` every run.
+- This avoids foreign key breaks with `model_train_logs.model_id`.
+
+### Current Limitation
+
+- `earlyStopping` exists in settings and UI, but is not fully wired into the TensorFlow.js fit flow yet.
+- Training still runs correctly; this is currently a known follow-up item rather than a blocker.
