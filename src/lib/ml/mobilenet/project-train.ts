@@ -104,6 +104,14 @@ export type ProjectTrainResult = {
   }
 }
 
+type EpochMetricSnapshot = {
+  acc?: number
+  epoch: number
+  loss: number
+  valAcc?: number
+  valLoss?: number
+}
+
 export async function trainProjectMobilenetModel({
   batchSize,
   classes,
@@ -134,6 +142,7 @@ export async function trainProjectMobilenetModel({
   let validationXs: tf.Tensor | null = null
   let validationYs: tf.Tensor | null = null
   let classifier: tf.LayersModel | null = null
+  let lastEpochLog: EpochMetricSnapshot | null = null
 
   async function pushEvent(event: ModelTrainLogEvent) {
     events.push(event)
@@ -266,6 +275,7 @@ export async function trainProjectMobilenetModel({
       epochs,
       batchSize: Math.min(batchSize, datasetSnapshot.trainSamples),
       onEpochEnd: async (log) => {
+        lastEpochLog = log
         await pushEvent({
           at: new Date().toISOString(),
           epoch: log.epoch,
@@ -297,10 +307,8 @@ export async function trainProjectMobilenetModel({
       },
       model: classifier,
     })
-
-    const lastEpochEvent =
-      events.filter((event) => event.type === "epoch").slice(-1)[0] ?? null
     const durationMs = trainResult.trainTimeMs
+    const finalEpochLog = lastEpochLog as EpochMetricSnapshot | null
 
     return {
       artifactPath,
@@ -308,11 +316,11 @@ export async function trainProjectMobilenetModel({
       events,
       inputShape: trainDataset.inputShape,
       summary: {
-        accuracy: lastEpochEvent?.acc ?? null,
+        accuracy: finalEpochLog?.acc ?? null,
         durationMs,
-        loss: lastEpochEvent?.loss ?? null,
-        validationAccuracy: lastEpochEvent?.valAcc ?? null,
-        validationLoss: lastEpochEvent?.valLoss ?? null,
+        loss: finalEpochLog?.loss ?? null,
+        validationAccuracy: finalEpochLog?.valAcc ?? null,
+        validationLoss: finalEpochLog?.valLoss ?? null,
       },
     } satisfies ProjectTrainResult
   } finally {

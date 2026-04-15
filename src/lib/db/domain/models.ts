@@ -209,7 +209,12 @@ export async function upsertProjectModel({
 }) {
   const db = getKysely()
   const now = new Date().toISOString()
-  const modelId = id ?? genModelId()
+  const existingModel = await db
+    .selectFrom("models")
+    .select(["id"])
+    .where("project_id", "=", projectId)
+    .executeTakeFirst()
+  const modelId = id ?? existingModel?.id ?? genModelId()
 
   await db
     .insertInto("models")
@@ -229,7 +234,6 @@ export async function upsertProjectModel({
     })
     .onConflict((oc) =>
       oc.column("project_id").doUpdateSet({
-        id: modelId,
         artifact_path: artifactPath,
         trained_at: trainedAt,
         accuracy,

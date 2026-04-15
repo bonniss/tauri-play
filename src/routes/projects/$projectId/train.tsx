@@ -282,6 +282,23 @@ function ProjectTrainPage() {
                       ? latestDatasetSnapshot
                       : current.datasetSnapshot,
                   events: [...current.events, event],
+                  summary:
+                    event.type === "epoch"
+                      ? {
+                          accuracy: event.acc ?? current.summary?.accuracy ?? null,
+                          durationMs: current.summary?.durationMs ?? null,
+                          endedAt: current.summary?.endedAt ?? "",
+                          loss: event.loss,
+                          validationAccuracy:
+                            event.valAcc ??
+                            current.summary?.validationAccuracy ??
+                            null,
+                          validationLoss:
+                            event.valLoss ??
+                            current.summary?.validationLoss ??
+                            null,
+                        }
+                      : current.summary,
                 }
               : current,
           )
@@ -429,6 +446,7 @@ function ProjectTrainPage() {
   )
   const latestEpoch =
     epochEvents.length > 0 ? epochEvents[epochEvents.length - 1] : null
+  const latestEpochNumber = latestEpoch?.epoch ?? 0
   const plannedEpochs =
     runSettings?.epochs && Number.isFinite(runSettings.epochs)
       ? Math.max(1, runSettings.epochs)
@@ -436,7 +454,7 @@ function ProjectTrainPage() {
   const trainProgress = displayedTrainLog
     ? displayedTrainLog.status === "completed"
       ? 1
-      : Math.min(epochEvents.length / plannedEpochs, 1)
+      : Math.min(latestEpochNumber / plannedEpochs, 1)
     : 0
   const elapsedMs = displayedTrainLog
     ? new Date(displayedTrainLog.endedAt ?? now).getTime() -
@@ -594,7 +612,7 @@ function ProjectTrainPage() {
                 <div className="text-right">
                   <Text fw={600}>{Math.round(trainProgress * 100)}%</Text>
                   <Text c="dimmed" size="sm">
-                    {epochEvents.length}/{plannedEpochs} epochs
+                    {latestEpochNumber}/{plannedEpochs} epochs
                   </Text>
                 </div>
               </Group>
@@ -604,20 +622,21 @@ function ProjectTrainPage() {
                 <MetricInline
                   label="Loss"
                   value={formatMetric(
-                    displayedTrainLog.summary?.loss ?? latestEpoch?.loss,
+                    latestEpoch?.loss ?? displayedTrainLog.summary?.loss,
                   )}
                 />
                 <MetricInline
                   label="Val Loss"
                   value={formatMetric(
-                    displayedTrainLog.summary?.validationLoss ?? latestEpoch?.valLoss,
+                    latestEpoch?.valLoss ??
+                      displayedTrainLog.summary?.validationLoss,
                   )}
                 />
                 <MetricInline
                   label="Val Acc"
                   value={formatMetric(
-                    displayedTrainLog.summary?.validationAccuracy ??
-                      latestEpoch?.valAcc,
+                    latestEpoch?.valAcc ??
+                      displayedTrainLog.summary?.validationAccuracy,
                   )}
                 />
               </div>
