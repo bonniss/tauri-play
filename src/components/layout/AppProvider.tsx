@@ -37,7 +37,7 @@ export const AppProvider: FunctionComponent<AppProviderProps> = ({
       >
         <InternalProvider>{children}</InternalProvider>
       </MantineProvider>
-      <Toaster />
+      <Toaster richColors />
     </QueryClientProvider>
   )
 }
