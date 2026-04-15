@@ -1,0 +1,11 @@
+ALTER TABLE samples
+ADD COLUMN mime_type TEXT;
+
+ALTER TABLE samples
+ADD COLUMN width INTEGER;
+
+ALTER TABLE samples
+ADD COLUMN height INTEGER;
+
+ALTER TABLE samples
+ADD COLUMN extra_metadata TEXT;

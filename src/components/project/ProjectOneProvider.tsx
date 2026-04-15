@@ -19,11 +19,15 @@ type ProjectOneSampleDraft = Pick<
   ProjectSample,
   | 'classId'
   | 'filePath'
+  | 'mimeType'
+  | 'width'
+  | 'height'
   | 'originalFileName'
   | 'originalFilePath'
   | 'fileSize'
   | 'lastModifiedAt'
   | 'contentHash'
+  | 'extraMetadata'
   | 'source'
 > & {
   id?: string;
@@ -156,11 +160,15 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
             projectId,
             classId,
             filePath: sample.filePath,
+            mimeType: sample.mimeType ?? null,
+            width: sample.width ?? null,
+            height: sample.height ?? null,
             originalFileName: sample.originalFileName ?? null,
             originalFilePath: sample.originalFilePath ?? null,
             fileSize: sample.fileSize ?? null,
             lastModifiedAt: sample.lastModifiedAt ?? null,
             contentHash: sample.contentHash ?? null,
+            extraMetadata: sample.extraMetadata ?? null,
             source: sample.source,
             order: sample.order ?? startOrder + index,
             className: cls.name,

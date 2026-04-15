@@ -28,6 +28,12 @@ pub fn run() {
             sql: include_str!("../migrations/0003_add_sample_metadata.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 4,
+            description: "add_sample_media_metadata",
+            sql: include_str!("../migrations/0004_add_sample_media_metadata.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()

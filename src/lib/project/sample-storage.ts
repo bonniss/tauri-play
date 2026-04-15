@@ -27,6 +27,47 @@ async function hashBytes(bytes: Uint8Array) {
   return bytesToHex(new Uint8Array(digest))
 }
 
+async function readImageDimensions(file: File) {
+  if (!file.type.startsWith("image/")) {
+    return {
+      height: null,
+      width: null,
+    }
+  }
+
+  const objectUrl = URL.createObjectURL(file)
+
+  try {
+    if ("createImageBitmap" in window) {
+      const bitmap = await createImageBitmap(file)
+      const dimensions = {
+        height: bitmap.height,
+        width: bitmap.width,
+      }
+
+      bitmap.close()
+
+      return dimensions
+    }
+
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const nextImage = new Image()
+
+      nextImage.onload = () => resolve(nextImage)
+      nextImage.onerror = () =>
+        reject(new Error("Failed to read image dimensions."))
+      nextImage.src = objectUrl
+    })
+
+    return {
+      height: image.naturalHeight,
+      width: image.naturalWidth,
+    }
+  } finally {
+    URL.revokeObjectURL(objectUrl)
+  }
+}
+
 export async function saveUploadedSampleFile({
   classId,
   file,
@@ -44,6 +85,7 @@ export async function saveUploadedSampleFile({
   const filePath = `${directoryPath}/${fileName}`
   const bytes = new Uint8Array(await file.arrayBuffer())
   const contentHash = await hashBytes(bytes)
+  const dimensions = await readImageDimensions(file)
 
   await mkdir(directoryPath, {
     baseDir: BaseDirectory.AppData,
@@ -58,6 +100,9 @@ export async function saveUploadedSampleFile({
     fileName,
     filePath,
     metadata: {
+      mimeType: file.type || null,
+      width: dimensions.width,
+      height: dimensions.height,
       contentHash,
       fileSize: file.size,
       lastModifiedAt: file.lastModified
@@ -68,6 +113,7 @@ export async function saveUploadedSampleFile({
         "webkitRelativePath" in file && file.webkitRelativePath
           ? file.webkitRelativePath
           : null,
+      extraMetadata: null,
     },
   }
 }

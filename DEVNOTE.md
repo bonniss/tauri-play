@@ -92,50 +92,65 @@ Tauri uses WebKit:
 
 [#5042](https://github.com/tauri-apps/tauri/issues/5042)
 
-## Core flow
+## Core Flow
 
-### Create a project
+### Create a Project
 
-- From list page -> Create new project/app (suggest me)
-- UI create/edit page will match
+- From list page -> create new project/app
+- UI create/edit page should align with that flow
 
 ## Label Image Grid Plan
 
-- Tách thumbnail grid thành một component `ImageGrid` tự chứa, nhận `samples` qua props.
-- `ImageGrid` cần a11y kiểu Windows Explorer:
-  - có active item
-  - hỗ trợ `ArrowLeft`, `ArrowRight`, `ArrowUp`, `ArrowDown`
-  - hỗ trợ `Home`, `End`
-  - `Enter` hoặc `Space` để mở lightbox
-  - `Escape` để đóng lightbox
-  - đóng lightbox xong trả focus về thumbnail đang active
-- Lightbox phải điều hướng được ảnh trước/sau bằng keyboard và UI control.
-- Lightbox có nút xóa ảnh, nhưng logic xóa do trang cha quyết định qua prop callback để giữ single responsibility.
-- Callback xóa nên nhận đầy đủ `sample`, không chỉ `id`.
-- Thumbnail grid nên nhận thêm các prop dạng:
+- Split the thumbnail grid into a self-contained `ImageGrid` component that receives `samples` via props.
+- `ImageGrid` should support Windows Explorer style a11y:
+  - active item state
+  - `ArrowLeft`, `ArrowRight`, `ArrowUp`, `ArrowDown`
+  - `Home`, `End`
+  - `Enter` or `Space` to open lightbox
+  - `Escape` to close lightbox
+  - when lightbox closes, restore focus to the active thumbnail
+- Lightbox should support previous/next navigation via keyboard and UI controls.
+- Lightbox should expose an image delete action, but actual delete logic stays in the parent via prop callback.
+- Delete callback should receive the full `sample`, not just `id`.
+- `ImageGrid` props should likely include:
   - `samples`
   - `activeSampleId?`
   - `defaultActiveSampleId?`
   - `onActiveSampleChange?`
   - `onDeleteSample?`
-  - `getPreviewUrl?` hoặc sample đã có sẵn `previewUrl`
+  - `getPreviewUrl?` or sample-level `previewUrl`
   - `emptyState?`
-- Hành vi xóa trong lightbox:
-  - xóa xong tự nhảy sang ảnh kế hoặc ảnh trước
-  - nếu xóa ảnh cuối cùng thì đóng lightbox
-- Cần chốt thêm sau:
-  - arrow key trong grid có wrap hay không
-  - xóa trong lightbox có confirm hay không
-  - upload trùng thì block, warn, hay vẫn cho upload
+- Lightbox delete behavior:
+  - after delete, move to next image or previous image
+  - if the deleted image was the last one, close lightbox
+- Open decisions to finalize later:
+  - whether arrow key navigation wraps
+  - whether delete in lightbox requires confirmation
+  - whether duplicate upload should block, warn, or still allow upload
 
 ## Sample Metadata Plan
 
-- Bổ sung metadata trên `sample` để chuẩn bị detect upload trùng:
+- Add metadata to `sample` for duplicate detection preparation:
   - `originalFileName?: string | null`
   - `originalFilePath?: string | null`
   - `fileSize?: number | null`
   - `lastModifiedAt?: string | null`
   - `contentHash?: string | null`
-- Nếu cần detect trùng ổn định, `contentHash` là tín hiệu chính.
-- `originalFileName` và `originalFilePath` chủ yếu để hiển thị nguồn gốc và hỗ trợ heuristic.
+- If duplicate detection needs to be reliable, `contentHash` is the main signal.
+- `originalFileName` and `originalFilePath` are mainly for source visibility and heuristics.
 
+## Sample Media Metadata Decision
+
+- Keep these sample fields as flat columns:
+  - `mimeType`
+  - `width`
+  - `height`
+  - `fileSize`
+  - `contentHash`
+  - `originalFileName`
+  - `originalFilePath`
+  - `lastModifiedAt`
+- Keep experimental or loosely structured metadata in JSON:
+  - `extraMetadata`
+- Use flat columns for values that UI, filtering, validation, or dedup logic will read often.
+- Use JSON for EXIF, device info, capture settings, import batch info, and other non-core metadata.
