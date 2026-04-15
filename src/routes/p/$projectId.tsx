@@ -1,18 +1,6 @@
 import type { MobileNet } from "@tensorflow-models/mobilenet"
 import type * as tf from "@tensorflow/tfjs"
-import {
-  Alert,
-  Badge,
-  Button,
-  Center,
-  FileButton,
-  Group,
-  Loader,
-  Paper,
-  Progress,
-  Stack,
-  Text,
-} from "@mantine/core"
+import { Alert, Button, FileButton, Loader, Progress, Skeleton } from "@mantine/core"
 import { IconArrowLeft, IconUpload } from "@tabler/icons-react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
@@ -33,6 +21,10 @@ import { loadMobilenetModel } from "~/lib/ml/mobilenet/model"
 import { predictWithMobilenetClassifier } from "~/lib/ml/mobilenet/predict"
 import { loadMobilenetClassifierModel } from "~/lib/ml/mobilenet/storage"
 import { fileToImageTensor } from "~/lib/ml/sample/image"
+import {
+  createSamplePreviewUrl,
+  revokeSamplePreviewUrl,
+} from "~/lib/project/sample-preview"
 
 export const Route = createFileRoute("/p/$projectId")({
   component: ProjectPlayerRoute,
@@ -48,33 +40,76 @@ function ProjectPlayerRoute() {
   )
 }
 
+function formatRelativeTime(input: string) {
+  const value = new Date(input).getTime()
+  const diffMs = value - Date.now()
+  const diffMinutes = Math.round(diffMs / 60000)
+  const formatter = new Intl.RelativeTimeFormat("en", { numeric: "auto" })
+
+  if (Math.abs(diffMinutes) < 60) {
+    return formatter.format(diffMinutes, "minute")
+  }
+
+  const diffHours = Math.round(diffMinutes / 60)
+
+  if (Math.abs(diffHours) < 24) {
+    return formatter.format(diffHours, "hour")
+  }
+
+  const diffDays = Math.round(diffHours / 24)
+  return formatter.format(diffDays, "day")
+}
+
+function hashString(value: string) {
+  let hash = 0
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0
+  }
+
+  return hash
+}
+
+function pickSeededSamples<T extends { id: string }>(
+  items: T[],
+  seed: string,
+  count: number,
+) {
+  if (items.length <= count) {
+    return items
+  }
+
+  const pool = [...items]
+  const picked: T[] = []
+  let hash = hashString(seed)
+
+  while (pool.length > 0 && picked.length < count) {
+    const index = hash % pool.length
+    picked.push(pool.splice(index, 1)[0])
+    hash = hashString(`${seed}:${hash}:${picked.length}`)
+  }
+
+  return picked
+}
+
 function ProjectPlayerPage() {
-  const {
-    classes,
-    isLoading,
-    playSettings,
-    projectDescription,
-    projectId,
-    projectName,
-  } = useProjectOne()
+  const { isLoading, playSettings, projectId, projectName } = useProjectOne()
 
   if (isLoading) {
     return (
-      <Center className="py-20">
+      <div className="flex min-h-[60vh] items-center justify-center">
         <Loader />
-      </Center>
+      </div>
     )
   }
 
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8">
-      <div className="flex items-center justify-between gap-4">
-        <div className="space-y-2">
-          <Badge variant="light">Project Demo</Badge>
-          <h1 className="text-4xl font-semibold tracking-tight">{projectName}</h1>
-          <Text c="dimmed" maw={720} size="lg">
-            {projectDescription || "Try this model with your own inputs."}
-          </Text>
+    <section className="mx-auto w-full max-w-7xl px-4 py-8 md:px-6">
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-4xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+            {projectName}
+          </h1>
         </div>
         <Button
           component={Link}
@@ -83,33 +118,31 @@ function ProjectPlayerPage() {
           to="/projects/$projectId/play"
           variant="default"
         >
-          Back to Play Settings
+          Back
         </Button>
       </div>
 
       {playSettings.mode === "camera" ? (
-        <Paper className="p-8" radius="xl" withBorder>
-          <Stack align="center" gap="sm">
-            <Text fw={600} size="lg">
-              Camera mode is coming next.
-            </Text>
-            <Text c="dimmed" size="sm">
-              Switch this project to upload mode for now to test the trained
-              model immediately.
-            </Text>
-          </Stack>
-        </Paper>
+        <div className="rounded-3xl border border-zinc-200 bg-white p-10 dark:border-zinc-800 dark:bg-zinc-950">
+          <div className="mx-auto max-w-xl text-center">
+            <h2 className="text-2xl font-semibold text-zinc-950 dark:text-zinc-50">
+              Camera mode is coming next
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+              Switch this project back to upload mode for now if you want to test
+              the current model immediately.
+            </p>
+          </div>
+        </div>
       ) : (
-        <UploadPlayExperience classNames={classes.map((item) => item.name)} />
+        <UploadPlayExperience />
       )}
     </section>
   )
 }
 
-const UploadPlayExperience: FunctionComponent<{ classNames: string[] }> = ({
-  classNames,
-}) => {
-  const { playSettings, projectId } = useProjectOne()
+const UploadPlayExperience: FunctionComponent = () => {
+  const { classes, playSettings, projectDescription, projectId } = useProjectOne()
   const projectModelQuery = useQuery({
     queryKey: ["project-model", projectId],
     queryFn: () => getProjectModel(projectId),
@@ -123,9 +156,10 @@ const UploadPlayExperience: FunctionComponent<{ classNames: string[] }> = ({
   } | null>(null)
   const [runtimeError, setRuntimeError] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [predictionTick, setPredictionTick] = useState(0)
   const classifierRef = useRef<tf.LayersModel | null>(null)
   const embeddingModelRef = useRef<MobileNet | null>(null)
-  const modelClassNamesRef = useRef<string[]>(classNames)
+  const modelClassNamesRef = useRef<string[]>(classes.map((item) => item.name))
 
   useEffect(() => {
     return () => {
@@ -163,9 +197,9 @@ const UploadPlayExperience: FunctionComponent<{ classNames: string[] }> = ({
       )
       classifierRef.current = result.model
       modelClassNamesRef.current =
-        result.metadata.classNames?.length === classNames.length
+        result.metadata.classNames?.length === classes.length
           ? result.metadata.classNames
-          : classNames
+          : classes.map((item) => item.name)
     }
   }
 
@@ -185,6 +219,7 @@ const UploadPlayExperience: FunctionComponent<{ classNames: string[] }> = ({
       })
 
       setPrediction(result)
+      setPredictionTick((current) => current + 1)
     } catch (error) {
       setPrediction(null)
       setRuntimeError(
@@ -202,12 +237,15 @@ const UploadPlayExperience: FunctionComponent<{ classNames: string[] }> = ({
 
     return prediction.confidences
       .map((confidence, index) => ({
-        className: modelClassNamesRef.current[index] ?? classNames[index] ?? `Class ${index + 1}`,
+        className:
+          modelClassNamesRef.current[index] ??
+          classes[index]?.name ??
+          `Class ${index + 1}`,
         confidence,
         index,
       }))
       .sort((left, right) => right.confidence - left.confidence)
-  }, [classNames, prediction])
+  }, [classes, prediction])
 
   const visibleResults = playSettings.showAllClasses
     ? rankedResults
@@ -225,145 +263,302 @@ const UploadPlayExperience: FunctionComponent<{ classNames: string[] }> = ({
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-      <Paper className="p-6" radius="xl" withBorder>
-        <Stack gap="lg">
-          <div className="space-y-2">
-            <Text fw={600} size="lg">
-              Upload an image
-            </Text>
-            <Text c="dimmed" size="sm">
-              Try the model with a new image and see how it classifies it.
-            </Text>
+    <div className="grid gap-8 lg:grid-cols-[320px_minmax(0,1fr)]">
+      <aside className="space-y-6">
+        <section className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
+            Model
+          </p>
+          <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+            Updated{" "}
+            <span className="font-medium text-zinc-900 dark:text-zinc-100">
+              {formatRelativeTime(projectModelQuery.data.trainedAt)}
+            </span>
+          </p>
+        </section>
+
+        <section className="space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
+            Classes
+          </p>
+          <div className="space-y-4">
+            {classes.map((projectClass) => (
+              <ClassPreviewItem
+                classId={projectClass.id}
+                key={projectClass.id}
+                name={projectClass.name}
+                samples={projectClass.samples}
+              />
+            ))}
           </div>
+        </section>
 
-          <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-6 dark:border-zinc-700 dark:bg-zinc-900/60">
-            <Stack align="center" gap="md">
-              {selectedFileUrl ? (
-                <img
-                  alt={selectedFile?.name ?? "Selected upload"}
-                  className="max-h-[420px] w-full rounded-xl object-contain"
-                  src={selectedFileUrl}
-                />
-              ) : (
-                <div className="flex h-[320px] w-full items-center justify-center rounded-xl bg-white text-sm text-zinc-500 dark:bg-zinc-950 dark:text-zinc-400">
-                  No image selected yet
-                </div>
-              )}
-
-              <Group>
-                <FileButton
-                  accept="image/*"
-                  multiple={false}
-                  onChange={(file) => {
-                    if (!file) {
-                      return
-                    }
-
-                    setSelectedFile(file)
-                    setPrediction(null)
-                    setRuntimeError(null)
-
-                    if (playSettings.autoPredictOnUpload) {
-                      void runPrediction(file)
-                    }
-                  }}
-                >
-                  {(props) => (
-                    <Button
-                      {...props}
-                      leftSection={<IconUpload className="size-4" />}
-                    >
-                      Choose Image
-                    </Button>
-                  )}
-                </FileButton>
-
-                {!playSettings.autoPredictOnUpload ? (
-                  <Button
-                    disabled={!selectedFile}
-                    loading={isAnalyzing}
-                    onClick={() => {
-                      if (!selectedFile) {
-                        return
-                      }
-
-                      void runPrediction(selectedFile)
-                    }}
-                    variant="light"
-                  >
-                    Analyze
-                  </Button>
-                ) : null}
-              </Group>
-            </Stack>
-          </div>
-        </Stack>
-      </Paper>
-
-      <Paper className="p-6" radius="xl" withBorder>
-        <Stack gap="lg">
-          <div className="space-y-2">
-            <Text fw={600} size="lg">
-              Result
-            </Text>
-            <Text c="dimmed" size="sm">
-              The model prediction appears here after you upload an image.
-            </Text>
-          </div>
-
-          {isAnalyzing ? (
-            <Center className="min-h-56">
-              <Loader />
-            </Center>
-          ) : runtimeError ? (
-            <Alert color="red" variant="light">
-              {runtimeError}
-            </Alert>
-          ) : !prediction || !topResult ? (
-            <div className="flex min-h-56 items-center justify-center rounded-xl bg-zinc-50 text-sm text-zinc-500 dark:bg-zinc-900/60 dark:text-zinc-400">
-              Upload an image to see the prediction.
+        <section className="space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
+            Description
+          </p>
+          <div className="max-h-72 overflow-y-auto pr-2 text-sm leading-7 text-zinc-600 dark:text-zinc-300">
+            <div className="whitespace-pre-wrap">
+              {projectDescription || "No project description yet."}
             </div>
-          ) : (
-            <Stack gap="md">
-              <div className="rounded-2xl bg-zinc-950 px-5 py-6 text-white">
-                <Text className="uppercase tracking-[0.12em] text-white/60" size="xs">
-                  Predicted Class
-                </Text>
-                <Text className="mt-2" fw={700} size="xl">
-                  {meetsThreshold ? topResult.className : "Not confident enough"}
-                </Text>
-                {playSettings.showConfidenceScores ? (
-                  <Text className="mt-2 text-white/70" size="sm">
-                    Confidence {(topResult.confidence * 100).toFixed(1)}%
-                  </Text>
-                ) : null}
-                <Text className="mt-2 text-white/50" size="xs">
-                  Inference time {prediction.predictTimeMs.toFixed(1)} ms
-                </Text>
+          </div>
+        </section>
+      </aside>
+
+      <div className="flex min-w-0 flex-col gap-6">
+        <div className="flex flex-wrap items-center gap-3">
+          <FileButton
+            accept="image/*"
+            multiple={false}
+            onChange={(file) => {
+              if (!file) {
+                return
+              }
+
+              setSelectedFile(file)
+              setPrediction(null)
+              setRuntimeError(null)
+
+              if (playSettings.autoPredictOnUpload) {
+                void runPrediction(file)
+              }
+            }}
+          >
+            {(props) => (
+              <Button
+                {...props}
+                leftSection={<IconUpload className="size-4" />}
+                size="md"
+              >
+                Upload Image
+              </Button>
+            )}
+          </FileButton>
+
+          {!playSettings.autoPredictOnUpload ? (
+            <Button
+              disabled={!selectedFile}
+              loading={isAnalyzing}
+              onClick={() => {
+                if (!selectedFile) {
+                  return
+                }
+
+                void runPrediction(selectedFile)
+              }}
+              size="md"
+              variant="default"
+            >
+              Predict
+            </Button>
+          ) : null}
+
+          {selectedFile ? (
+            <span className="truncate text-sm text-zinc-500 dark:text-zinc-400">
+              {selectedFile.name}
+            </span>
+          ) : null}
+        </div>
+
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="min-h-[420px] overflow-hidden rounded-3xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/60">
+            {selectedFileUrl ? (
+              <img
+                alt={selectedFile?.name ?? "Selected upload"}
+                className="h-full max-h-[680px] w-full object-contain"
+                src={selectedFileUrl}
+              />
+            ) : (
+              <div className="flex h-full min-h-[420px] items-center justify-center px-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                Upload an image to try the model.
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+            <div
+              className="space-y-6 motion-duration-300 motion-preset-expand"
+              key={predictionTick}
+            >
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
+                  Result
+                </p>
+                <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+                  {isAnalyzing
+                    ? "Analyzing..."
+                    : !prediction || !topResult
+                      ? "Ready to test"
+                      : meetsThreshold
+                        ? topResult.className
+                        : "Not confident enough"}
+                </h2>
+                {playSettings.showConfidenceScores && prediction && topResult ? (
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                    Confidence {(topResult.confidence * 100).toFixed(1)}% ·{" "}
+                    {prediction.predictTimeMs.toFixed(1)} ms
+                  </p>
+                ) : (
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                    Upload an image to see how the model responds.
+                  </p>
+                )}
               </div>
 
-              {playSettings.showConfidenceScores ? (
-                <Stack gap="sm">
-                  {visibleResults.map((result) => (
-                    <div key={result.index}>
-                      <div className="mb-2 flex items-center justify-between gap-3">
-                        <Text fw={500} size="sm">
-                          {result.className}
-                        </Text>
-                        <Text c="dimmed" size="sm">
-                          {(result.confidence * 100).toFixed(1)}%
-                        </Text>
-                      </div>
-                      <Progress radius="xl" size="lg" value={result.confidence * 100} />
+              {isAnalyzing ? (
+                <AnalyzeSkeleton />
+              ) : runtimeError ? (
+                <Alert color="red" variant="light">
+                  {runtimeError}
+                </Alert>
+              ) : !prediction || !topResult ? (
+                <div className="space-y-4 rounded-2xl border border-dashed border-zinc-200 px-4 py-5 dark:border-zinc-800">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
+                      Ready to test
+                    </p>
+                    <p className="text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+                      Upload a fresh image to compare it against {classes.length} trained
+                      classes. The result panel will rank the most likely matches.
+                    </p>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-xl bg-zinc-100 px-3 py-3 dark:bg-zinc-900">
+                      <p className="text-xs uppercase tracking-[0.14em] text-zinc-400 dark:text-zinc-500">
+                        Mode
+                      </p>
+                      <p className="mt-2 text-sm font-medium text-zinc-800 dark:text-zinc-200">
+                        Upload
+                      </p>
                     </div>
-                  ))}
-                </Stack>
-              ) : null}
-            </Stack>
-          )}
-        </Stack>
-      </Paper>
+                    <div className="rounded-xl bg-zinc-100 px-3 py-3 dark:bg-zinc-900">
+                      <p className="text-xs uppercase tracking-[0.14em] text-zinc-400 dark:text-zinc-500">
+                        Threshold
+                      </p>
+                      <p className="mt-2 text-sm font-medium text-zinc-800 dark:text-zinc-200">
+                        {(playSettings.confidenceThreshold * 100).toFixed(0)}%
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {playSettings.showConfidenceScores ? (
+                    visibleResults.map((result) => (
+                      <div key={result.index}>
+                        <div className="mb-2 flex items-center justify-between gap-3">
+                          <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
+                            {result.className}
+                          </span>
+                          <span className="text-sm text-zinc-500 dark:text-zinc-400">
+                            {(result.confidence * 100).toFixed(1)}%
+                          </span>
+                        </div>
+                        <Progress
+                          radius="xl"
+                          size="lg"
+                          value={result.confidence * 100}
+                        />
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-2xl bg-zinc-100 px-4 py-4 text-sm text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
+                      Confidence display is disabled for this play mode.
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const ClassPreviewItem: FunctionComponent<{
+  classId: string
+  name: string
+  samples: Array<{
+    filePath: string
+    id: string
+  }>
+}> = ({ classId, name, samples }) => {
+  const [previewUrls, setPreviewUrls] = useState<string[]>([])
+  const previewSamples = useMemo(
+    () => pickSeededSamples(samples, classId, 4),
+    [classId, samples],
+  )
+
+  useEffect(() => {
+    let cancelled = false
+    let nextUrls: string[] = []
+
+    if (!previewSamples.length) {
+      setPreviewUrls([])
+      return
+    }
+
+    void Promise.all(
+      previewSamples.map((sample) => createSamplePreviewUrl(sample.filePath)),
+    ).then((urls) => {
+      if (cancelled) {
+        urls.forEach((url) => revokeSamplePreviewUrl(url))
+        return
+      }
+
+      nextUrls = urls
+      setPreviewUrls(urls)
+    })
+
+    return () => {
+      cancelled = true
+      nextUrls.forEach((url) => revokeSamplePreviewUrl(url))
+    }
+  }, [previewSamples])
+
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{name}</p>
+      <div className="flex gap-2">
+        {previewUrls.length ? (
+          previewUrls.map((url, index) => (
+            <img
+              alt={`${name} sample ${index + 1}`}
+              className="size-[60px] rounded-xl object-cover"
+              key={url}
+              src={url}
+            />
+          ))
+        ) : (
+          <div className="flex h-[60px] w-full items-center rounded-xl border border-dashed border-zinc-200 px-3 text-xs text-zinc-400 dark:border-zinc-800">
+            No samples yet
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function AnalyzeSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-3">
+        <Skeleton height={14} radius="xl" width="24%" />
+        <Skeleton height={32} radius="xl" width="58%" />
+        <Skeleton height={12} radius="xl" width="42%" />
+      </div>
+      <div className="space-y-4">
+        {[0, 1, 2].map((index) => (
+          <div className="space-y-2 motion-preset-fade" key={index}>
+            <div className="flex items-center justify-between gap-3">
+              <Skeleton height={12} radius="xl" width={`${48 - index * 6}%`} />
+              <Skeleton height={12} radius="xl" width="16%" />
+            </div>
+            <Skeleton height={16} radius="xl" width="100%" />
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
