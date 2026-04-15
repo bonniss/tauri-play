@@ -344,10 +344,7 @@ function ProjectLabelPage() {
         <div className="mt-6 space-y-3">
           <CameraCapturePanel
             currentCameraClass={currentCameraClass}
-            isBusy={isPersistingCameraFrames || isOpeningCamera}
-            isPersisting={isPersistingCameraFrames}
             onCaptureSession={handleCameraCaptureSession}
-            onClose={closeInlineCamera}
             onRenameClass={updateClassName}
           />
         </div>
@@ -463,10 +460,7 @@ function ProjectLabelPage() {
                     <div className="mb-4">
                       <CameraCapturePanel
                         currentCameraClass={currentCameraClass}
-                        isBusy={isPersistingCameraFrames || isOpeningCamera}
-                        isPersisting={isPersistingCameraFrames}
                         onCaptureSession={handleCameraCaptureSession}
-                        onClose={closeInlineCamera}
                         onRenameClass={updateClassName}
                       />
                     </div>
@@ -522,17 +516,11 @@ function ProjectLabelPage() {
 
 function CameraCapturePanel({
   currentCameraClass,
-  isBusy,
-  isPersisting,
   onCaptureSession,
-  onClose,
   onRenameClass,
 }: {
   currentCameraClass: NonNullable<ReturnType<typeof useProjectOne>['classes'][number]> | null;
-  isBusy: boolean;
-  isPersisting: boolean;
   onCaptureSession: (session: CaptureSession) => Promise<void>;
-  onClose: () => Promise<void>;
   onRenameClass: (indexOrClassId: number | string, name: string) => void;
 }) {
   if (!currentCameraClass) {
@@ -540,23 +528,7 @@ function CameraCapturePanel({
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="text-sm text-zinc-500 dark:text-zinc-400">
-          {isPersisting ? 'Saving captures...' : 'Camera capture'}
-        </div>
-        <Button
-          disabled={isBusy}
-          onClick={() => {
-            void onClose();
-          }}
-          size="xs"
-          variant="default"
-        >
-          Done
-        </Button>
-      </div>
-
+    <div>
       <CameraUI
         className="w-full"
         onCaptureSession={(session) => {
