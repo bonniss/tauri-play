@@ -3,6 +3,8 @@ import {
   Button,
   Loader,
   Modal,
+  Popover,
+  Table,
   Text,
 } from "@mantine/core"
 import {
@@ -50,9 +52,12 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
   const [internalActiveSampleId, setInternalActiveSampleId] = useState<string | null>(
     defaultActiveSampleId ?? samples[0]?.id ?? null,
   )
-  const [lightboxSampleId, setLightboxSampleId] = useState<string | null>(null)
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false)
+  const [displayedSampleId, setDisplayedSampleId] = useState<string | null>(null)
   const [isDeletingSample, setIsDeletingSample] = useState(false)
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
   const [isLoadingPreviews, setIsLoadingPreviews] = useState(false)
+  const [showMetadata, setShowMetadata] = useState(false)
   const [previewMap, setPreviewMap] = useState<Record<string, string>>({})
   const [columnCount, setColumnCount] = useState(1)
   const gridRef = useRef<HTMLDivElement | null>(null)
@@ -63,8 +68,8 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
     ? activeSampleId ?? null
     : internalActiveSampleId
   const lightboxSampleIndex = useMemo(
-    () => samples.findIndex((sample) => sample.id === lightboxSampleId),
-    [lightboxSampleId, samples],
+    () => samples.findIndex((sample) => sample.id === displayedSampleId),
+    [displayedSampleId, samples],
   )
   const lightboxSample =
     lightboxSampleIndex >= 0 ? samples[lightboxSampleIndex] : null
@@ -127,17 +132,23 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
       setResolvedActiveSampleId(samples[0]?.id ?? null)
     }
 
-    if (lightboxSampleId && !samples.some((sample) => sample.id === lightboxSampleId)) {
-      const removedIndex = previousIds.indexOf(lightboxSampleId)
+    if (displayedSampleId && !samples.some((sample) => sample.id === displayedSampleId)) {
+      const removedIndex = previousIds.indexOf(displayedSampleId)
       const fallbackSample =
         samples[Math.min(removedIndex, samples.length - 1)] ?? null
 
-      setLightboxSampleId(fallbackSample?.id ?? null)
+      if (fallbackSample) {
+        setDisplayedSampleId(fallbackSample.id)
+      } else {
+        setIsDeleteConfirmOpen(false)
+        setShowMetadata(false)
+        setIsLightboxOpen(false)
+      }
       setResolvedActiveSampleId(fallbackSample?.id ?? null)
     }
 
     previousSamplesRef.current = samples
-  }, [lightboxSampleId, resolvedActiveSampleId, samples])
+  }, [displayedSampleId, resolvedActiveSampleId, samples])
 
   useEffect(() => {
     const gridElement = gridRef.current
@@ -224,13 +235,27 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
       return
     }
 
-    setLightboxSampleId(nextSample.id)
+    setDisplayedSampleId(nextSample.id)
+    setIsDeleteConfirmOpen(false)
     setResolvedActiveSampleId(nextSample.id)
   }
 
   function openLightbox(sampleId: string) {
-    setLightboxSampleId(sampleId)
+    setDisplayedSampleId(sampleId)
+    setIsLightboxOpen(true)
+    setIsDeleteConfirmOpen(false)
     setResolvedActiveSampleId(sampleId)
+    setShowMetadata(false)
+  }
+
+  function closeLightbox() {
+    if (resolvedActiveSampleId) {
+      shouldFocusActiveRef.current = true
+    }
+
+    setIsDeleteConfirmOpen(false)
+    setShowMetadata(false)
+    setIsLightboxOpen(false)
   }
 
   async function handleDeleteSample() {
@@ -367,29 +392,25 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
 
       <Modal
         centered
-        onClose={() => {
-          setLightboxSampleId(null)
-
-          if (resolvedActiveSampleId) {
-            shouldFocusActiveRef.current = true
-          }
-        }}
-        opened={Boolean(lightboxSample)}
+        keepMounted
+        onClose={closeLightbox}
+        opened={isLightboxOpen}
         size="auto"
-        title={lightboxSample ? `${lightboxSampleIndex + 1} / ${samples.length}` : ""}
+        title=""
+        withCloseButton={false}
       >
         {lightboxSample ? (
           <div className="flex max-w-[min(90vw,1100px)] flex-col gap-4">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <Text fw={600} truncate>
-                  {lightboxSample.originalFileName ?? lightboxSample.className ?? "Sample"}
-                </Text>
-                <Text c="dimmed" size="sm">
-                  {lightboxSample.width && lightboxSample.height
-                    ? `${lightboxSample.width} x ${lightboxSample.height}`
-                    : "Image preview"}
-                </Text>
+                <div className="flex items-center gap-2">
+                  <Text fw={600} truncate>
+                    {lightboxSample.originalFileName ?? lightboxSample.className ?? "Sample"}
+                  </Text>
+                  <Text c="dimmed" size="sm">
+                    {lightboxSampleIndex + 1} / {samples.length}
+                  </Text>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <ActionIcon
@@ -412,19 +433,6 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
                 >
                   <IconChevronRight size={18} stroke={1.8} />
                 </ActionIcon>
-                {onDeleteSample ? (
-                  <Button
-                    color="red"
-                    leftSection={<IconTrash size={16} stroke={1.8} />}
-                    loading={isDeletingSample}
-                    onClick={() => {
-                      void handleDeleteSample()
-                    }}
-                    variant="light"
-                  >
-                    Delete
-                  </Button>
-                ) : null}
               </div>
             </div>
 
@@ -439,10 +447,157 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
                 <Loader size="sm" />
               )}
             </div>
+
+            {showMetadata ? (
+              <div className="rounded-lg border border-zinc-200 bg-white/85 p-3 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/85">
+                <Table
+                  className="text-xs"
+                  highlightOnHover={false}
+                  horizontalSpacing="sm"
+                  verticalSpacing={6}
+                >
+                  <Table.Tbody>
+                    <MetadataRow
+                      label="Name"
+                      value={lightboxSample.originalFileName ?? "-"}
+                    />
+                    <MetadataRow
+                      label="Path"
+                      value={lightboxSample.originalFilePath ?? lightboxSample.filePath}
+                    />
+                    <MetadataRow
+                      label="Mime"
+                      value={lightboxSample.mimeType ?? "-"}
+                    />
+                    <MetadataRow
+                      label="Size"
+                      value={
+                        lightboxSample.fileSize != null
+                          ? `${lightboxSample.fileSize.toLocaleString()} B`
+                          : "-"
+                      }
+                    />
+                    <MetadataRow
+                      label="Dimensions"
+                      value={
+                        lightboxSample.width && lightboxSample.height
+                          ? `${lightboxSample.width} x ${lightboxSample.height}`
+                          : "-"
+                      }
+                    />
+                    <MetadataRow
+                      label="Modified"
+                      value={lightboxSample.lastModifiedAt ?? "-"}
+                    />
+                    <MetadataRow
+                      label="Hash"
+                      value={lightboxSample.contentHash ?? "-"}
+                    />
+                    <MetadataRow
+                      label="Source"
+                      value={lightboxSample.source}
+                    />
+                  </Table.Tbody>
+                </Table>
+              </div>
+            ) : null}
+
+            <div className="flex items-center justify-between gap-3">
+              <Button
+                onClick={() => {
+                  setShowMetadata((current) => !current)
+                  setIsDeleteConfirmOpen(false)
+                }}
+                variant="default"
+              >
+                {showMetadata ? "Hide Meta" : "Show Meta"}
+              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={closeLightbox}
+                  variant="default"
+                >
+                  Close
+                </Button>
+                {onDeleteSample ? (
+                  <Popover
+                    onDismiss={() => {
+                      setIsDeleteConfirmOpen(false)
+                    }}
+                    opened={isDeleteConfirmOpen}
+                    position="top-end"
+                    shadow="md"
+                    trapFocus
+                    withArrow
+                  >
+                    <Popover.Target>
+                      <Button
+                        color="red"
+                        leftSection={<IconTrash size={16} stroke={1.8} />}
+                        onClick={() => {
+                          setIsDeleteConfirmOpen((current) => !current)
+                        }}
+                        variant="light"
+                      >
+                        Delete
+                      </Button>
+                    </Popover.Target>
+                    <Popover.Dropdown>
+                      <div className="w-56 space-y-3">
+                        <Text size="sm">Delete this sample?</Text>
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            onClick={() => {
+                              setIsDeleteConfirmOpen(false)
+                            }}
+                            size="xs"
+                            variant="default"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            color="red"
+                            data-autofocus
+                            loading={isDeletingSample}
+                            onClick={() => {
+                              void handleDeleteSample().finally(() => {
+                                setIsDeleteConfirmOpen(false)
+                              })
+                            }}
+                            size="xs"
+                          >
+                            Confirm
+                          </Button>
+                        </div>
+                      </div>
+                    </Popover.Dropdown>
+                  </Popover>
+                ) : null}
+              </div>
+            </div>
           </div>
         ) : null}
       </Modal>
     </>
+  )
+}
+
+function MetadataRow({
+  label,
+  value,
+}: {
+  label: string
+  value: string
+}) {
+  return (
+    <Table.Tr>
+      <Table.Td className="w-28 whitespace-nowrap px-0 py-1 text-zinc-500 dark:text-zinc-400">
+        {label}
+      </Table.Td>
+      <Table.Td className="break-all px-0 py-1 text-zinc-900 dark:text-zinc-100">
+        {value}
+      </Table.Td>
+    </Table.Tr>
   )
 }
 
