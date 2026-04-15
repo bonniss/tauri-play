@@ -20,7 +20,15 @@ import {
   listProjects,
 } from "~/lib/db/domain/projects";
 import { genProjectId } from "~/lib/project/id-generator";
-import { generateRandomProjectName } from "~/lib/project/name";
+import {
+  ANIMAL_ICON_OPTIONS,
+  generateRandomProjectIdentity,
+} from "~/lib/project/name";
+import {
+  DEFAULT_PROJECT_SETTINGS,
+  parseProjectSettings,
+  stringifyProjectSettings,
+} from "~/lib/project/settings";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -48,9 +56,8 @@ const createProjectForm = defineConfig<{
 
 function HomePage() {
   const [search, setSearch] = useState("")
-  const [projectNameSeed, setProjectNameSeed] = useState(
-    generateRandomProjectName(),
-  )
+  const [projectSeed, setProjectSeed] = useState(generateRandomProjectIdentity())
+  const [selectedProjectIcon, setSelectedProjectIcon] = useState(projectSeed.icon)
   const [createProjectOpened, createProjectHandlers] = useDisclosure(false)
   const deferredSearch = useDeferredValue(search)
   const navigate = useNavigate()
@@ -63,14 +70,20 @@ function HomePage() {
     mutationFn: async ({
       description,
       name,
+      icon,
     }: {
       description: string
+      icon: string
       name: string
     }) => {
       return createProject({
         id: genProjectId(),
         description: description.trim() || null,
         name,
+        settings: stringifyProjectSettings({
+          ...DEFAULT_PROJECT_SETTINGS,
+          icon,
+        }),
         status: "draft",
       })
     },
@@ -111,12 +124,39 @@ function HomePage() {
           config={createProjectForm}
           defaultValues={{
             description: "",
-            name: projectNameSeed,
+            name: projectSeed.name,
           }}
           onSubmit={async (values) => {
-            await createProjectMutation.mutateAsync(values)
+            await createProjectMutation.mutateAsync({
+              ...values,
+              icon: selectedProjectIcon,
+            })
           }}
         >
+          <div className="space-y-2">
+            <Text c="dimmed" size="sm">
+              Icon
+            </Text>
+            <div className="grid grid-cols-7 gap-2">
+              {ANIMAL_ICON_OPTIONS.map((option) => (
+                <button
+                  className={`flex h-11 items-center justify-center rounded-xl border text-xl transition-colors ${
+                    selectedProjectIcon === option.icon
+                      ? "border-zinc-900 bg-zinc-100 dark:border-zinc-100 dark:bg-zinc-800"
+                      : "border-zinc-200 bg-white hover:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-900"
+                  }`}
+                  key={`${option.value}-${option.icon}`}
+                  onClick={() => {
+                    setSelectedProjectIcon(option.icon)
+                  }}
+                  title={option.label}
+                  type="button"
+                >
+                  {option.icon}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="mt-4 flex justify-end gap-3">
             <Button
               onClick={createProjectHandlers.close}
@@ -143,7 +183,9 @@ function HomePage() {
           />
           <Button
             onClick={() => {
-              setProjectNameSeed(generateRandomProjectName())
+              const nextSeed = generateRandomProjectIdentity()
+              setProjectSeed(nextSeed)
+              setSelectedProjectIcon(nextSeed.icon)
               createProjectHandlers.open()
             }}
           >
@@ -180,13 +222,18 @@ function HomePage() {
             <Paper className="p-5" key={project.id} radius="lg" withBorder>
               <Stack gap="md">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-1">
-                    <h2 className="text-lg font-semibold leading-tight">
-                      {project.name}
-                    </h2>
-                    <Text c="dimmed" size="sm">
-                      {project.description || "No description yet."}
-                    </Text>
+                  <div className="flex min-w-0 gap-3">
+                    <div className="pt-0.5 text-2xl leading-none">
+                      {parseProjectSettings(project.settings).icon}
+                    </div>
+                    <div className="space-y-1">
+                      <h2 className="text-lg font-semibold leading-tight">
+                        {project.name}
+                      </h2>
+                      <Text c="dimmed" size="sm">
+                        {project.description || "No description yet."}
+                      </Text>
+                    </div>
                   </div>
                   <Badge
                     color={project.hasModel ? "green" : "gray"}
@@ -201,7 +248,7 @@ function HomePage() {
                   <Stat label="Samples" value={project.sampleCount} />
                   <Stat label="Task" value={project.taskType} />
                   <Stat
-                    label="Updated"
+                  label="Updated"
                     value={new Date(project.updatedAt).toLocaleDateString()}
                   />
                 </div>

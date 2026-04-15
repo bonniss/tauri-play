@@ -21,6 +21,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
     classes,
     totalSamples,
     project,
+    projectIcon,
     projectName,
     classReadiness,
     trainProgress,
@@ -114,16 +115,19 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
           <Text c="dimmed" className="px-2 font-mono" size="xs">
             {projectId}
           </Text>
-          <ContentEditable
-            as="h2"
-            aria-label="Project name"
-            className="min-w-0 rounded-md px-2 py-1 text-lg font-semibold leading-tight text-zinc-950 outline-none transition-colors dark:text-zinc-50"
-            focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
-            onBlur={async (value) => {
-              await saveProjectField({ name: value })
-            }}
-            value={projectName}
-          />
+          <div className="flex items-start gap-2 px-2">
+            <div className="pt-1 text-xl leading-none">{projectIcon}</div>
+            <ContentEditable
+              as="h2"
+              aria-label="Project name"
+              className="min-w-0 rounded-md py-1 text-lg font-semibold leading-tight text-zinc-950 outline-none transition-colors dark:text-zinc-50"
+              focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
+              onBlur={async (value) => {
+                await saveProjectField({ name: value })
+              }}
+              value={projectName}
+            />
+          </div>
           <ContentEditable
             as="p"
             aria-label="Project description"

@@ -27,6 +27,7 @@ export interface ProjectPlaySettings {
 }
 
 export interface ProjectSettings {
+  icon: string
   label: ProjectLabelSettings
   play: ProjectPlaySettings
   train: ProjectTrainSettings
@@ -85,6 +86,7 @@ export const DEFAULT_PROJECT_PLAY_SETTINGS: ProjectPlaySettings = {
 }
 
 export const DEFAULT_PROJECT_SETTINGS: ProjectSettings = {
+  icon: "🦊",
   label: DEFAULT_PROJECT_LABEL_SETTINGS,
   play: DEFAULT_PROJECT_PLAY_SETTINGS,
   train: DEFAULT_PROJECT_TRAIN_SETTINGS,
@@ -117,6 +119,7 @@ const playSettingsInputSchema = type({
 })
 
 const projectSettingsInputSchema = type({
+  icon: "string | undefined",
   label: labelSettingsInputSchema.or("undefined"),
   play: playSettingsInputSchema.or("undefined"),
   train: trainSettingsInputSchema.or("undefined"),
@@ -164,12 +167,14 @@ export function normalizeProjectSettings(
   value: ProjectSettingsInput | undefined,
 ): ProjectSettings {
   const source = value ?? {
+    icon: undefined,
     label: undefined,
     play: undefined,
     train: undefined,
   }
 
   return {
+    icon: source.icon?.trim() || DEFAULT_PROJECT_SETTINGS.icon,
     label: normalizeProjectLabelSettings(source.label),
     play: normalizeProjectPlaySettings(source.play),
     train: normalizeProjectTrainSettings(source.train),

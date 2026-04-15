@@ -112,6 +112,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
     const projectDescription = project?.description ?? '';
     const projectStatus = project?.status;
     const projectSettings = parseProjectSettings(project?.settings);
+    const projectIcon = projectSettings.icon;
     const labelSettings = projectSettings.label;
     const playSettings = projectSettings.play;
     const trainSettings = projectSettings.train;
@@ -463,6 +464,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       isApplyingTrainSettings,
       projectId,
       projectName,
+      projectIcon,
       projectDescription,
       projectStatus,
       seedClass,
