@@ -178,8 +178,10 @@ export async function trainProjectMobilenetModel({
       samplesPerClass: splitResults.map((item) => ({
         classId: item.classId,
         className: item.className,
+        trainSampleIds: item.trainSamples.map((sample) => sample.id),
         totalSamples: item.allSamples,
         trainSamples: item.trainSamples.length,
+        validationSampleIds: item.validationSamples.map((sample) => sample.id),
         validationSamples: item.validationSamples.length,
       })),
     }

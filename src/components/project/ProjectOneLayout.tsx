@@ -111,6 +111,9 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
     <section className="min-h-[calc(100vh-6rem)] flex flex-col lg:flex-row gap-8">
       <aside className="lg:flex lg:flex-col lg:w-80 overflow-y-auto border-r border-zinc-200 dark:border-zinc-600 px-4 py-2 bg-gray-50 dark:bg-gray-800/80 rounded-sm">
         <div className="space-y-1">
+          <Text c="dimmed" className="px-2 font-mono" size="xs">
+            {projectId}
+          </Text>
           <ContentEditable
             as="h2"
             aria-label="Project name"

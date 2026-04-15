@@ -7,6 +7,7 @@ import {
   Popover,
   Progress,
   ScrollArea,
+  SegmentedControl,
   Stack,
   Text,
 } from "@mantine/core"
@@ -16,6 +17,7 @@ import { createFileRoute } from "@tanstack/react-router"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Form, defineConfig } from "~/components/form"
+import SampleGrid from "~/components/project/SampleGrid"
 import { useProjectOne } from "~/components/project/ProjectOneProvider"
 import {
   appendModelTrainLogEvent,
@@ -99,13 +101,17 @@ const trainSettingsForm = defineConfig<ProjectTrainSettingsFormValues>({
 })
 
 type ActiveTrainSession = {
+  datasetSnapshot: ModelTrainLogDatasetSnapshot
   endedAt: string | null
   events: ModelTrainLogEvent[]
+  settingsSnapshot: string
   startedAt: string
   status: "started" | "completed" | "failed"
   summary: ModelTrainLogSummary | null
   trainLogId: string
 }
+
+type TrainDataView = "train" | "validation"
 
 function formatDuration(durationMs: number) {
   const totalSeconds = Math.max(0, Math.floor(durationMs / 1000))
@@ -151,8 +157,10 @@ function createPendingDatasetSnapshot(
     samplesPerClass: classes.map((item) => ({
       classId: item.id,
       className: item.name,
+      trainSampleIds: [],
       totalSamples: item.samples.length,
       trainSamples: 0,
+      validationSampleIds: [],
       validationSamples: 0,
     })),
   }
@@ -173,6 +181,7 @@ function ProjectTrainPage() {
   const queryClient = useQueryClient()
   const [trainSettingsOpened, setTrainSettingsOpened] = useState(false)
   const [activeSession, setActiveSession] = useState<ActiveTrainSession | null>(null)
+  const [trainDataView, setTrainDataView] = useState<TrainDataView>("train")
   const [now, setNow] = useState(() => Date.now())
   const activeTrainLogIdRef = useRef<string | null>(null)
 
@@ -204,6 +213,7 @@ function ProjectTrainPage() {
       })
 
       setActiveSession({
+        datasetSnapshot: pendingSnapshot,
         endedAt: null,
         events: [
           {
@@ -212,6 +222,7 @@ function ProjectTrainPage() {
             type: "phase",
           },
         ],
+        settingsSnapshot: JSON.stringify(projectSettings.train),
         startedAt,
         status: "started",
         summary: null,
@@ -266,6 +277,10 @@ function ProjectTrainPage() {
             current
               ? {
                   ...current,
+                  datasetSnapshot:
+                    event.type === "split"
+                      ? latestDatasetSnapshot
+                      : current.datasetSnapshot,
                   events: [...current.events, event],
                 }
               : current,
@@ -312,13 +327,14 @@ function ProjectTrainPage() {
       setActiveSession((current) =>
         current
           ? {
-              ...current,
-              endedAt: summary.endedAt,
-              status: "completed",
-              summary,
-            }
-          : current,
-      )
+                  ...current,
+                  datasetSnapshot: result.datasetSnapshot,
+                  endedAt: summary.endedAt,
+                  status: "completed",
+                  summary,
+                }
+              : current,
+          )
 
       return { modelId, summary, trainLogId, datasetSnapshot: latestDatasetSnapshot }
     },
@@ -394,14 +410,33 @@ function ProjectTrainPage() {
 
   const displayedTrainLog = activeSession ?? latestTrainLogQuery.data
   const displayedModel = latestModelQuery.data
+  const runSettings = useMemo(() => {
+    if (!displayedTrainLog?.settingsSnapshot) {
+      return null
+    }
+
+    try {
+      return JSON.parse(displayedTrainLog.settingsSnapshot) as {
+        epochs?: number
+      }
+    } catch {
+      return null
+    }
+  }, [displayedTrainLog?.settingsSnapshot])
   const epochEvents = useMemo(
     () => displayedTrainLog?.events.filter((event) => event.type === "epoch") ?? [],
     [displayedTrainLog?.events],
   )
   const latestEpoch =
     epochEvents.length > 0 ? epochEvents[epochEvents.length - 1] : null
+  const plannedEpochs =
+    runSettings?.epochs && Number.isFinite(runSettings.epochs)
+      ? Math.max(1, runSettings.epochs)
+      : trainSettings.epochs
   const trainProgress = displayedTrainLog
-    ? Math.min(epochEvents.length / trainSettings.epochs, 1)
+    ? displayedTrainLog.status === "completed"
+      ? 1
+      : Math.min(epochEvents.length / plannedEpochs, 1)
     : 0
   const elapsedMs = displayedTrainLog
     ? new Date(displayedTrainLog.endedAt ?? now).getTime() -
@@ -421,6 +456,32 @@ function ProjectTrainPage() {
       window.clearInterval(timer)
     }
   }, [displayedTrainLog?.status])
+
+  const sampleMap = useMemo(
+    () =>
+      new Map(
+        classes.flatMap((item) =>
+          item.samples.map((sample) => [sample.id, sample] as const),
+        ),
+      ),
+    [classes],
+  )
+  const displayedSplitSamples = useMemo(() => {
+    if (!displayedTrainLog) {
+      return []
+    }
+
+    const sampleIds = displayedTrainLog.datasetSnapshot.samplesPerClass.flatMap(
+      (item) =>
+        trainDataView === "train"
+          ? (item.trainSampleIds ?? [])
+          : (item.validationSampleIds ?? []),
+    )
+
+    return sampleIds
+      .map((sampleId) => sampleMap.get(sampleId) ?? null)
+      .filter((sample): sample is NonNullable<typeof sample> => sample != null)
+  }, [displayedTrainLog, sampleMap, trainDataView])
 
   return (
     <Paper className="p-4">
@@ -533,33 +594,33 @@ function ProjectTrainPage() {
                 <div className="text-right">
                   <Text fw={600}>{Math.round(trainProgress * 100)}%</Text>
                   <Text c="dimmed" size="sm">
-                    {epochEvents.length}/{trainSettings.epochs} epochs
+                    {epochEvents.length}/{plannedEpochs} epochs
                   </Text>
                 </div>
               </Group>
               <Progress animated={displayedTrainLog.status === "started"} radius="xl" size="lg" value={trainProgress * 100} />
-              <Group grow>
-                <MetricCard label="Elapsed" value={formatDuration(elapsedMs)} />
-                <MetricCard
+              <div className="grid gap-3 text-sm text-zinc-600 dark:text-zinc-300 md:grid-cols-4">
+                <MetricInline label="Elapsed" value={formatDuration(elapsedMs)} />
+                <MetricInline
                   label="Loss"
                   value={formatMetric(
                     displayedTrainLog.summary?.loss ?? latestEpoch?.loss,
                   )}
                 />
-                <MetricCard
+                <MetricInline
                   label="Val Loss"
                   value={formatMetric(
                     displayedTrainLog.summary?.validationLoss ?? latestEpoch?.valLoss,
                   )}
                 />
-                <MetricCard
+                <MetricInline
                   label="Val Acc"
                   value={formatMetric(
                     displayedTrainLog.summary?.validationAccuracy ??
                       latestEpoch?.valAcc,
                   )}
                 />
-              </Group>
+              </div>
             </Stack>
           </Paper>
         ) : (
@@ -611,20 +672,23 @@ function ProjectTrainPage() {
                 <Text fw={600}>Latest run log</Text>
                 {displayedTrainLog ? (
                   <ScrollArea.Autosize mah={320} type="auto">
-                    <div className="space-y-2">
+                    <div className="overflow-hidden rounded-lg border border-zinc-200 bg-zinc-950 text-zinc-100 dark:border-zinc-800">
+                      <div className="border-b border-white/10 px-3 py-2 font-mono text-xs text-zinc-400">
+                        train@{projectId}
+                      </div>
+                      <div className="space-y-1 px-3 py-3 font-mono text-xs">
                       {displayedTrainLog.events.map((event, index) => (
                         <div
-                          className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-800"
+                          className="leading-5"
                           key={`${event.at}-${index}`}
                         >
-                          <div className="font-medium">
-                            {renderEventMessage(event)}
-                          </div>
-                          <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                          <span className="mr-2 text-zinc-500">
                             {new Date(event.at).toLocaleTimeString()}
-                          </div>
+                          </span>
+                          <span>{renderEventMessage(event)}</span>
                         </div>
                       ))}
+                      </div>
                     </div>
                   </ScrollArea.Autosize>
                 ) : (
@@ -636,18 +700,45 @@ function ProjectTrainPage() {
             </Paper>
           </div>
         </div>
+
+        {displayedTrainLog ? (
+          <Paper className="border border-zinc-200 p-4 dark:border-zinc-800" radius="lg">
+            <Stack gap="sm">
+              <Group justify="space-between">
+                <Text fw={600}>Train Data</Text>
+                <SegmentedControl
+                  data={[
+                    {
+                      label: `Train (${displayedTrainLog.datasetSnapshot.trainSamples})`,
+                      value: "train",
+                    },
+                    {
+                      label: `Validation (${displayedTrainLog.datasetSnapshot.validationSamples})`,
+                      value: "validation",
+                    },
+                  ]}
+                  onChange={(value) => {
+                    setTrainDataView(value as TrainDataView)
+                  }}
+                  value={trainDataView}
+                />
+              </Group>
+              <SampleGrid samples={displayedSplitSamples} />
+            </Stack>
+          </Paper>
+        ) : null}
       </Stack>
     </Paper>
   )
 }
 
-function MetricCard({ label, value }: { label: string; value: string }) {
+function MetricInline({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-zinc-200 px-3 py-3 dark:border-zinc-800">
+    <div className="rounded-md border border-zinc-200 px-3 py-2 dark:border-zinc-800">
       <Text c="dimmed" size="xs">
         {label}
       </Text>
-      <Text fw={600} mt={4} size="sm">
+      <Text fw={600} mt={2} size="sm">
         {value}
       </Text>
     </div>

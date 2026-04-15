@@ -52,8 +52,10 @@ export type ModelTrainLogDatasetSnapshot = {
   samplesPerClass: Array<{
     classId: string
     className: string
+    trainSampleIds: string[]
     totalSamples: number
     trainSamples: number
+    validationSampleIds: string[]
     validationSamples: number
   }>
 }
