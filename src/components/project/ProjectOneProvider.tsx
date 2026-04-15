@@ -1,10 +1,21 @@
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { createProvider } from 'react-easy-provider';
 import { ProjectClass, renameClass } from '~/lib/db/domain/classes';
-import { getProjectWorkspace, ProjectRecord } from '~/lib/db/domain/projects';
+import {
+  getProjectWorkspace,
+  ProjectRecord,
+  updateProject,
+} from '~/lib/db/domain/projects';
 import { ProjectSample } from '~/lib/db/domain/samples';
 import { genClassId, genSampleId } from '~/lib/project/id-generator';
-import { parseProjectSettings } from '~/lib/project/settings';
+import {
+  parseProjectLabelSettingsFormValues,
+  parseProjectSettings,
+  ProjectLabelSettingsFormValues,
+  projectLabelSettingsToFormValues,
+  stringifyProjectSettings,
+} from '~/lib/project/settings';
 
 function getSampleIdFromFilePath(filePath: string) {
   const fileName = filePath.split('/').pop();
@@ -52,8 +63,10 @@ type ProjectOneSampleDraft = Pick<
 export const [useProjectOne, ProjectOneProvider] = createProvider(
   (defaultValue?: { projectId: string }) => {
     const projectId = defaultValue?.projectId;
+    const queryClient = useQueryClient();
 
     const [isInitialized, setIsInitialized] = useState(false);
+    const [isApplyingLabelSettings, setIsApplyingLabelSettings] = useState(false);
     const [project, setProject] = useState<ProjectRecord | undefined>();
     const [classes, setClasses] = useState<ProjectOneClass[]>([]);
 
@@ -91,7 +104,6 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
     const projectStatus = project?.status;
     const projectSettings = parseProjectSettings(project?.settings);
     const labelSettings = projectSettings.label;
-    console.log("🚀 ~ labelSettings:", labelSettings)
 
     const totalClasses = classes.length;
     const totalSamples = classes.reduce(
@@ -265,8 +277,65 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       });
     };
 
+    const getLabelSettingsFormValues = (): ProjectLabelSettingsFormValues =>
+      projectLabelSettingsToFormValues(labelSettings);
+
+    const applyLabelSettings = async (
+      values: ProjectLabelSettingsFormValues,
+    ) => {
+      const nextLabelSettings = parseProjectLabelSettingsFormValues(values);
+      const nextProjectSettings = {
+        ...projectSettings,
+        label: nextLabelSettings,
+      };
+      const nextSettings = stringifyProjectSettings(nextProjectSettings);
+
+      if (nextSettings === (project?.settings ?? '')) {
+        return;
+      }
+
+      setIsApplyingLabelSettings(true);
+
+      try {
+        setProject((current) =>
+          current
+            ? {
+                ...current,
+                settings: nextSettings,
+                updatedAt: new Date().toISOString(),
+              }
+            : current,
+        );
+
+        await updateProject({
+          projectId,
+          settings: nextSettings,
+        });
+        await queryClient.invalidateQueries({ queryKey: ['projects'] });
+      } catch (error) {
+        const workspace = await getProjectWorkspace(projectId);
+        setProject(workspace.project);
+        setClasses(
+          workspace.classes.map((cls) => ({
+            id: cls.id,
+            projectId: cls.projectId,
+            name: cls.name,
+            description: cls.description,
+            order: cls.order,
+            samples: workspace.samples.filter(
+              (sample) => sample.classId === cls.id,
+            ),
+          })),
+        );
+        throw error;
+      } finally {
+        setIsApplyingLabelSettings(false);
+      }
+    };
+
     return {
       isLoading: !isInitialized,
+      isApplyingLabelSettings,
       projectId,
       projectName,
       projectStatus,
@@ -277,6 +346,8 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       removeSamplesFromClass,
       setProjectStatus,
       updateClassName,
+      getLabelSettingsFormValues,
+      applyLabelSettings,
 
       project,
       projectSettings,

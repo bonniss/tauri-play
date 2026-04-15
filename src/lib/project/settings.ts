@@ -17,6 +17,13 @@ export interface ProjectSettings {
   train: ProjectTrainSettings
 }
 
+export interface ProjectLabelSettingsFormValues {
+  maxClasses: string
+  maxSamplesPerClass: string
+  minClasses: string
+  minSamplesPerClass: string
+}
+
 export const DEFAULT_PROJECT_LABEL_SETTINGS: ProjectLabelSettings = {
   maxClasses: null,
   maxSamplesPerClass: null,
@@ -111,4 +118,46 @@ export function parseProjectSettings(settings: string | null | undefined) {
   } catch {
     return DEFAULT_PROJECT_SETTINGS
   }
+}
+
+export function stringifyProjectSettings(settings: ProjectSettings) {
+  return JSON.stringify(settings)
+}
+
+export function projectLabelSettingsToFormValues(
+  settings: ProjectLabelSettings,
+): ProjectLabelSettingsFormValues {
+  return {
+    maxClasses: settings.maxClasses != null ? String(settings.maxClasses) : "",
+    maxSamplesPerClass:
+      settings.maxSamplesPerClass != null
+        ? String(settings.maxSamplesPerClass)
+        : "",
+    minClasses: String(settings.minClasses),
+    minSamplesPerClass: String(settings.minSamplesPerClass),
+  }
+}
+
+export function parseProjectLabelSettingsFormValues(
+  values: ProjectLabelSettingsFormValues,
+): ProjectLabelSettings {
+  const nextMinClasses = Number(values.minClasses.trim())
+  const nextMinSamplesPerClass = Number(values.minSamplesPerClass.trim())
+  const nextMaxClasses = values.maxClasses.trim()
+    ? Number(values.maxClasses.trim())
+    : null
+  const nextMaxSamplesPerClass = values.maxSamplesPerClass.trim()
+    ? Number(values.maxSamplesPerClass.trim())
+    : null
+
+  return normalizeProjectLabelSettings({
+    maxClasses: Number.isFinite(nextMaxClasses) ? nextMaxClasses : null,
+    maxSamplesPerClass: Number.isFinite(nextMaxSamplesPerClass)
+      ? nextMaxSamplesPerClass
+      : null,
+    minClasses: Number.isFinite(nextMinClasses) ? nextMinClasses : undefined,
+    minSamplesPerClass: Number.isFinite(nextMinSamplesPerClass)
+      ? nextMinSamplesPerClass
+      : undefined,
+  })
 }

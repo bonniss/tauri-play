@@ -6,12 +6,14 @@ import {
   Menu,
   Modal,
   Paper,
+  Popover,
   Text,
 } from '@mantine/core';
 import {
   IconChevronRight,
   IconDots,
   IconDownload,
+  IconSettings,
   IconTrash,
 } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -20,6 +22,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import CameraUI from '~/components/camera/CameraUI';
 import { CaptureSession } from '~/components/camera/types';
+import { Form, defineConfig } from '~/components/form';
 import ContentEditable from '~/components/headless/ContentEditable';
 import ProjectActionButton from '~/components/project/ProjectActionButton';
 import SampleGrid from '~/components/project/SampleGrid';
@@ -32,9 +35,43 @@ import {
   deleteSampleFile,
   saveCapturedSampleFrames,
 } from '~/lib/project/sample-storage';
+import { ProjectLabelSettingsFormValues } from '~/lib/project/settings';
 
 export const Route = createFileRoute('/projects/$projectId/label/')({
   component: ProjectLabelPage,
+});
+
+const labelSettingsForm = defineConfig<ProjectLabelSettingsFormValues>({
+  minClasses: {
+    type: 'text',
+    label: 'Min classes',
+    props: {
+      inputMode: 'numeric',
+    },
+  },
+  maxClasses: {
+    type: 'text',
+    label: 'Max classes',
+    props: {
+      placeholder: 'Unlimited',
+      inputMode: 'numeric',
+    },
+  },
+  minSamplesPerClass: {
+    type: 'text',
+    label: 'Min samples per class',
+    props: {
+      inputMode: 'numeric',
+    },
+  },
+  maxSamplesPerClass: {
+    type: 'text',
+    label: 'Max samples per class',
+    props: {
+      placeholder: 'Unlimited',
+      inputMode: 'numeric',
+    },
+  },
 });
 
 type CameraTargetState = {
@@ -46,7 +83,10 @@ type CameraTargetState = {
 function ProjectLabelPage() {
   const {
     addSamplesToClass,
+    applyLabelSettings,
     classes,
+    getLabelSettingsFormValues,
+    isApplyingLabelSettings,
     projectId,
     projectStatus,
     removeClass,
@@ -61,6 +101,7 @@ function ProjectLabelPage() {
   const [isOpeningCamera, setIsOpeningCamera] = useState(false);
   const [isPersistingCameraFrames, setIsPersistingCameraFrames] = useState(false);
   const [deleteClassId, setDeleteClassId] = useState<string | null>(null);
+  const [labelSettingsOpened, setLabelSettingsOpened] = useState(false);
   const [uploadingClassMap, setUploadingClassMap] = useState<
     Record<string, { fileCount: number; isPending: boolean }>
   >({});
@@ -368,6 +409,61 @@ function ProjectLabelPage() {
             buttonLabel="Upload"
             className="flex-1"
           />
+          <Popover
+            onDismiss={() => {
+              setLabelSettingsOpened(false);
+            }}
+            opened={labelSettingsOpened}
+            position="bottom-end"
+            shadow="md"
+            width={360}
+            withArrow
+          >
+            <Popover.Target>
+              <Button
+                leftSection={<IconSettings className="size-4" />}
+                onClick={() => {
+                  setLabelSettingsOpened((current) => !current);
+                }}
+                variant="default"
+              >
+                Label Settings
+              </Button>
+            </Popover.Target>
+            <Popover.Dropdown>
+              <Form
+                key={JSON.stringify(getLabelSettingsFormValues())}
+                config={labelSettingsForm}
+                defaultValues={getLabelSettingsFormValues()}
+                onSubmit={async (values) => {
+                  await applyLabelSettings(values);
+                  setLabelSettingsOpened(false);
+                }}
+                renderRoot={({ children, onSubmit }) => (
+                  <form className="space-y-3" onSubmit={onSubmit}>
+                    <Text fw={600} size="sm">
+                      Label Settings
+                    </Text>
+                    {children}
+                    <Group justify="flex-end">
+                      <Button
+                        onClick={() => {
+                          setLabelSettingsOpened(false);
+                        }}
+                        type="button"
+                        variant="default"
+                      >
+                        Cancel
+                      </Button>
+                      <Button loading={isApplyingLabelSettings} type="submit">
+                        Apply
+                      </Button>
+                    </Group>
+                  </form>
+                )}
+              />
+            </Popover.Dropdown>
+          </Popover>
         </Group>
       </div>
 
