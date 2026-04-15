@@ -194,8 +194,13 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
 
     const updateClassName = (indexOrClassId: number | string, name: string) => {
       const trimmedName = name.trim();
+      const currentClassId =
+        typeof indexOrClassId === 'number'
+          ? classes[indexOrClassId]?.id
+          : indexOrClassId;
+      const currentClass = classes.find((cls) => cls.id === currentClassId);
 
-      if (!trimmedName) {
+      if (!trimmedName || !currentClassId || currentClass?.name === trimmedName) {
         return;
       }
 
@@ -209,10 +214,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
         }),
       );
       renameClass({
-        classId:
-          typeof indexOrClassId === 'number'
-            ? classes[indexOrClassId]?.id!
-            : indexOrClassId,
+        classId: currentClassId,
         name: trimmedName,
       });
     };

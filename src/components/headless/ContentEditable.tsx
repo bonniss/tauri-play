@@ -65,10 +65,21 @@ const ContentEditable: FunctionComponent<ContentEditableProps> = ({
 
   function flushBlur() {
     const trimmedValue = draftValueRef.current.trim()
+    const normalizedValue = value.trim()
 
     if (!trimmedValue) {
       draftValueRef.current = value
       setIsEmpty(value.trim().length === 0)
+
+      if (elementRef.current) {
+        elementRef.current.textContent = value
+      }
+
+      return
+    }
+
+    if (trimmedValue === normalizedValue) {
+      draftValueRef.current = value
 
       if (elementRef.current) {
         elementRef.current.textContent = value
