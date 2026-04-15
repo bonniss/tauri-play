@@ -1,11 +1,11 @@
 import { Badge, NavLink, Progress, Text } from '@mantine/core';
-import { IconBrain, IconPencil, IconPlayerPlay } from '@tabler/icons-react';
+import { IconPencil } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, Outlet, useRouterState } from '@tanstack/react-router';
 import { FunctionComponent, ReactNode } from 'react';
 import ContentEditable from '~/components/headless/ContentEditable';
 import { type ProjectWorkspace, updateProject } from '~/lib/db/domain/projects';
-import { IconDataLabel } from '../icon/semantic';
+import { IconDataLabel, IconDataPlay, IconDataTrain } from '../icon/semantic';
 import { useProjectOne } from './ProjectOneProvider';
 
 interface ProjectOneLayoutProps {}
@@ -152,7 +152,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
             />
             <ProjectNavItem
               current={pathname === `/projects/${projectId}/train`}
-              icon={IconBrain}
+              icon={IconDataTrain}
               label="Train"
               progress={trainNavProgress}
               projectId={projectId}
@@ -163,7 +163,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
             <ProjectNavItem
               current={pathname === `/projects/${projectId}/play`}
               disabled={!canPlay}
-              icon={IconPlayerPlay}
+              icon={IconDataPlay}
               label="Play"
               projectId={projectId}
               to="/projects/$projectId/play"
