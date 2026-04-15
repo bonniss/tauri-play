@@ -8,6 +8,22 @@ import { genClassId, genSampleId } from '~/lib/project/id-generator';
 export const MIN_CLASSES_FOR_TRAIN = 2;
 export const MIN_SAMPLES_PER_CLASS_FOR_TRAIN = 10;
 
+function getSampleIdFromFilePath(filePath: string) {
+  const fileName = filePath.split('/').pop();
+
+  if (!fileName) {
+    return null;
+  }
+
+  const extensionIndex = fileName.lastIndexOf('.');
+
+  if (extensionIndex <= 0) {
+    return fileName;
+  }
+
+  return fileName.slice(0, extensionIndex);
+}
+
 export type ProjectOneClass = Pick<
   ProjectClass,
   'id' | 'projectId' | 'name' | 'description' | 'order'
@@ -156,7 +172,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
 
           const startOrder = cls.samples.length;
           optimisticSamples = nextSamples.map((sample, index) => ({
-            id: sample.id ?? genSampleId(),
+            id: sample.id ?? getSampleIdFromFilePath(sample.filePath) ?? genSampleId(),
             projectId,
             classId,
             filePath: sample.filePath,

@@ -1,15 +1,22 @@
-export function uuid() {
-  return crypto.randomUUID();
+export function unsnake_uuid() {
+  return crypto.randomUUID().replace(/-/g, "")
+}
+
+export function randomBase36(length: number) {
+  const bytes = new Uint8Array(length)
+  crypto.getRandomValues(bytes)
+
+  return Array.from(bytes, (byte) => (byte % 36).toString(36)).join("")
 }
 
 export function genProjectId() {
-  return uuid();
+  return randomBase36(20)
 }
 
 export function genClassId() {
-  return uuid().replace(/-/g, '').slice(-8);
+  return randomBase36(10)
 }
 
 export function genSampleId() {
-  return uuid().replace(/-/g, '').slice(-16);
+  return `${+new Date()}_${randomBase36(8)}`
 }

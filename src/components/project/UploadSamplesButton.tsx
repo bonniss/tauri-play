@@ -4,6 +4,7 @@ import { ChangeEvent, FunctionComponent, useRef } from "react"
 import { createClass } from "~/lib/db/domain/classes"
 import { activateProject, updateProject } from "~/lib/db/domain/projects"
 import { createSample } from "~/lib/db/domain/samples"
+import { genSampleId } from "~/lib/project/id-generator"
 import { saveUploadedSampleFile } from "~/lib/project/sample-storage"
 import { useProjectOne } from "./ProjectOneProvider"
 
@@ -64,7 +65,7 @@ const UploadSamplesButton: FunctionComponent<UploadSamplesButtonProps> = ({
         seededClass.id,
         await Promise.all(
           selectedFiles.map(async (file) => {
-            const sampleId = crypto.randomUUID()
+            const sampleId = genSampleId()
             const { filePath, metadata } = await saveUploadedSampleFile({
               classId: seededClass.id,
               file,
