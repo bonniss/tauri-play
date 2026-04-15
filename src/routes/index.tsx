@@ -8,39 +8,39 @@ import {
   Stack,
   Text,
   TextInput,
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { startTransition, useDeferredValue, useState } from "react";
-import { Form, defineConfig } from "~/components/form";
+} from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
+import { startTransition, useDeferredValue, useState } from 'react';
+import { Form, defineConfig } from '~/components/form';
 import {
   createProject,
   deleteProject,
   listProjects,
-} from "~/lib/db/domain/projects";
-import { genProjectId } from "~/lib/project/id-generator";
+} from '~/lib/db/domain/projects';
+import { genProjectId } from '~/lib/project/id-generator';
 import {
   ANIMAL_ICON_OPTIONS,
   generateRandomProjectIdentity,
-} from "~/lib/project/name";
+} from '~/lib/project/name';
 import {
   DEFAULT_PROJECT_SETTINGS,
   parseProjectSettings,
   stringifyProjectSettings,
-} from "~/lib/project/settings";
+} from '~/lib/project/settings';
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute('/')({
   component: HomePage,
-})
+});
 
 const createProjectForm = defineConfig<{
-  description: string
-  name: string
+  description: string;
+  name: string;
 }>({
   name: {
-    type: "text",
-    label: "Name",
+    type: 'text',
+    label: 'Name',
     rules: {
       required: true,
     },
@@ -49,32 +49,36 @@ const createProjectForm = defineConfig<{
     },
   },
   description: {
-    type: "longText",
-    label: "Description",
+    type: 'longText',
+    label: 'Description',
   },
-})
+});
 
 function HomePage() {
-  const [search, setSearch] = useState("")
-  const [projectSeed, setProjectSeed] = useState(generateRandomProjectIdentity())
-  const [selectedProjectIcon, setSelectedProjectIcon] = useState(projectSeed.icon)
-  const [createProjectOpened, createProjectHandlers] = useDisclosure(false)
-  const deferredSearch = useDeferredValue(search)
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
+  const [search, setSearch] = useState('');
+  const [projectSeed, setProjectSeed] = useState(
+    generateRandomProjectIdentity(),
+  );
+  const [selectedProjectIcon, setSelectedProjectIcon] = useState(
+    projectSeed.icon,
+  );
+  const [createProjectOpened, createProjectHandlers] = useDisclosure(false);
+  const deferredSearch = useDeferredValue(search);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const projectsQuery = useQuery({
-    queryKey: ["projects", deferredSearch],
+    queryKey: ['projects', deferredSearch],
     queryFn: () => listProjects({ search: deferredSearch }),
-  })
+  });
   const createProjectMutation = useMutation({
     mutationFn: async ({
       description,
       name,
       icon,
     }: {
-      description: string
-      icon: string
-      name: string
+      description: string;
+      icon: string;
+      name: string;
     }) => {
       return createProject({
         id: genProjectId(),
@@ -84,29 +88,29 @@ function HomePage() {
           ...DEFAULT_PROJECT_SETTINGS,
           icon,
         }),
-        status: "draft",
-      })
+        status: 'draft',
+      });
     },
     onSuccess: async (projectId) => {
-      createProjectHandlers.close()
-      await queryClient.invalidateQueries({ queryKey: ["projects"] })
+      createProjectHandlers.close();
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
 
       startTransition(() => {
         void navigate({
-          to: "/projects/$projectId/label",
+          to: '/projects/$projectId/label',
           params: { projectId },
-        })
-      })
+        });
+      });
     },
-  })
+  });
   const deleteProjectMutation = useMutation({
     mutationFn: async (projectId: string) => {
-      await deleteProject(projectId)
+      await deleteProject(projectId);
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["projects"] })
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
-  })
+  });
 
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 py-4">
@@ -123,14 +127,14 @@ function HomePage() {
           )}
           config={createProjectForm}
           defaultValues={{
-            description: "",
+            description: '',
             name: projectSeed.name,
           }}
           onSubmit={async (values) => {
             await createProjectMutation.mutateAsync({
               ...values,
               icon: selectedProjectIcon,
-            })
+            });
           }}
         >
           <div className="space-y-2">
@@ -142,12 +146,12 @@ function HomePage() {
                 <button
                   className={`flex h-11 items-center justify-center rounded-xl border text-xl transition-colors ${
                     selectedProjectIcon === option.icon
-                      ? "border-zinc-900 bg-zinc-100 dark:border-zinc-100 dark:bg-zinc-800"
-                      : "border-zinc-200 bg-white hover:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-900"
+                      ? 'border-zinc-900 bg-zinc-100 dark:border-zinc-100 dark:bg-zinc-800'
+                      : 'border-zinc-200 bg-white hover:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-900'
                   }`}
                   key={`${option.value}-${option.icon}`}
                   onClick={() => {
-                    setSelectedProjectIcon(option.icon)
+                    setSelectedProjectIcon(option.icon);
                   }}
                   title={option.label}
                   type="button"
@@ -183,10 +187,10 @@ function HomePage() {
           />
           <Button
             onClick={() => {
-              const nextSeed = generateRandomProjectIdentity()
-              setProjectSeed(nextSeed)
-              setSelectedProjectIcon(nextSeed.icon)
-              createProjectHandlers.open()
+              const nextSeed = generateRandomProjectIdentity();
+              setProjectSeed(nextSeed);
+              setSelectedProjectIcon(nextSeed.icon);
+              createProjectHandlers.open();
             }}
           >
             New Project
@@ -198,7 +202,7 @@ function HomePage() {
         <Alert color="red" title="Failed to create project" variant="light">
           {createProjectMutation.error instanceof Error
             ? createProjectMutation.error.message
-            : "Unknown error while creating the project."}
+            : 'Unknown error while creating the project.'}
         </Alert>
       ) : null}
 
@@ -212,7 +216,7 @@ function HomePage() {
         <Alert color="red" title="Failed to load projects" variant="light">
           {projectsQuery.error instanceof Error
             ? projectsQuery.error.message
-            : "Unknown error while loading projects."}
+            : 'Unknown error while loading projects.'}
         </Alert>
       ) : null}
 
@@ -221,26 +225,18 @@ function HomePage() {
           {projectsQuery.data.map((project) => (
             <Paper className="p-5" key={project.id} radius="lg" withBorder>
               <Stack gap="md">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 gap-3">
-                    <div className="pt-0.5 text-2xl leading-none">
-                      {parseProjectSettings(project.settings).icon}
-                    </div>
-                    <div className="space-y-1">
-                      <h2 className="text-lg font-semibold leading-tight">
-                        {project.name}
-                      </h2>
-                      <Text c="dimmed" size="sm">
-                        {project.description || "No description yet."}
-                      </Text>
-                    </div>
+                <div className="flex min-w-0 gap-3">
+                  <div className="pt-0.5 text-2xl leading-none">
+                    {parseProjectSettings(project.settings).icon}
                   </div>
-                  <Badge
-                    color={project.hasModel ? "green" : "gray"}
-                    variant="light"
-                  >
-                    {project.hasModel ? "Model ready" : "No model"}
-                  </Badge>
+                  <div className="space-y-1">
+                    <h2 className="text-lg font-semibold leading-tight">
+                      {project.name}
+                    </h2>
+                    <Text c="dimmed" size="sm">
+                      {project.description || 'No description yet.'}
+                    </Text>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 text-sm">
@@ -248,7 +244,7 @@ function HomePage() {
                   <Stat label="Samples" value={project.sampleCount} />
                   <Stat label="Task" value={project.taskType} />
                   <Stat
-                  label="Updated"
+                    label="Updated"
                     value={new Date(project.updatedAt).toLocaleDateString()}
                   />
                 </div>
@@ -269,7 +265,7 @@ function HomePage() {
                       deleteProjectMutation.variables === project.id
                     }
                     onClick={() => {
-                      deleteProjectMutation.mutate(project.id)
+                      deleteProjectMutation.mutate(project.id);
                     }}
                     variant="light"
                   >
@@ -289,19 +285,19 @@ function HomePage() {
           <Stack gap="xs">
             <Text fw={600}>
               {deferredSearch
-                ? "No projects match this search."
-                : "No projects yet."}
+                ? 'No projects match this search.'
+                : 'No projects yet.'}
             </Text>
             <Text c="dimmed" size="sm">
               {deferredSearch
-                ? "Try a different project name."
-                : "Create the first project to start collecting labels and samples."}
+                ? 'Try a different project name.'
+                : 'Create the first project to start collecting labels and samples.'}
             </Text>
           </Stack>
         </Paper>
       ) : null}
     </section>
-  )
+  );
 }
 
 function Stat({ label, value }: { label: string; value: number | string }) {
@@ -312,7 +308,7 @@ function Stat({ label, value }: { label: string; value: number | string }) {
       </Text>
       <div className="mt-1 text-sm font-medium">{value}</div>
     </div>
-  )
+  );
 }
 
-export default HomePage
+export default HomePage;

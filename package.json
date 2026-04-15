@@ -12,6 +12,7 @@
     "routes:gen": "tsr generate"
   },
   "dependencies": {
+    "@fontsource-variable/lora": "^5.2.8",
     "@mantine/core": "^9.0.1",
     "@mantine/hooks": "^9.0.1",
     "@tabler/icons-react": "^3.41.1",
