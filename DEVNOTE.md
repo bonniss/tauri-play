@@ -97,5 +97,45 @@ Tauri uses WebKit:
 ### Create a project
 
 - From list page -> Create new project/app (suggest me)
-- UI create/edit page will match 
+- UI create/edit page will match
+
+## Label Image Grid Plan
+
+- Tách thumbnail grid thành một component `ImageGrid` tự chứa, nhận `samples` qua props.
+- `ImageGrid` cần a11y kiểu Windows Explorer:
+  - có active item
+  - hỗ trợ `ArrowLeft`, `ArrowRight`, `ArrowUp`, `ArrowDown`
+  - hỗ trợ `Home`, `End`
+  - `Enter` hoặc `Space` để mở lightbox
+  - `Escape` để đóng lightbox
+  - đóng lightbox xong trả focus về thumbnail đang active
+- Lightbox phải điều hướng được ảnh trước/sau bằng keyboard và UI control.
+- Lightbox có nút xóa ảnh, nhưng logic xóa do trang cha quyết định qua prop callback để giữ single responsibility.
+- Callback xóa nên nhận đầy đủ `sample`, không chỉ `id`.
+- Thumbnail grid nên nhận thêm các prop dạng:
+  - `samples`
+  - `activeSampleId?`
+  - `defaultActiveSampleId?`
+  - `onActiveSampleChange?`
+  - `onDeleteSample?`
+  - `getPreviewUrl?` hoặc sample đã có sẵn `previewUrl`
+  - `emptyState?`
+- Hành vi xóa trong lightbox:
+  - xóa xong tự nhảy sang ảnh kế hoặc ảnh trước
+  - nếu xóa ảnh cuối cùng thì đóng lightbox
+- Cần chốt thêm sau:
+  - arrow key trong grid có wrap hay không
+  - xóa trong lightbox có confirm hay không
+  - upload trùng thì block, warn, hay vẫn cho upload
+
+## Sample Metadata Plan
+
+- Bổ sung metadata trên `sample` để chuẩn bị detect upload trùng:
+  - `originalFileName?: string | null`
+  - `originalFilePath?: string | null`
+  - `fileSize?: number | null`
+  - `lastModifiedAt?: string | null`
+  - `contentHash?: string | null`
+- Nếu cần detect trùng ổn định, `contentHash` là tín hiệu chính.
+- `originalFileName` và `originalFilePath` chủ yếu để hiển thị nguồn gốc và hỗ trợ heuristic.
 

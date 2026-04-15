@@ -18,6 +18,15 @@ function inferExtension(file: File) {
   return "jpg"
 }
 
+function bytesToHex(bytes: Uint8Array) {
+  return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("")
+}
+
+async function hashBytes(bytes: Uint8Array) {
+  const digest = await crypto.subtle.digest("SHA-256", bytes)
+  return bytesToHex(new Uint8Array(digest))
+}
+
 export async function saveUploadedSampleFile({
   classId,
   file,
@@ -34,6 +43,7 @@ export async function saveUploadedSampleFile({
   const fileName = `${sampleId}.${extension}`
   const filePath = `${directoryPath}/${fileName}`
   const bytes = new Uint8Array(await file.arrayBuffer())
+  const contentHash = await hashBytes(bytes)
 
   await mkdir(directoryPath, {
     baseDir: BaseDirectory.AppData,
@@ -47,5 +57,17 @@ export async function saveUploadedSampleFile({
   return {
     fileName,
     filePath,
+    metadata: {
+      contentHash,
+      fileSize: file.size,
+      lastModifiedAt: file.lastModified
+        ? new Date(file.lastModified).toISOString()
+        : null,
+      originalFileName: file.name || null,
+      originalFilePath:
+        "webkitRelativePath" in file && file.webkitRelativePath
+          ? file.webkitRelativePath
+          : null,
+    },
   }
 }

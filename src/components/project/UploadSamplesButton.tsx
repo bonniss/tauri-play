@@ -65,7 +65,7 @@ const UploadSamplesButton: FunctionComponent<UploadSamplesButtonProps> = ({
         await Promise.all(
           selectedFiles.map(async (file) => {
             const sampleId = crypto.randomUUID()
-            const { filePath } = await saveUploadedSampleFile({
+            const { filePath, metadata } = await saveUploadedSampleFile({
               classId: seededClass.id,
               file,
               projectId,
@@ -76,6 +76,11 @@ const UploadSamplesButton: FunctionComponent<UploadSamplesButtonProps> = ({
               id: sampleId,
               classId: seededClass.id,
               filePath,
+              originalFileName: metadata.originalFileName,
+              originalFilePath: metadata.originalFilePath,
+              fileSize: metadata.fileSize,
+              lastModifiedAt: metadata.lastModifiedAt,
+              contentHash: metadata.contentHash,
               source: "upload" as const,
             }
           }),
@@ -99,6 +104,11 @@ const UploadSamplesButton: FunctionComponent<UploadSamplesButtonProps> = ({
               projectId,
               classId: sample.classId,
               filePath: sample.filePath,
+              originalFileName: sample.originalFileName,
+              originalFilePath: sample.originalFilePath,
+              fileSize: sample.fileSize,
+              lastModifiedAt: sample.lastModifiedAt,
+              contentHash: sample.contentHash,
               source: sample.source,
               order: sample.order,
             }),

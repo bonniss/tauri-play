@@ -22,6 +22,12 @@ pub fn run() {
             sql: include_str!("../migrations/0002_add_order_to_classes_and_samples.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 3,
+            description: "add_sample_metadata",
+            sql: include_str!("../migrations/0003_add_sample_metadata.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()

@@ -53,6 +53,11 @@ type SampleTable = {
   project_id: string
   class_id: string
   file_path: string
+  original_file_name: string | null
+  original_file_path: string | null
+  file_size: number | null
+  last_modified_at: string | null
+  content_hash: string | null
   source: "camera" | "upload"
   order: ColumnType<number, number | undefined, number>
   created_at: ColumnType<string, string | undefined, never>
