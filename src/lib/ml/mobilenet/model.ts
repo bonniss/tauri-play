@@ -20,6 +20,9 @@ export const MOBILENET_ALPHA = 1
 export function createMobilenetClassifierHead(
   inputShape: number[],
   numClasses: number,
+  options?: {
+    learningRate?: number
+  },
 ) {
   const model = tf.sequential()
 
@@ -41,7 +44,7 @@ export function createMobilenetClassifierHead(
   )
 
   model.compile({
-    optimizer: tf.train.adam(0.001),
+    optimizer: tf.train.adam(options?.learningRate ?? 0.001),
     loss: "categoricalCrossentropy",
     metrics: ["accuracy"],
   })

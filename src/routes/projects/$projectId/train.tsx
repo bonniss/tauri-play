@@ -10,17 +10,26 @@ import {
   Stack,
   Text,
 } from "@mantine/core"
-import { IconSettings } from "@tabler/icons-react"
-import { useQuery } from "@tanstack/react-query"
+import { IconPlayerPlay, IconSettings } from "@tabler/icons-react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { toast } from "sonner"
 import { Form, defineConfig } from "~/components/form"
 import { useProjectOne } from "~/components/project/ProjectOneProvider"
 import {
+  appendModelTrainLogEvent,
+  createModelTrainLog,
   getLatestProjectTrainLog,
   getProjectModel,
+  ModelTrainLogDatasetSnapshot,
   ModelTrainLogEvent,
+  ModelTrainLogSummary,
+  upsertProjectModel,
+  updateModelTrainLogDatasetSnapshot,
+  updateModelTrainLogStatus,
 } from "~/lib/db/domain/models"
+import { trainProjectMobilenetModel } from "~/lib/ml/mobilenet/project-train"
 import { ProjectTrainSettingsFormValues } from "~/lib/project/settings"
 
 export const Route = createFileRoute("/projects/$projectId/train")({
@@ -89,6 +98,15 @@ const trainSettingsForm = defineConfig<ProjectTrainSettingsFormValues>({
   },
 })
 
+type ActiveTrainSession = {
+  endedAt: string | null
+  events: ModelTrainLogEvent[]
+  startedAt: string
+  status: "started" | "completed" | "failed"
+  summary: ModelTrainLogSummary | null
+  trainLogId: string
+}
+
 function formatDuration(durationMs: number) {
   const totalSeconds = Math.max(0, Math.floor(durationMs / 1000))
   const minutes = Math.floor(totalSeconds / 60)
@@ -99,7 +117,7 @@ function formatDuration(durationMs: number) {
 
 function formatMetric(value: number | null | undefined, fractionDigits = 3) {
   if (value == null || Number.isNaN(value)) {
-    return "—"
+    return "-"
   }
 
   return value.toFixed(fractionDigits)
@@ -114,14 +132,30 @@ function renderEventMessage(event: ModelTrainLogEvent) {
     return `Split dataset: ${event.trainSamples} train / ${event.validationSamples} validation`
   }
 
-  const acc =
-    event.acc != null ? ` acc ${event.acc.toFixed(3)}` : ""
-  const valAcc =
-    event.valAcc != null ? ` val_acc ${event.valAcc.toFixed(3)}` : ""
+  const acc = event.acc != null ? ` acc ${event.acc.toFixed(3)}` : ""
+  const valAcc = event.valAcc != null ? ` val_acc ${event.valAcc.toFixed(3)}` : ""
   const valLoss =
     event.valLoss != null ? ` val_loss ${event.valLoss.toFixed(3)}` : ""
 
   return `Epoch ${event.epoch} - loss ${event.loss.toFixed(3)}${acc}${valAcc}${valLoss}`
+}
+
+function createPendingDatasetSnapshot(
+  classes: ReturnType<typeof useProjectOne>["classes"],
+): ModelTrainLogDatasetSnapshot {
+  return {
+    classCount: classes.length,
+    totalSamples: classes.reduce((sum, item) => sum + item.samples.length, 0),
+    trainSamples: 0,
+    validationSamples: 0,
+    samplesPerClass: classes.map((item) => ({
+      classId: item.id,
+      className: item.name,
+      totalSamples: item.samples.length,
+      trainSamples: 0,
+      validationSamples: 0,
+    })),
+  }
 }
 
 function ProjectTrainPage() {
@@ -132,11 +166,15 @@ function ProjectTrainPage() {
     isApplyingTrainSettings,
     isReadyForTrain,
     projectId,
+    projectSettings,
     totalSamples,
     trainSettings,
   } = useProjectOne()
+  const queryClient = useQueryClient()
   const [trainSettingsOpened, setTrainSettingsOpened] = useState(false)
+  const [activeSession, setActiveSession] = useState<ActiveTrainSession | null>(null)
   const [now, setNow] = useState(() => Date.now())
+  const activeTrainLogIdRef = useRef<string | null>(null)
 
   const latestModelQuery = useQuery({
     queryKey: ["project-model", projectId],
@@ -147,24 +185,231 @@ function ProjectTrainPage() {
     queryFn: () => getLatestProjectTrainLog(projectId),
   })
 
-  const latestTrainLog = latestTrainLogQuery.data
-  const latestModel = latestModelQuery.data
+  const trainMutation = useMutation({
+    mutationFn: async () => {
+      const pendingSnapshot = createPendingDatasetSnapshot(classes)
+      const startedAt = new Date().toISOString()
+      const trainLogId = await createModelTrainLog({
+        datasetSnapshot: pendingSnapshot,
+        events: [
+          {
+            at: startedAt,
+            message: "Training started",
+            type: "phase",
+          },
+        ],
+        projectId,
+        settingsSnapshot: JSON.stringify(projectSettings.train),
+        startedAt,
+      })
+
+      setActiveSession({
+        endedAt: null,
+        events: [
+          {
+            at: startedAt,
+            message: "Training started",
+            type: "phase",
+          },
+        ],
+        startedAt,
+        status: "started",
+        summary: null,
+        trainLogId,
+      })
+      activeTrainLogIdRef.current = trainLogId
+
+      let latestDatasetSnapshot = pendingSnapshot
+      let lastEventKey = ""
+
+      const result = await trainProjectMobilenetModel({
+        batchSize: trainSettings.batchSize,
+        classes: classes.map((item) => ({
+          id: item.id,
+          name: item.name,
+          samples: item.samples.map((sample) => ({
+            filePath: sample.filePath,
+            id: sample.id,
+            originalFileName: sample.originalFileName,
+          })),
+        })),
+        earlyStopping: trainSettings.earlyStopping,
+        earlyStoppingPatience: trainSettings.earlyStoppingPatience,
+        epochs: trainSettings.epochs,
+        imageSize: trainSettings.imageSize,
+        learningRate: trainSettings.learningRate,
+        onEvent: async (event) => {
+          const eventKey = `${event.type}:${event.at}:${renderEventMessage(event)}`
+
+          if (eventKey === lastEventKey) {
+            return
+          }
+
+          lastEventKey = eventKey
+
+          if (event.type === "split") {
+            const nextSnapshot: ModelTrainLogDatasetSnapshot = {
+              ...pendingSnapshot,
+              trainSamples: event.trainSamples,
+              validationSamples: event.validationSamples,
+              samplesPerClass: latestDatasetSnapshot.samplesPerClass,
+            }
+            latestDatasetSnapshot = nextSnapshot
+            await updateModelTrainLogDatasetSnapshot({
+              datasetSnapshot: nextSnapshot,
+              trainLogId,
+            })
+          }
+
+          await appendModelTrainLogEvent(trainLogId, event)
+          setActiveSession((current) =>
+            current
+              ? {
+                  ...current,
+                  events: [...current.events, event],
+                }
+              : current,
+          )
+        },
+        projectId,
+        validationSplit: trainSettings.validationSplit,
+      })
+
+      latestDatasetSnapshot = result.datasetSnapshot
+      await updateModelTrainLogDatasetSnapshot({
+        datasetSnapshot: result.datasetSnapshot,
+        trainLogId,
+      })
+
+      const modelId = await upsertProjectModel({
+        accuracy: result.summary.accuracy,
+        artifactPath: result.artifactPath,
+        datasetSnapshot: JSON.stringify(result.datasetSnapshot),
+        loss: result.summary.loss,
+        projectId,
+        settingsSnapshot: JSON.stringify(projectSettings.train),
+        trainedAt: new Date().toISOString(),
+        validationAccuracy: result.summary.validationAccuracy,
+        validationLoss: result.summary.validationLoss,
+      })
+
+      const summary: ModelTrainLogSummary = {
+        accuracy: result.summary.accuracy,
+        durationMs: result.summary.durationMs,
+        endedAt: new Date().toISOString(),
+        loss: result.summary.loss,
+        validationAccuracy: result.summary.validationAccuracy,
+        validationLoss: result.summary.validationLoss,
+      }
+
+      await updateModelTrainLogStatus({
+        modelId,
+        status: "completed",
+        summary,
+        trainLogId,
+      })
+
+      setActiveSession((current) =>
+        current
+          ? {
+              ...current,
+              endedAt: summary.endedAt,
+              status: "completed",
+              summary,
+            }
+          : current,
+      )
+
+      return { modelId, summary, trainLogId, datasetSnapshot: latestDatasetSnapshot }
+    },
+    onError: async (error) => {
+      const endedAt = new Date().toISOString()
+      const summary: ModelTrainLogSummary = {
+        accuracy: null,
+        durationMs: null,
+        endedAt,
+        loss: null,
+        validationAccuracy: null,
+        validationLoss: null,
+      }
+
+      if (activeTrainLogIdRef.current) {
+        await appendModelTrainLogEvent(activeTrainLogIdRef.current, {
+          at: endedAt,
+          message:
+            error instanceof Error ? error.message : "Training failed unexpectedly.",
+          type: "phase",
+        })
+        await updateModelTrainLogStatus({
+          status: "failed",
+          summary,
+          trainLogId: activeTrainLogIdRef.current,
+        })
+      }
+
+      setActiveSession((current) =>
+        current
+          ? {
+              ...current,
+              endedAt,
+              events: [
+                ...current.events,
+                {
+                  at: endedAt,
+                  message:
+                    error instanceof Error
+                      ? error.message
+                      : "Training failed unexpectedly.",
+                  type: "phase",
+                },
+              ],
+              status: "failed",
+              summary,
+            }
+          : current,
+      )
+      activeTrainLogIdRef.current = null
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["project-model", projectId] }),
+        queryClient.invalidateQueries({
+          queryKey: ["project-train-log", projectId],
+        }),
+      ])
+      toast.error(
+        error instanceof Error ? error.message : "Training failed unexpectedly.",
+      )
+    },
+    onSuccess: async () => {
+      activeTrainLogIdRef.current = null
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["project-model", projectId] }),
+        queryClient.invalidateQueries({
+          queryKey: ["project-train-log", projectId],
+        }),
+        queryClient.invalidateQueries({ queryKey: ["projects"] }),
+      ])
+      toast.success("Training completed.")
+    },
+  })
+
+  const displayedTrainLog = activeSession ?? latestTrainLogQuery.data
+  const displayedModel = latestModelQuery.data
   const epochEvents = useMemo(
-    () => latestTrainLog?.events.filter((event) => event.type === "epoch") ?? [],
-    [latestTrainLog?.events],
+    () => displayedTrainLog?.events.filter((event) => event.type === "epoch") ?? [],
+    [displayedTrainLog?.events],
   )
   const latestEpoch =
     epochEvents.length > 0 ? epochEvents[epochEvents.length - 1] : null
-  const trainProgress = latestTrainLog
+  const trainProgress = displayedTrainLog
     ? Math.min(epochEvents.length / trainSettings.epochs, 1)
     : 0
-  const elapsedMs = latestTrainLog
-    ? new Date(latestTrainLog.endedAt ?? now).getTime() -
-      new Date(latestTrainLog.startedAt).getTime()
+  const elapsedMs = displayedTrainLog
+    ? new Date(displayedTrainLog.endedAt ?? now).getTime() -
+      new Date(displayedTrainLog.startedAt).getTime()
     : 0
 
   useEffect(() => {
-    if (latestTrainLog?.status !== "started") {
+    if (displayedTrainLog?.status !== "started") {
       return
     }
 
@@ -175,68 +420,80 @@ function ProjectTrainPage() {
     return () => {
       window.clearInterval(timer)
     }
-  }, [latestTrainLog?.status])
+  }, [displayedTrainLog?.status])
 
   return (
     <Paper className="p-4">
       <Stack gap="md">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-2xl font-semibold tracking-tight">Train</h2>
-          <Popover
-            onDismiss={() => {
-              setTrainSettingsOpened(false)
-            }}
-            opened={trainSettingsOpened}
-            position="bottom-end"
-            shadow="md"
-            width={360}
-            withArrow
-          >
-            <Popover.Target>
-              <Button
-                leftSection={<IconSettings className="size-4" />}
-                onClick={() => {
-                  setTrainSettingsOpened((current) => !current)
-                }}
-                variant="default"
-              >
-                Settings
-              </Button>
-            </Popover.Target>
-            <Popover.Dropdown>
-              <Form
-                key={JSON.stringify(getTrainSettingsFormValues())}
-                config={trainSettingsForm}
-                defaultValues={getTrainSettingsFormValues()}
-                onSubmit={async (values) => {
-                  await applyTrainSettings(values)
-                  setTrainSettingsOpened(false)
-                }}
-                renderRoot={({ children, onSubmit }) => (
-                  <form className="space-y-3" onSubmit={onSubmit}>
-                    <Text fw={600} size="sm">
-                      Train Settings
-                    </Text>
-                    {children}
-                    <Group justify="flex-end">
-                      <Button
-                        onClick={() => {
-                          setTrainSettingsOpened(false)
-                        }}
-                        type="button"
-                        variant="default"
-                      >
-                        Cancel
-                      </Button>
-                      <Button loading={isApplyingTrainSettings} type="submit">
-                        Apply
-                      </Button>
-                    </Group>
-                  </form>
-                )}
-              />
-            </Popover.Dropdown>
-          </Popover>
+          <Group gap="sm">
+            <Button
+              disabled={!isReadyForTrain}
+              leftSection={<IconPlayerPlay className="size-4" />}
+              loading={trainMutation.isPending}
+              onClick={() => {
+                void trainMutation.mutateAsync()
+              }}
+            >
+              Start Training
+            </Button>
+            <Popover
+              onDismiss={() => {
+                setTrainSettingsOpened(false)
+              }}
+              opened={trainSettingsOpened}
+              position="bottom-end"
+              shadow="md"
+              width={360}
+              withArrow
+            >
+              <Popover.Target>
+                <Button
+                  leftSection={<IconSettings className="size-4" />}
+                  onClick={() => {
+                    setTrainSettingsOpened((current) => !current)
+                  }}
+                  variant="default"
+                >
+                  Settings
+                </Button>
+              </Popover.Target>
+              <Popover.Dropdown>
+                <Form
+                  key={JSON.stringify(getTrainSettingsFormValues())}
+                  config={trainSettingsForm}
+                  defaultValues={getTrainSettingsFormValues()}
+                  onSubmit={async (values) => {
+                    await applyTrainSettings(values)
+                    setTrainSettingsOpened(false)
+                  }}
+                  renderRoot={({ children, onSubmit }) => (
+                    <form className="space-y-3" onSubmit={onSubmit}>
+                      <Text fw={600} size="sm">
+                        Train Settings
+                      </Text>
+                      {children}
+                      <Group justify="flex-end">
+                        <Button
+                          onClick={() => {
+                            setTrainSettingsOpened(false)
+                          }}
+                          type="button"
+                          variant="default"
+                        >
+                          Cancel
+                        </Button>
+                        <Button loading={isApplyingTrainSettings} type="submit">
+                          Apply
+                        </Button>
+                      </Group>
+                    </form>
+                  )}
+                />
+              </Popover.Dropdown>
+            </Popover>
+          </Group>
         </div>
 
         <Text c="dimmed" size="sm">
@@ -255,16 +512,22 @@ function ProjectTrainPage() {
           <Badge variant="light">LR {trainSettings.learningRate}</Badge>
         </Group>
 
-        {latestTrainLog ? (
+        {!isReadyForTrain ? (
+          <Alert color="yellow" variant="light">
+            Label data is not ready yet. Complete the minimum class and sample requirements first.
+          </Alert>
+        ) : null}
+
+        {displayedTrainLog ? (
           <Paper className="border border-zinc-200 p-4 dark:border-zinc-800" radius="lg">
             <Stack gap="sm">
               <Group justify="space-between">
                 <div>
                   <Text fw={600}>Latest training run</Text>
                   <Text c="dimmed" size="sm">
-                    {latestTrainLog.status === "started"
+                    {displayedTrainLog.status === "started"
                       ? "Training is in progress."
-                      : `Last status: ${latestTrainLog.status}`}
+                      : `Last status: ${displayedTrainLog.status}`}
                   </Text>
                 </div>
                 <div className="text-right">
@@ -274,28 +537,26 @@ function ProjectTrainPage() {
                   </Text>
                 </div>
               </Group>
-              <Progress radius="xl" size="lg" value={trainProgress * 100} />
+              <Progress animated={displayedTrainLog.status === "started"} radius="xl" size="lg" value={trainProgress * 100} />
               <Group grow>
-                <MetricCard
-                  label="Elapsed"
-                  value={formatDuration(elapsedMs)}
-                />
+                <MetricCard label="Elapsed" value={formatDuration(elapsedMs)} />
                 <MetricCard
                   label="Loss"
                   value={formatMetric(
-                    latestTrainLog.summary?.loss ?? latestEpoch?.loss,
+                    displayedTrainLog.summary?.loss ?? latestEpoch?.loss,
                   )}
                 />
                 <MetricCard
                   label="Val Loss"
                   value={formatMetric(
-                    latestTrainLog.summary?.validationLoss ?? latestEpoch?.valLoss,
+                    displayedTrainLog.summary?.validationLoss ?? latestEpoch?.valLoss,
                   )}
                 />
                 <MetricCard
                   label="Val Acc"
                   value={formatMetric(
-                    latestTrainLog.summary?.validationAccuracy ?? latestEpoch?.valAcc,
+                    displayedTrainLog.summary?.validationAccuracy ??
+                      latestEpoch?.valAcc,
                   )}
                 />
               </Group>
@@ -303,7 +564,7 @@ function ProjectTrainPage() {
           </Paper>
         ) : (
           <Alert color="blue" variant="light">
-            Training has not started yet. Settings and log storage are ready; the train action comes next.
+            Training has not started yet.
           </Alert>
         )}
 
@@ -312,18 +573,27 @@ function ProjectTrainPage() {
             <Paper className="h-full border border-zinc-200 p-4 dark:border-zinc-800" radius="lg">
               <Stack gap="sm">
                 <Text fw={600}>Current model</Text>
-                {latestModel ? (
+                {displayedModel ? (
                   <>
-                    <MetricRow label="Trained at" value={new Date(latestModel.trainedAt).toLocaleString()} />
-                    <MetricRow label="Accuracy" value={formatMetric(latestModel.accuracy)} />
+                    <MetricRow
+                      label="Trained at"
+                      value={new Date(displayedModel.trainedAt).toLocaleString()}
+                    />
+                    <MetricRow
+                      label="Accuracy"
+                      value={formatMetric(displayedModel.accuracy)}
+                    />
                     <MetricRow
                       label="Validation accuracy"
-                      value={formatMetric(latestModel.validationAccuracy)}
+                      value={formatMetric(displayedModel.validationAccuracy)}
                     />
-                    <MetricRow label="Loss" value={formatMetric(latestModel.loss)} />
+                    <MetricRow
+                      label="Loss"
+                      value={formatMetric(displayedModel.loss)}
+                    />
                     <MetricRow
                       label="Validation loss"
-                      value={formatMetric(latestModel.validationLoss)}
+                      value={formatMetric(displayedModel.validationLoss)}
                     />
                   </>
                 ) : (
@@ -339,15 +609,17 @@ function ProjectTrainPage() {
             <Paper className="h-full border border-zinc-200 p-4 dark:border-zinc-800" radius="lg">
               <Stack gap="sm">
                 <Text fw={600}>Latest run log</Text>
-                {latestTrainLog ? (
+                {displayedTrainLog ? (
                   <ScrollArea.Autosize mah={320} type="auto">
                     <div className="space-y-2">
-                      {latestTrainLog.events.map((event, index) => (
+                      {displayedTrainLog.events.map((event, index) => (
                         <div
                           className="rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-800"
                           key={`${event.at}-${index}`}
                         >
-                          <div className="font-medium">{renderEventMessage(event)}</div>
+                          <div className="font-medium">
+                            {renderEventMessage(event)}
+                          </div>
                           <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                             {new Date(event.at).toLocaleTimeString()}
                           </div>
