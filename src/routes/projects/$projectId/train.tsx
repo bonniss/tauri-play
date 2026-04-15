@@ -111,6 +111,48 @@ type ActiveTrainSession = {
 
 type TrainDataView = "train" | "validation"
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message.trim()
+  }
+
+  if (typeof error === "string" && error.trim()) {
+    return error.trim()
+  }
+
+  return "Training failed unexpectedly."
+}
+
+function getErrorDescription(error: unknown) {
+  if (!(error instanceof Error)) {
+    return null
+  }
+
+  const details: string[] = []
+
+  if ("cause" in error && error.cause != null) {
+    const causeMessage = getErrorMessage(error.cause)
+
+    if (causeMessage && causeMessage !== error.message) {
+      details.push(causeMessage)
+    }
+  }
+
+  if (typeof error.stack === "string") {
+    const stackLines = error.stack
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .slice(1, 3)
+
+    if (stackLines.length > 0) {
+      details.push(stackLines.join(" | "))
+    }
+  }
+
+  return details.length > 0 ? details.join("\n") : null
+}
+
 function formatDuration(durationMs: number) {
   const totalSeconds = Math.max(0, Math.floor(durationMs / 1000))
   const minutes = Math.floor(totalSeconds / 60)
@@ -347,6 +389,8 @@ function ProjectTrainPage() {
       return { modelId, summary, trainLogId, datasetSnapshot: latestDatasetSnapshot }
     },
     onError: async (error) => {
+      const errorMessage = getErrorMessage(error)
+      const errorDescription = getErrorDescription(error)
       const endedAt = new Date().toISOString()
       const summary: ModelTrainLogSummary = {
         accuracy: null,
@@ -360,8 +404,7 @@ function ProjectTrainPage() {
       if (activeTrainLogIdRef.current) {
         await appendModelTrainLogEvent(activeTrainLogIdRef.current, {
           at: endedAt,
-          message:
-            error instanceof Error ? error.message : "Training failed unexpectedly.",
+          message: errorMessage,
           type: "phase",
         })
         await updateModelTrainLogStatus({
@@ -380,10 +423,7 @@ function ProjectTrainPage() {
                 ...current.events,
                 {
                   at: endedAt,
-                  message:
-                    error instanceof Error
-                      ? error.message
-                      : "Training failed unexpectedly.",
+                  message: errorMessage,
                   type: "phase",
                 },
               ],
@@ -399,9 +439,9 @@ function ProjectTrainPage() {
           queryKey: ["project-train-log", projectId],
         }),
       ])
-      toast.error(
-        error instanceof Error ? error.message : "Training failed unexpectedly.",
-      )
+      toast.error(errorMessage, {
+        description: errorDescription ?? undefined,
+      })
     },
     onSuccess: async () => {
       activeTrainLogIdRef.current = null
