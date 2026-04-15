@@ -12,8 +12,11 @@ import { genClassId, genSampleId } from '~/lib/project/id-generator';
 import {
   parseProjectLabelSettingsFormValues,
   parseProjectSettings,
+  parseProjectTrainSettingsFormValues,
   ProjectLabelSettingsFormValues,
+  ProjectTrainSettingsFormValues,
   projectLabelSettingsToFormValues,
+  projectTrainSettingsToFormValues,
   stringifyProjectSettings,
 } from '~/lib/project/settings';
 
@@ -67,6 +70,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
 
     const [isInitialized, setIsInitialized] = useState(false);
     const [isApplyingLabelSettings, setIsApplyingLabelSettings] = useState(false);
+    const [isApplyingTrainSettings, setIsApplyingTrainSettings] = useState(false);
     const [project, setProject] = useState<ProjectRecord | undefined>();
     const [classes, setClasses] = useState<ProjectOneClass[]>([]);
 
@@ -104,6 +108,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
     const projectStatus = project?.status;
     const projectSettings = parseProjectSettings(project?.settings);
     const labelSettings = projectSettings.label;
+    const trainSettings = projectSettings.train;
 
     const totalClasses = classes.length;
     const totalSamples = classes.reduce(
@@ -280,6 +285,9 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
     const getLabelSettingsFormValues = (): ProjectLabelSettingsFormValues =>
       projectLabelSettingsToFormValues(labelSettings);
 
+    const getTrainSettingsFormValues = (): ProjectTrainSettingsFormValues =>
+      projectTrainSettingsToFormValues(trainSettings);
+
     const applyLabelSettings = async (
       values: ProjectLabelSettingsFormValues,
     ) => {
@@ -333,9 +341,63 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       }
     };
 
+    const applyTrainSettings = async (
+      values: ProjectTrainSettingsFormValues,
+    ) => {
+      const nextTrainSettings = parseProjectTrainSettingsFormValues(values);
+      const nextProjectSettings = {
+        ...projectSettings,
+        train: nextTrainSettings,
+      };
+      const nextSettings = stringifyProjectSettings(nextProjectSettings);
+
+      if (nextSettings === (project?.settings ?? '')) {
+        return;
+      }
+
+      setIsApplyingTrainSettings(true);
+
+      try {
+        setProject((current) =>
+          current
+            ? {
+                ...current,
+                settings: nextSettings,
+                updatedAt: new Date().toISOString(),
+              }
+            : current,
+        );
+
+        await updateProject({
+          projectId,
+          settings: nextSettings,
+        });
+        await queryClient.invalidateQueries({ queryKey: ['projects'] });
+      } catch (error) {
+        const workspace = await getProjectWorkspace(projectId);
+        setProject(workspace.project);
+        setClasses(
+          workspace.classes.map((cls) => ({
+            id: cls.id,
+            projectId: cls.projectId,
+            name: cls.name,
+            description: cls.description,
+            order: cls.order,
+            samples: workspace.samples.filter(
+              (sample) => sample.classId === cls.id,
+            ),
+          })),
+        );
+        throw error;
+      } finally {
+        setIsApplyingTrainSettings(false);
+      }
+    };
+
     return {
       isLoading: !isInitialized,
       isApplyingLabelSettings,
+      isApplyingTrainSettings,
       projectId,
       projectName,
       projectStatus,
@@ -347,11 +409,14 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       setProjectStatus,
       updateClassName,
       getLabelSettingsFormValues,
+      getTrainSettingsFormValues,
       applyLabelSettings,
+      applyTrainSettings,
 
       project,
       projectSettings,
       labelSettings,
+      trainSettings,
       classes,
       totalClasses,
       totalSamples,

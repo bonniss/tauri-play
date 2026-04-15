@@ -7,7 +7,15 @@ export interface ProjectLabelSettings {
   minSamplesPerClass: number
 }
 
-export interface ProjectTrainSettings {}
+export interface ProjectTrainSettings {
+  batchSize: number
+  earlyStopping: boolean
+  earlyStoppingPatience: number
+  epochs: number
+  imageSize: number
+  learningRate: number
+  validationSplit: number
+}
 
 export interface ProjectPlaySettings {}
 
@@ -24,6 +32,16 @@ export interface ProjectLabelSettingsFormValues {
   minSamplesPerClass: string
 }
 
+export interface ProjectTrainSettingsFormValues {
+  batchSize: string
+  earlyStopping: boolean
+  earlyStoppingPatience: string
+  epochs: string
+  imageSize: string
+  learningRate: string
+  validationSplit: string
+}
+
 export const DEFAULT_PROJECT_LABEL_SETTINGS: ProjectLabelSettings = {
   maxClasses: null,
   maxSamplesPerClass: null,
@@ -31,10 +49,20 @@ export const DEFAULT_PROJECT_LABEL_SETTINGS: ProjectLabelSettings = {
   minSamplesPerClass: 10,
 }
 
+export const DEFAULT_PROJECT_TRAIN_SETTINGS: ProjectTrainSettings = {
+  batchSize: 16,
+  earlyStopping: true,
+  earlyStoppingPatience: 3,
+  epochs: 20,
+  imageSize: 224,
+  learningRate: 0.001,
+  validationSplit: 0.2,
+}
+
 export const DEFAULT_PROJECT_SETTINGS: ProjectSettings = {
   label: DEFAULT_PROJECT_LABEL_SETTINGS,
   play: {},
-  train: {},
+  train: DEFAULT_PROJECT_TRAIN_SETTINGS,
 }
 
 const labelSettingsInputSchema = type({
@@ -44,13 +72,24 @@ const labelSettingsInputSchema = type({
   minSamplesPerClass: "number.integer >= 10 | undefined",
 })
 
+const trainSettingsInputSchema = type({
+  batchSize: "number.integer >= 1 | undefined",
+  earlyStopping: "boolean | undefined",
+  earlyStoppingPatience: "number.integer >= 1 | undefined",
+  epochs: "number.integer >= 1 | undefined",
+  imageSize: "number.integer >= 32 | undefined",
+  learningRate: "number > 0 | undefined",
+  validationSplit: "number > 0 | undefined",
+})
+
 const projectSettingsInputSchema = type({
   label: labelSettingsInputSchema.or("undefined"),
   play: "object | undefined",
-  train: "object | undefined",
+  train: trainSettingsInputSchema.or("undefined"),
 })
 
 type ProjectLabelSettingsInput = typeof labelSettingsInputSchema.infer
+type ProjectTrainSettingsInput = typeof trainSettingsInputSchema.infer
 type ProjectSettingsInput = typeof projectSettingsInputSchema.infer
 
 function normalizeMaxSetting(value: number | null | undefined, minValue: number) {
@@ -98,7 +137,38 @@ export function normalizeProjectSettings(
   return {
     label: normalizeProjectLabelSettings(source.label),
     play: {},
-    train: {},
+    train: normalizeProjectTrainSettings(source.train),
+  }
+}
+
+export function normalizeProjectTrainSettings(
+  value: ProjectTrainSettingsInput | undefined,
+): ProjectTrainSettings {
+  const source = value ?? {
+    batchSize: undefined,
+    earlyStopping: undefined,
+    earlyStoppingPatience: undefined,
+    epochs: undefined,
+    imageSize: undefined,
+    learningRate: undefined,
+    validationSplit: undefined,
+  }
+
+  return {
+    batchSize: source.batchSize ?? DEFAULT_PROJECT_TRAIN_SETTINGS.batchSize,
+    earlyStopping:
+      source.earlyStopping ?? DEFAULT_PROJECT_TRAIN_SETTINGS.earlyStopping,
+    earlyStoppingPatience:
+      source.earlyStoppingPatience ??
+      DEFAULT_PROJECT_TRAIN_SETTINGS.earlyStoppingPatience,
+    epochs: source.epochs ?? DEFAULT_PROJECT_TRAIN_SETTINGS.epochs,
+    imageSize: source.imageSize ?? DEFAULT_PROJECT_TRAIN_SETTINGS.imageSize,
+    learningRate:
+      source.learningRate ?? DEFAULT_PROJECT_TRAIN_SETTINGS.learningRate,
+    validationSplit: Math.min(
+      0.5,
+      source.validationSplit ?? DEFAULT_PROJECT_TRAIN_SETTINGS.validationSplit,
+    ),
   }
 }
 
@@ -158,6 +228,47 @@ export function parseProjectLabelSettingsFormValues(
     minClasses: Number.isFinite(nextMinClasses) ? nextMinClasses : undefined,
     minSamplesPerClass: Number.isFinite(nextMinSamplesPerClass)
       ? nextMinSamplesPerClass
+      : undefined,
+  })
+}
+
+export function projectTrainSettingsToFormValues(
+  settings: ProjectTrainSettings,
+): ProjectTrainSettingsFormValues {
+  return {
+    batchSize: String(settings.batchSize),
+    earlyStopping: settings.earlyStopping,
+    earlyStoppingPatience: String(settings.earlyStoppingPatience),
+    epochs: String(settings.epochs),
+    imageSize: String(settings.imageSize),
+    learningRate: String(settings.learningRate),
+    validationSplit: String(settings.validationSplit),
+  }
+}
+
+export function parseProjectTrainSettingsFormValues(
+  values: ProjectTrainSettingsFormValues,
+): ProjectTrainSettings {
+  const nextBatchSize = Number(values.batchSize.trim())
+  const nextEarlyStoppingPatience = Number(values.earlyStoppingPatience.trim())
+  const nextEpochs = Number(values.epochs.trim())
+  const nextImageSize = Number(values.imageSize.trim())
+  const nextLearningRate = Number(values.learningRate.trim())
+  const nextValidationSplit = Number(values.validationSplit.trim())
+
+  return normalizeProjectTrainSettings({
+    batchSize: Number.isFinite(nextBatchSize) ? nextBatchSize : undefined,
+    earlyStopping: values.earlyStopping,
+    earlyStoppingPatience: Number.isFinite(nextEarlyStoppingPatience)
+      ? nextEarlyStoppingPatience
+      : undefined,
+    epochs: Number.isFinite(nextEpochs) ? nextEpochs : undefined,
+    imageSize: Number.isFinite(nextImageSize) ? nextImageSize : undefined,
+    learningRate: Number.isFinite(nextLearningRate)
+      ? nextLearningRate
+      : undefined,
+    validationSplit: Number.isFinite(nextValidationSplit)
+      ? nextValidationSplit
       : undefined,
   })
 }
