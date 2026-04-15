@@ -16,6 +16,7 @@ export type ProjectListItem = {
   classCount: number
   sampleCount: number
   hasModel: boolean
+  trainedAt: string | null
   updatedAt: string
 }
 
@@ -46,6 +47,7 @@ type ProjectListRow = {
   settings: string
   status: ProjectStatus
   task_type: string
+  trained_at: string | null
   updated_at: string
 }
 
@@ -71,6 +73,7 @@ function mapProjectRow(row: ProjectListRow): ProjectListItem {
     classCount: Number(row.classCount),
     sampleCount: Number(row.sampleCount),
     hasModel: row.hasModel > 0,
+    trainedAt: row.trained_at,
     updatedAt: row.updated_at,
   }
 }
@@ -110,6 +113,7 @@ export async function listProjects({
       "p.description",
       "p.settings",
       "p.task_type",
+      fn.max<string | null>(ref("m.trained_at")).as("trained_at"),
       "p.updated_at",
       fn.count<string>(ref("c.id")).distinct().as("classCount"),
       fn.count<string>(ref("s.id")).distinct().as("sampleCount"),
