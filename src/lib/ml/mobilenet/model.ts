@@ -3,19 +3,19 @@ import * as tf from "@tensorflow/tfjs"
 
 let mobilenetPromise: Promise<mobilenet.MobileNet> | null = null
 
+export const MOBILENET_VERSION = 2
+export const MOBILENET_ALPHA = 1
+
 export function loadMobilenetModel() {
   if (!mobilenetPromise) {
     mobilenetPromise = mobilenet.load({
-      version: 2,
-      alpha: 1,
+      version: MOBILENET_VERSION,
+      alpha: MOBILENET_ALPHA,
     })
   }
 
   return mobilenetPromise
 }
-
-export const MOBILENET_VERSION = 2
-export const MOBILENET_ALPHA = 1
 
 export function createMobilenetClassifierHead(
   inputShape: number[],
