@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { createProvider } from "react-easy-provider"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { createProvider } from "react-easy-provider"
 import { toast } from "sonner"
 import { useProjectOne } from "~/components/project/ProjectOneProvider"
 import {
@@ -13,10 +13,7 @@ import {
   updateModelTrainLogStatus,
   upsertProjectModel,
 } from "~/lib/db/domain/models"
-import {
-  MOBILENET_ALPHA,
-  MOBILENET_VERSION,
-} from "~/lib/ml/mobilenet/model"
+import { MOBILENET_ALPHA, MOBILENET_VERSION } from "~/lib/ml/mobilenet/model"
 import { trainProjectMobilenetModel } from "~/lib/ml/mobilenet/project-train"
 
 type ActiveTrainSession = {
@@ -25,7 +22,7 @@ type ActiveTrainSession = {
   events: ModelTrainLogEvent[]
   settingsSnapshot: string
   startedAt: string
-  status: "started" | "completed" | "failed"
+  status: "started" | "completed" | "failed" | "cancelled"
   summary: ModelTrainLogSummary | null
   trainLogId: string
 }
@@ -70,6 +67,61 @@ const FIXED_TIMELINE_STEP_LABELS: Record<FixedTimelineStepId, string> = {
   head: "Classifier Head",
   training: "Training",
   saving: "Saving Model",
+}
+
+function getDefaultStepDetail(
+  id: FixedTimelineStepId,
+  context?: {
+    latestEpochNumber?: number
+    plannedEpochs?: number
+    trainSamples?: number
+    validationSamples?: number
+  },
+) {
+  if (id === "tfjs") {
+    return "Initialize runtime and select the execution backend."
+  }
+
+  if (id === "mobilenet") {
+    return `Load pretrained backbone v${MOBILENET_VERSION} alpha ${MOBILENET_ALPHA}.`
+  }
+
+  if (id === "split") {
+    return "Split each class into train and validation sets automatically."
+  }
+
+  if (id === "samples") {
+    const trainSamples = context?.trainSamples ?? 0
+    const validationSamples = context?.validationSamples ?? 0
+    const totalSamples = trainSamples + validationSamples
+
+    if (totalSamples > 0) {
+      return `${totalSamples} images loaded`
+    }
+
+    return "Images loaded"
+  }
+
+  if (id === "embeddings") {
+    return "Convert images into 1280-d MobileNet feature vectors."
+  }
+
+  if (id === "head") {
+    return "Create a small dense classifier on top of the extracted features."
+  }
+
+  if (id === "training") {
+    const latestEpochNumber = context?.latestEpochNumber ?? 0
+    const plannedEpochs = context?.plannedEpochs ?? 0
+
+    if (latestEpochNumber > 0 && plannedEpochs > 0) {
+      return `Optimize the classifier head for ${latestEpochNumber}/${plannedEpochs} epochs.`
+    }
+
+    return "Optimize the classifier head on top of frozen MobileNet features."
+  }
+
+  return "Write the trained model artifacts to the project workspace."
 }
 
 function formatDuration(durationMs: number) {
@@ -201,7 +253,10 @@ function getTimelineStepIdFromEvent(
     return "mobilenet"
   }
 
-  if (message.includes("training images") || message.includes("local samples")) {
+  if (
+    message.includes("training images") ||
+    message.includes("local samples")
+  ) {
     return "samples"
   }
 
@@ -282,14 +337,19 @@ function buildFixedTimelineSteps({
   now,
   plannedEpochs,
 }: {
-  displayedTrainLog: ActiveTrainSession | ReturnType<typeof useProjectOne>["latestTrainLog"]
+  displayedTrainLog:
+    | ActiveTrainSession
+    | ReturnType<typeof useProjectOne>["latestTrainLog"]
   latestEpoch: Extract<ModelTrainLogEvent, { type: "epoch" }> | null
   latestEpochNumber: number
   now: number
   plannedEpochs: number
 }): FixedTimelineStep[] {
   const fallbackSteps = FIXED_TIMELINE_STEP_ORDER.map((id) => ({
-    detail: id === "mobilenet" ? `v${MOBILENET_VERSION} alpha ${MOBILENET_ALPHA}` : null,
+    detail:
+      id === "mobilenet"
+        ? `v${MOBILENET_VERSION} alpha ${MOBILENET_ALPHA}`
+        : null,
     elapsedLabel: null,
     id,
     label: FIXED_TIMELINE_STEP_LABELS[id],
@@ -347,9 +407,9 @@ function buildFixedTimelineSteps({
 
   return FIXED_TIMELINE_STEP_ORDER.map((id, index) => {
     const milestone = milestoneMap.get(id)
-    const nextReachedStepId = FIXED_TIMELINE_STEP_ORDER
-      .slice(index + 1)
-      .find((stepId) => milestoneMap.has(stepId))
+    const nextReachedStepId = FIXED_TIMELINE_STEP_ORDER.slice(index + 1).find(
+      (stepId) => milestoneMap.has(stepId),
+    )
     const nextMilestone = nextReachedStepId
       ? milestoneMap.get(nextReachedStepId)
       : null
@@ -360,6 +420,8 @@ function buildFixedTimelineSteps({
       const isLastReached = id === lastReachedStepId
 
       if (displayedTrainLog.status === "failed" && isLastReached) {
+        status = "failed"
+      } else if (displayedTrainLog.status === "cancelled" && isLastReached) {
         status = "failed"
       } else if (displayedTrainLog.status === "started" && isLastReached) {
         status = "in_progress"
@@ -380,11 +442,13 @@ function buildFixedTimelineSteps({
     return {
       detail:
         milestone?.detail ??
-        (id === "training" && latestEpochNumber > 0
-          ? `${latestEpochNumber}/${plannedEpochs} epochs`
-          : id === "mobilenet"
-            ? `v${MOBILENET_VERSION} alpha ${MOBILENET_ALPHA}`
-            : null),
+        getDefaultStepDetail(id, {
+          latestEpochNumber,
+          plannedEpochs,
+          trainSamples: displayedTrainLog.datasetSnapshot.trainSamples,
+          validationSamples:
+            displayedTrainLog.datasetSnapshot.validationSamples,
+        }),
       elapsedLabel: elapsedMs != null ? formatDuration(elapsedMs) : null,
       id,
       label: FIXED_TIMELINE_STEP_LABELS[id],
@@ -415,9 +479,12 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
   const [trainDataView, setTrainDataView] = useState<TrainDataView>("train")
   const [trainSettingsOpened, setTrainSettingsOpened] = useState(false)
   const activeTrainLogIdRef = useRef<string | null>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   const trainMutation = useMutation({
     mutationFn: async () => {
+      const abortController = new AbortController()
+      abortControllerRef.current = abortController
       const pendingSnapshot = createPendingDatasetSnapshot(classes)
       const startedAt = new Date().toISOString()
       const trainLogId = await createModelTrainLog({
@@ -527,6 +594,7 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
           )
         },
         projectId,
+        signal: abortController.signal,
         validationSplit: trainSettings.validationSplit,
       })
 
@@ -577,6 +645,8 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
       )
     },
     onError: async (error) => {
+      const isCancelled =
+        error instanceof Error && error.message === "Training cancelled."
       const errorMessage = getErrorMessage(error)
       const errorDescription = getErrorDescription(error)
       const endedAt = new Date().toISOString()
@@ -596,7 +666,7 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
           type: "phase",
         })
         await updateModelTrainLogStatus({
-          status: "failed",
+          status: isCancelled ? "cancelled" : "failed",
           summary,
           trainLogId: activeTrainLogIdRef.current,
         })
@@ -615,12 +685,13 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
                   type: "phase",
                 },
               ],
-              status: "failed",
+              status: isCancelled ? "cancelled" : "failed",
               summary,
             }
           : current,
       )
       activeTrainLogIdRef.current = null
+      abortControllerRef.current = null
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ["project-model", projectId],
@@ -629,12 +700,17 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
           queryKey: ["project-train-log", projectId],
         }),
       ])
-      toast.error(errorMessage, {
-        description: errorDescription ?? undefined,
-      })
+      if (isCancelled) {
+        toast.message("Training cancelled.")
+      } else {
+        toast.error(errorMessage, {
+          description: errorDescription ?? undefined,
+        })
+      }
     },
     onSuccess: async () => {
       activeTrainLogIdRef.current = null
+      abortControllerRef.current = null
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ["project-model", projectId],
@@ -644,7 +720,9 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
         }),
         queryClient.invalidateQueries({ queryKey: ["projects"] }),
       ])
-      toast.success("Training completed.")
+      toast.success("Training completed.", {
+        position: "top-center",
+      })
     },
   })
 
@@ -755,6 +833,7 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
     isApplyingTrainSettings,
     isReadyForTrain,
     isTraining: trainMutation.isPending,
+    isTrainingCancelled: displayedTrainLog?.status === "cancelled",
     latestEpochNumber,
     logDetailsOpened,
     logEntries,
@@ -767,6 +846,9 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
     plannedEpochs,
     projectId,
     projectModel,
+    requestStopTraining: () => {
+      abortControllerRef.current?.abort(new Error("Training cancelled."))
+    },
     setTrainDataView: (value: TrainDataView) => {
       setTrainDataView(value)
     },
@@ -798,8 +880,7 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
       {
         label: "Val Acc",
         value: formatMetric(
-          latestEpoch?.valAcc ??
-            displayedTrainLog?.summary?.validationAccuracy,
+          latestEpoch?.valAcc ?? displayedTrainLog?.summary?.validationAccuracy,
         ),
       },
     ],
@@ -822,7 +903,9 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
     trainStatusText: displayedTrainLog
       ? displayedTrainLog.status === "started"
         ? "Training is in progress."
-        : `Last status: ${displayedTrainLog.status}`
+        : displayedTrainLog.status === "cancelled"
+          ? "Last status: cancelled"
+          : `Last status: ${displayedTrainLog.status}`
       : "Training has not started yet.",
   }
 })

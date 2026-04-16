@@ -122,6 +122,7 @@ export async function trainProjectMobilenetModel({
   learningRate,
   onEvent,
   projectId,
+  signal,
   validationSplit,
 }: {
   batchSize: number
@@ -133,6 +134,7 @@ export async function trainProjectMobilenetModel({
   learningRate: number
   onEvent?: (event: ModelTrainLogEvent) => Promise<void> | void
   projectId: string
+  signal?: AbortSignal
   validationSplit: number
 }) {
   const events: ModelTrainLogEvent[] = []
@@ -149,8 +151,20 @@ export async function trainProjectMobilenetModel({
     await onEvent?.(event)
   }
 
+  function throwIfAborted() {
+    if (!signal?.aborted) {
+      return
+    }
+
+    throw signal.reason instanceof Error
+      ? signal.reason
+      : new Error("Training cancelled.")
+  }
+
   try {
+    throwIfAborted()
     const tfState = await initTf()
+    throwIfAborted()
 
     await pushEvent({
       at: new Date().toISOString(),
@@ -163,6 +177,7 @@ export async function trainProjectMobilenetModel({
     })
 
     const embeddingModel = await loadMobilenetModel()
+    throwIfAborted()
 
     await pushEvent({
       at: new Date().toISOString(),
@@ -212,6 +227,7 @@ export async function trainProjectMobilenetModel({
         labelIndex,
       })),
     )
+    throwIfAborted()
     const validationGroups = await Promise.all(
       splitResults.map(async (item, labelIndex) => ({
         files: await Promise.all(
@@ -220,6 +236,7 @@ export async function trainProjectMobilenetModel({
         labelIndex,
       })),
     )
+    throwIfAborted()
 
     await pushEvent({
       at: new Date().toISOString(),
@@ -237,12 +254,14 @@ export async function trainProjectMobilenetModel({
       fileToTensor: fileToImageTensor,
       imageSize,
     })
+    throwIfAborted()
     const validationDataset = await buildMobilenetEmbeddingDatasetFromGroups({
       groups: validationGroups,
       embeddingModel,
       fileToTensor: fileToImageTensor,
       imageSize,
     })
+    throwIfAborted()
 
     trainXs = trainDataset.xs
     trainYs = trainDataset.ys
@@ -283,6 +302,7 @@ export async function trainProjectMobilenetModel({
       earlyStoppingPatience,
       epochs,
       batchSize: Math.min(batchSize, datasetSnapshot.trainSamples),
+      signal,
       onEpochEnd: async (log) => {
         lastEpochLog = log
         await pushEvent({
@@ -296,6 +316,7 @@ export async function trainProjectMobilenetModel({
         })
       },
     })
+    throwIfAborted()
 
     const artifactPath = `projects/${projectId}/model/latest`
     await saveMobilenetClassifierModel({
@@ -310,6 +331,7 @@ export async function trainProjectMobilenetModel({
       },
       model: classifier,
     })
+    throwIfAborted()
 
     await pushEvent({
       at: new Date().toISOString(),

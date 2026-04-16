@@ -1,5 +1,5 @@
 import { Alert, Button } from "@mantine/core"
-import { IconPlayerPlay } from "@tabler/icons-react"
+import { IconPlayerPlay, IconPlayerStop } from "@tabler/icons-react"
 import TrainDataSection from "~/components/project/train/TrainDataSection"
 import TrainLogDrawer from "~/components/project/train/TrainLogDrawer"
 import TrainRunSummaryCard from "~/components/project/train/TrainRunSummaryCard"
@@ -9,7 +9,12 @@ import TrainTimelinePanel from "~/components/project/train/TrainTimelinePanel"
 import { useDataTrain } from "~/components/project/train/DataTrainProvider"
 
 function TrainPageContent() {
-  const { isReadyForTrain, isTraining, startTraining } = useDataTrain()
+  const {
+    isReadyForTrain,
+    isTraining,
+    requestStopTraining,
+    startTraining,
+  } = useDataTrain()
 
   return (
     <div className="space-y-4 p-4">
@@ -18,14 +23,25 @@ function TrainPageContent() {
           <h2 className="text-2xl font-semibold tracking-tight">Train</h2>
           <div className="flex gap-2">
             <Button
-              disabled={!isReadyForTrain}
-              leftSection={<IconPlayerPlay className="size-4" />}
-              loading={isTraining}
+              color={isTraining ? "red" : undefined}
+              disabled={!isReadyForTrain && !isTraining}
+              leftSection={
+                isTraining ? (
+                  <IconPlayerStop className="size-4" />
+                ) : (
+                  <IconPlayerPlay className="size-4" />
+                )
+              }
               onClick={() => {
+                if (isTraining) {
+                  requestStopTraining()
+                  return
+                }
+
                 void startTraining()
               }}
             >
-              Start Training
+              {isTraining ? "Stop Training" : "Start Training"}
             </Button>
             <TrainSettingsPopover />
           </div>

@@ -71,6 +71,7 @@ function TrainSettingsPopover() {
     applyTrainSettings,
     getTrainSettingsFormValues,
     isApplyingTrainSettings,
+    isTraining,
     setTrainSettingsOpened,
     trainSettingsOpened,
   } = useDataTrain()
@@ -88,6 +89,7 @@ function TrainSettingsPopover() {
     >
       <Popover.Target>
         <Button
+          disabled={isTraining}
           leftSection={<IconSettings className="size-4" />}
           onClick={() => {
             setTrainSettingsOpened(!trainSettingsOpened)

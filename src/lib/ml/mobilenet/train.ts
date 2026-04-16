@@ -5,6 +5,7 @@ export async function trainMobilenetClassifier({
   xs,
   ys,
   validationData,
+  signal,
   earlyStopping = false,
   earlyStoppingPatience = 3,
   epochs = 20,
@@ -15,6 +16,7 @@ export async function trainMobilenetClassifier({
   xs: tf.Tensor
   ys: tf.Tensor
   validationData?: [tf.Tensor, tf.Tensor]
+  signal?: AbortSignal
   earlyStopping?: boolean
   earlyStoppingPatience?: number
   epochs?: number
@@ -31,13 +33,30 @@ export async function trainMobilenetClassifier({
   void earlyStopping
   void earlyStoppingPatience
 
+  const stopIfAborted = () => {
+    if (!signal?.aborted) {
+      return
+    }
+
+    model.stopTraining = true
+    throw signal.reason instanceof Error
+      ? signal.reason
+      : new Error("Training cancelled.")
+  }
+
+  stopIfAborted()
+
   await model.fit(xs, ys, {
     epochs,
     batchSize,
     shuffle: true,
     validationData,
     callbacks: {
+      onBatchEnd: async () => {
+        stopIfAborted()
+      },
       onEpochEnd: async (epoch, logs) => {
+        stopIfAborted()
         onEpochEnd?.({
           epoch: epoch + 1,
           loss: logs?.loss ?? 0,
@@ -48,6 +67,8 @@ export async function trainMobilenetClassifier({
       },
     },
   })
+
+  stopIfAborted()
 
   return {
     trainTimeMs: performance.now() - start,
