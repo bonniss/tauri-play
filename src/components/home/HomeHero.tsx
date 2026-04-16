@@ -31,9 +31,9 @@ const heroAnimals = [
   {
     accent: 'from-sky-300/80 to-cyan-200/55',
     confidence: '96.7%',
-    image: elephant,
-    label: 'Elephant',
-    position: 'right-[8%] top-[10%] z-10',
+    image: kangaroo,
+    label: 'Kangaroo',
+    position: 'right-[8%] top-[2%] z-10',
     scoreColor: 'text-sky-500 dark:text-sky-300',
     size: 'w-[176px]',
     style: {
@@ -53,7 +53,7 @@ const heroAnimals = [
     label: 'Deer',
     position: 'left-[18%] top-[42%] z-30',
     scoreColor: 'text-amber-500 dark:text-amber-300',
-    size: 'w-[168px]',
+    size: 'w-[175px]',
     style: {
       ['--drift-duration' as string]: '9.6s',
       ['--drift-x' as string]: '8px',
@@ -67,8 +67,8 @@ const heroAnimals = [
   {
     accent: 'from-fuchsia-300/75 to-violet-200/50',
     confidence: '93.9%',
-    image: kangaroo,
-    label: 'Kangaroo',
+    image: elephant,
+    label: 'Elephant',
     position: 'right-[20%] top-[54%] z-20',
     scoreColor: 'text-fuchsia-500 dark:text-fuchsia-300',
     size: 'w-[160px]',
@@ -105,7 +105,7 @@ const heroAnimals = [
     confidence: '89.8%',
     image: bear,
     label: 'Bear',
-    position: 'left-[2%] top-[60%] z-10',
+    position: 'left-[-2%] top-[63%] z-10',
     scoreColor: 'text-zinc-500 dark:text-zinc-300',
     size: 'w-[148px]',
     style: {
