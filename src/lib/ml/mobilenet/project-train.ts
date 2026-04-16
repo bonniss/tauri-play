@@ -150,23 +150,27 @@ export async function trainProjectMobilenetModel({
   }
 
   try {
-    await pushEvent({
-      at: new Date().toISOString(),
-      message: "Initializing TensorFlow.js",
-      type: "phase",
-    })
-    await initTf()
+    const tfState = await initTf()
 
     await pushEvent({
       at: new Date().toISOString(),
-      message: "Loading MobileNet feature extractor",
+      message: "TensorFlow.js ready",
+      meta: {
+        backend: tfState.backend,
+        initTimeMs: Math.round(tfState.initTimeMs),
+      },
       type: "phase",
     })
+
     const embeddingModel = await loadMobilenetModel()
 
     await pushEvent({
       at: new Date().toISOString(),
-      message: "Preparing train and validation split",
+      message: "MobileNet ready",
+      meta: {
+        alpha: MOBILENET_ALPHA,
+        version: MOBILENET_VERSION,
+      },
       type: "phase",
     })
 
@@ -202,12 +206,6 @@ export async function trainProjectMobilenetModel({
       validationSamples: datasetSnapshot.validationSamples,
     })
 
-    await pushEvent({
-      at: new Date().toISOString(),
-      message: "Loading training images from local storage",
-      type: "phase",
-    })
-
     const trainGroups = await Promise.all(
       splitResults.map(async (item, labelIndex) => ({
         files: await Promise.all(item.trainSamples.map((sample) => loadSampleAsFile(sample))),
@@ -225,7 +223,11 @@ export async function trainProjectMobilenetModel({
 
     await pushEvent({
       at: new Date().toISOString(),
-      message: "Building embeddings",
+      message: "Local samples ready",
+      meta: {
+        trainSamples: datasetSnapshot.trainSamples,
+        validationSamples: datasetSnapshot.validationSamples,
+      },
       type: "phase",
     })
 
@@ -249,7 +251,11 @@ export async function trainProjectMobilenetModel({
 
     await pushEvent({
       at: new Date().toISOString(),
-      message: "Creating classifier head",
+      message: "Embeddings ready",
+      meta: {
+        inputShape: trainDataset.inputShape.join("x"),
+        numClasses: trainDataset.numClasses,
+      },
       type: "phase",
     })
 
@@ -261,7 +267,10 @@ export async function trainProjectMobilenetModel({
 
     await pushEvent({
       at: new Date().toISOString(),
-      message: "Training classifier",
+      message: "Classifier head ready",
+      meta: {
+        learningRate,
+      },
       type: "phase",
     })
 
@@ -288,12 +297,6 @@ export async function trainProjectMobilenetModel({
       },
     })
 
-    await pushEvent({
-      at: new Date().toISOString(),
-      message: "Saving trained model",
-      type: "phase",
-    })
-
     const artifactPath = `projects/${projectId}/model/latest`
     await saveMobilenetClassifierModel({
       directoryPath: artifactPath,
@@ -306,6 +309,15 @@ export async function trainProjectMobilenetModel({
         numClasses: trainDataset.numClasses,
       },
       model: classifier,
+    })
+
+    await pushEvent({
+      at: new Date().toISOString(),
+      message: "Model saved",
+      meta: {
+        artifactPath,
+      },
+      type: "phase",
     })
     const durationMs = trainResult.trainTimeMs
     const finalEpochLog = lastEpochLog as EpochMetricSnapshot | null

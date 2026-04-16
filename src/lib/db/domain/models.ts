@@ -25,6 +25,7 @@ export type ModelRecord = {
 export type ModelTrainLogEvent =
   | {
       at: string
+      meta?: Record<string, string | number | boolean | null>
       message: string
       type: "phase"
     }
