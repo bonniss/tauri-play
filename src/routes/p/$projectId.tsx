@@ -413,12 +413,12 @@ const UploadPlayExperience: FunctionComponent = () => {
             <Paper
               className="h-[500px] relative overflow-hidden
     bg-[repeating-linear-gradient(135deg,rgba(229,231,235,0.5)_0px,rgba(229,231,235,0.5)_1px,transparent_1px,transparent_12px)]
-    dark:bg-[repeating-linear-gradient(135deg,rgba(55,65,81,0.5)_0px,rgba(55,65,81,0.5)_1px,transparent_1px,transparent_12px)]"
+    dark:bg-[repeating-linear-gradient(135deg,rgba(55,65,81,0.5)_0px,rgba(55,65,81,0.5)_1px,transparent_1px,transparent_12px)] drop-shadow-md"
               withBorder
             >
               <img
                 alt={selectedFile?.name ?? "Selected upload"}
-                className="h-full w-full object-contain relative z-10"
+                className="h-full w-full object-contain"
                 src={selectedFileUrl as string}
               />
             </Paper>
