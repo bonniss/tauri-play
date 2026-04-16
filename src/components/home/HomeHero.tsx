@@ -69,7 +69,7 @@ const heroAnimals = [
     confidence: '93.9%',
     image: elephant,
     label: 'Elephant',
-    position: 'right-[20%] top-[54%] z-20',
+    position: 'right-[20%] top-[57%] z-20',
     scoreColor: 'text-fuchsia-500 dark:text-fuchsia-300',
     size: 'w-[160px]',
     style: {
@@ -87,7 +87,7 @@ const heroAnimals = [
     confidence: '91.4%',
     image: crocodile,
     label: 'Crocodile',
-    position: 'right-[0%] top-[34%] z-20',
+    position: 'right-[-1%] top-[34%] z-20',
     scoreColor: 'text-rose-500 dark:text-rose-300',
     size: 'w-[150px]',
     style: {
@@ -174,17 +174,25 @@ const HomeHero: FunctionComponent = () => {
                   <div className="relative overflow-hidden rounded-[24px] p-4">
                     <img
                       alt={animal.label}
-                      className="mx-auto h-28 w-full object-contain drop-shadow-[0_18px_24px_rgba(15,23,42,0.16)]"
+                      className={`mx-auto h-28 w-full object-contain drop-shadow-[0_18px_24px_rgba(15,23,42,0.16)] ${
+                        animal.label === 'Tiger' ? '-scale-x-100' : ''
+                      }`}
                       src={animal.image}
                     />
                   </div>
-                  <div className="relative mt-2 px-2 pb-1">
-                    <div className="text-base font-semibold tracking-tight text-zinc-950 dark:text-white">
+                  <div className="relative mt-2 px-1 pb-1">
+                    <div className="text-lg font-semibold tracking-normal text-zinc-950 dark:text-white">
                       {animal.label}
                     </div>
                   </div>
                   <div
-                    className={`pointer-events-none absolute -bottom-3 right-3 text-3xl font-semibold tracking-tight ${animal.scoreColor} opacity-95`}
+                    className={`pointer-events-none absolute text-3xl font-semibold tracking-tight ${animal.scoreColor} opacity-95 ${
+                      animal.label === 'Tiger'
+                        ? 'left-4 -top-5'
+                        : animal.label === 'Kangaroo'
+                          ? 'right-3 -top-3'
+                          : '-bottom-3 right-3'
+                    }`}
                   >
                     {animal.confidence}
                   </div>
