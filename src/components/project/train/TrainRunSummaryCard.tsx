@@ -1,9 +1,11 @@
-import { Alert, Button, Paper, Progress, Text } from "@mantine/core"
+import { Button, Divider, Progress, Text } from "@mantine/core"
 import { useDataTrain } from "~/components/project/train/DataTrainProvider"
+import TrainStatsGrid from "./TrainStatsGrid"
 
 function TrainRunSummaryCard() {
   const {
     displayedTrainLog,
+    summaryStats,
     isTraining,
     latestEpochNumber,
     openLogDetails,
@@ -13,12 +15,9 @@ function TrainRunSummaryCard() {
   } = useDataTrain()
 
   return (
-    <Paper
-      className="border border-zinc-200 p-4 dark:border-zinc-800 xl:col-span-8"
-      radius="lg"
-    >
+    <>
       {displayedTrainLog ? (
-        <div className="space-y-5">
+        <div className="space-y-6">
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1">
               <Text fw={600}>Latest training run</Text>
@@ -47,13 +46,31 @@ function TrainRunSummaryCard() {
               value={trainProgressPercent}
             />
           </div>
+
+          <Divider />
+
+          <div className="grid grid-cols-4 gap-4">
+            {summaryStats.map((stat) => (
+              <div className="space-y-1" key={stat.label}>
+                <Text c="dimmed" size="xs" tt="uppercase">
+                  {stat.label}
+                </Text>
+                <Text
+                  className="text-3xl font-semibold tracking-tight"
+                  fw={600}
+                >
+                  {stat.value}
+                </Text>
+              </div>
+            ))}
+          </div>
+
+          <Divider />
+
+          <TrainStatsGrid />
         </div>
-      ) : (
-        <Alert color="blue" variant="light">
-          Training has not started yet.
-        </Alert>
-      )}
-    </Paper>
+      ) : null}
+    </>
   )
 }
 

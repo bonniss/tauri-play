@@ -1,20 +1,15 @@
-import { Alert, Button } from "@mantine/core"
+import { Alert, Button, Paper } from "@mantine/core"
 import { IconPlayerPlay, IconPlayerStop } from "@tabler/icons-react"
+import { useDataTrain } from "~/components/project/train/DataTrainProvider"
 import TrainDataSection from "~/components/project/train/TrainDataSection"
 import TrainLogDrawer from "~/components/project/train/TrainLogDrawer"
 import TrainRunSummaryCard from "~/components/project/train/TrainRunSummaryCard"
 import TrainSettingsPopover from "~/components/project/train/TrainSettingsPopover"
-import TrainStatsGrid from "~/components/project/train/TrainStatsGrid"
 import TrainTimelinePanel from "~/components/project/train/TrainTimelinePanel"
-import { useDataTrain } from "~/components/project/train/DataTrainProvider"
 
 function TrainPageContent() {
-  const {
-    isReadyForTrain,
-    isTraining,
-    requestStopTraining,
-    startTraining,
-  } = useDataTrain()
+  const { isReadyForTrain, isTraining, requestStopTraining, startTraining } =
+    useDataTrain()
 
   return (
     <div className="space-y-4 p-4">
@@ -55,10 +50,13 @@ function TrainPageContent() {
         </Alert>
       ) : null}
 
-      <div className="grid gap-4 xl:grid-cols-12">
-        <TrainTimelinePanel />
-        <TrainRunSummaryCard />
-        <TrainStatsGrid />
+      <div className="grid items-start gap-4 xl:grid-cols-2">
+        <Paper className="p-4" withBorder radius="md">
+          <TrainTimelinePanel />
+        </Paper>
+        <Paper className="p-4" withBorder radius="md">
+          <TrainRunSummaryCard />
+        </Paper>
       </div>
 
       <TrainDataSection />

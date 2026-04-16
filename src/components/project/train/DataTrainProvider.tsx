@@ -29,6 +29,16 @@ type ActiveTrainSession = {
 
 type TrainDataView = "train" | "validation"
 
+type PreviewSplitClass = {
+  classId: string
+  className: string
+  trainSampleIds: string[]
+  trainSamples: number
+  totalSamples: number
+  validationSampleIds: string[]
+  validationSamples: number
+}
+
 type FixedTimelineStepId =
   | "tfjs"
   | "mobilenet"
@@ -229,6 +239,78 @@ function createPendingDatasetSnapshot(
       validationSampleIds: [],
       validationSamples: 0,
     })),
+  }
+}
+
+function createDeterministicSampleOrder(sample: {
+  filePath: string
+  id: string
+  originalFileName: string | null
+}) {
+  return `${sample.id}:${sample.filePath}:${sample.originalFileName ?? ""}`
+}
+
+function createPreviewSplitSnapshot({
+  classes,
+  validationSplit,
+}: {
+  classes: ReturnType<typeof useProjectOne>["classes"]
+  validationSplit: number
+}): ModelTrainLogDatasetSnapshot {
+  const samplesPerClass: PreviewSplitClass[] = classes.map((projectClass) => {
+    const orderedSamples = [...projectClass.samples].sort((left, right) =>
+      createDeterministicSampleOrder(left).localeCompare(
+        createDeterministicSampleOrder(right),
+      ),
+    )
+
+    if (orderedSamples.length === 0) {
+      return {
+        classId: projectClass.id,
+        className: projectClass.name,
+        trainSampleIds: [],
+        trainSamples: 0,
+        totalSamples: 0,
+        validationSampleIds: [],
+        validationSamples: 0,
+      }
+    }
+
+    const rawValidationCount = Math.round(
+      orderedSamples.length * validationSplit,
+    )
+    const validationCount = Math.min(
+      Math.max(1, rawValidationCount),
+      Math.max(orderedSamples.length - 1, 1),
+    )
+    const trainSamples = orderedSamples.slice(
+      0,
+      orderedSamples.length - validationCount,
+    )
+    const validationSamples = orderedSamples.slice(
+      orderedSamples.length - validationCount,
+    )
+
+    return {
+      classId: projectClass.id,
+      className: projectClass.name,
+      trainSampleIds: trainSamples.map((sample) => sample.id),
+      trainSamples: trainSamples.length,
+      totalSamples: orderedSamples.length,
+      validationSampleIds: validationSamples.map((sample) => sample.id),
+      validationSamples: validationSamples.length,
+    }
+  })
+
+  return {
+    classCount: classes.length,
+    totalSamples: classes.reduce((sum, item) => sum + item.samples.length, 0),
+    trainSamples: samplesPerClass.reduce((sum, item) => sum + item.trainSamples, 0),
+    validationSamples: samplesPerClass.reduce(
+      (sum, item) => sum + item.validationSamples,
+      0,
+    ),
+    samplesPerClass,
   }
 }
 
@@ -476,6 +558,7 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
   )
   const [logDetailsOpened, setLogDetailsOpened] = useState(false)
   const [now, setNow] = useState(() => Date.now())
+  const [inspectDataOpened, setInspectDataOpened] = useState(false)
   const [trainDataView, setTrainDataView] = useState<TrainDataView>("train")
   const [trainSettingsOpened, setTrainSettingsOpened] = useState(false)
   const activeTrainLogIdRef = useRef<string | null>(null)
@@ -785,12 +868,18 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
       ),
     [classes],
   )
+  const previewSplitSnapshot = useMemo(
+    () =>
+      createPreviewSplitSnapshot({
+        classes,
+        validationSplit: trainSettings.validationSplit,
+      }),
+    [classes, trainSettings.validationSplit],
+  )
+  const inspectedDataSnapshot =
+    displayedTrainLog?.datasetSnapshot ?? previewSplitSnapshot
   const displayedSplitSamples = useMemo(() => {
-    if (!displayedTrainLog) {
-      return []
-    }
-
-    const sampleIds = displayedTrainLog.datasetSnapshot.samplesPerClass.flatMap(
+    const sampleIds = inspectedDataSnapshot.samplesPerClass.flatMap(
       (item) =>
         trainDataView === "train"
           ? (item.trainSampleIds ?? [])
@@ -800,7 +889,7 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
     return sampleIds
       .map((sampleId) => sampleMap.get(sampleId) ?? null)
       .filter((sample): sample is NonNullable<typeof sample> => sample != null)
-  }, [displayedTrainLog, sampleMap, trainDataView])
+  }, [inspectedDataSnapshot, sampleMap, trainDataView])
   const timelineSteps = useMemo(
     () =>
       buildFixedTimelineSteps({
@@ -813,8 +902,8 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
     [displayedTrainLog, latestEpoch, latestEpochNumber, now, plannedEpochs],
   )
   const hasTrainData =
-    (displayedTrainLog?.datasetSnapshot.trainSamples ?? 0) > 0 ||
-    (displayedTrainLog?.datasetSnapshot.validationSamples ?? 0) > 0
+    inspectedDataSnapshot.trainSamples > 0 ||
+    inspectedDataSnapshot.validationSamples > 0
   const logEntries =
     displayedTrainLog?.events.map((event, index) => ({
       key: `${event.at}-${index}`,
@@ -830,6 +919,8 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
     formatMetric,
     getTrainSettingsFormValues,
     hasTrainData,
+    inspectDataOpened,
+    inspectedDataSnapshot,
     isApplyingTrainSettings,
     isReadyForTrain,
     isTraining: trainMutation.isPending,
@@ -848,6 +939,15 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
     projectModel,
     requestStopTraining: () => {
       abortControllerRef.current?.abort(new Error("Training cancelled."))
+    },
+    setInspectDataOpened,
+    openTrainDataDrawer: () => {
+      setTrainDataView("train")
+      setInspectDataOpened(true)
+    },
+    openValidationDataDrawer: () => {
+      setTrainDataView("validation")
+      setInspectDataOpened(true)
     },
     setTrainDataView: (value: TrainDataView) => {
       setTrainDataView(value)
@@ -886,20 +986,19 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
     ],
     timelineSteps,
     trainDataView,
-    trainDataViewOptions: displayedTrainLog
-      ? [
-          {
-            label: `Train (${displayedTrainLog.datasetSnapshot.trainSamples})`,
-            value: "train",
-          },
-          {
-            label: `Validation (${displayedTrainLog.datasetSnapshot.validationSamples})`,
-            value: "validation",
-          },
-        ]
-      : [],
+    trainDataViewOptions: [
+      {
+        label: `Train (${inspectedDataSnapshot.trainSamples})`,
+        value: "train",
+      },
+      {
+        label: `Validation (${inspectedDataSnapshot.validationSamples})`,
+        value: "validation",
+      },
+    ],
     trainProgressPercent: Math.round(trainProgress * 100),
     trainSettingsOpened,
+    validationSplitLabel: `${Math.round(trainSettings.validationSplit * 100)}%`,
     trainStatusText: displayedTrainLog
       ? displayedTrainLog.status === "started"
         ? "Training is in progress."

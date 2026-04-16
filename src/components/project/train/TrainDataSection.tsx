@@ -1,39 +1,39 @@
-import { Group, Paper, SegmentedControl, Stack, Text } from "@mantine/core"
+import { Drawer, SegmentedControl } from "@mantine/core"
 import SampleGrid from "~/components/project/SampleGrid"
 import { useDataTrain } from "~/components/project/train/DataTrainProvider"
 
 function TrainDataSection() {
   const {
     displayedSplitSamples,
-    hasTrainData,
+    inspectDataOpened,
+    setInspectDataOpened,
     setTrainDataView,
     trainDataView,
     trainDataViewOptions,
   } = useDataTrain()
 
-  if (!hasTrainData) {
-    return null
-  }
-
   return (
-    <Paper
-      className="border border-zinc-200 p-4 dark:border-zinc-800"
-      radius="lg"
+    <Drawer
+      onClose={() => {
+        setInspectDataOpened(false)
+      }}
+      opened={inspectDataOpened}
+      padding="md"
+      position="bottom"
+      size="75%"
+      title={trainDataView === "train" ? "Train Images" : "Validation Images"}
     >
-      <Stack gap="sm">
-        <Group justify="space-between">
-          <Text fw={600}>Train Data</Text>
-          <SegmentedControl
-            data={trainDataViewOptions}
-            onChange={(value) => {
-              setTrainDataView(value as "train" | "validation")
-            }}
-            value={trainDataView}
-          />
-        </Group>
+      <div className="container space-y-4">
+        <SegmentedControl
+          data={trainDataViewOptions}
+          onChange={(value) => {
+            setTrainDataView(value as "train" | "validation")
+          }}
+          value={trainDataView}
+        />
         <SampleGrid samples={displayedSplitSamples} />
-      </Stack>
-    </Paper>
+      </div>
+    </Drawer>
   )
 }
 
