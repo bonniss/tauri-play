@@ -42,6 +42,35 @@
 }
 
 @layer components {
+  @keyframes homeHeroFloat {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) rotate(var(--float-rotate, 0deg));
+    }
+    50% {
+      transform: translate3d(0, var(--float-y, -14px), 0)
+        rotate(calc(var(--float-rotate, 0deg) + var(--float-tilt, 2deg)));
+    }
+  }
+
+  @keyframes homeHeroDrift {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0);
+    }
+    50% {
+      transform: translate3d(var(--drift-x, 8px), var(--drift-y, -10px), 0);
+    }
+  }
+
+  .home-hero-float {
+    animation: homeHeroFloat var(--float-duration, 7.2s) ease-in-out infinite;
+  }
+
+  .home-hero-drift {
+    animation: homeHeroDrift var(--drift-duration, 9.5s) ease-in-out infinite;
+  }
+
   .flash-overlay {
     position: absolute;
     inset: 0;
