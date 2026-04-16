@@ -5,7 +5,7 @@ import { FunctionComponent } from 'react';
 
 const HomeHero: FunctionComponent = () => {
   return (
-    <section className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden py-8">
+    <section className="relative left-1/2 mt-[-60px] w-screen -translate-x-1/2 overflow-hidden py-16 pt-[108px]">
       <div className="pointer-events-none absolute inset-x-0 -top-16 bottom-0 overflow-hidden">
         <div className="absolute -left-24 top-6 h-72 w-72 rounded-full bg-emerald-300/35 blur-[120px] dark:bg-emerald-500/22" />
         <div className="absolute right-0 top-0 h-80 w-80 rounded-full bg-sky-300/28 blur-[140px] dark:bg-sky-500/18" />
