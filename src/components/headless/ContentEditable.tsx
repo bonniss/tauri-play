@@ -47,6 +47,10 @@ const ContentEditable: FunctionComponent<ContentEditableProps> = ({
   const draftValueRef = useRef(value)
   const [isActive, setIsActive] = useState(false)
   const [isEmpty, setIsEmpty] = useState(value.trim().length === 0)
+  const defaultClassName =
+    "rounded px-1 py-0.5 outline-none transition-colors hover:bg-orange-50 hover:text-orange-700 dark:hover:bg-orange-900/75 dark:hover:text-orange-200"
+  const defaultFocusedClassName =
+    "bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
 
   useEffect(() => {
     draftValueRef.current = value
@@ -110,7 +114,12 @@ const ContentEditable: FunctionComponent<ContentEditableProps> = ({
 
   return (
     <Element
-      className={[className, isActive ? focusedClassName : null]
+      className={[
+        defaultClassName,
+        className,
+        isActive ? defaultFocusedClassName : null,
+        isActive ? focusedClassName : null,
+      ]
         .filter(Boolean)
         .join(" ")}
       contentEditable

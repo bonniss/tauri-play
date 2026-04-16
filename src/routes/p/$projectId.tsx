@@ -12,6 +12,8 @@ import type { MobileNet } from "@tensorflow-models/mobilenet"
 import type * as tf from "@tensorflow/tfjs"
 import clsx from "clsx"
 import { FunctionComponent, useEffect, useMemo, useRef, useState } from "react"
+import PlayRuntimeSettings from "~/components/project/play/PlayRuntimeSettings"
+import { ProjectPlayProvider } from "~/components/project/play/ProjectPlayProvider"
 import {
   ProjectOneProvider,
   useProjectOne,
@@ -36,7 +38,9 @@ function ProjectPlayerRoute() {
 
   return (
     <ProjectOneProvider defaultValue={{ projectId }}>
-      <ProjectPlayerPage />
+      <ProjectPlayProvider>
+        <ProjectPlayerPage />
+      </ProjectPlayProvider>
     </ProjectOneProvider>
   )
 }
@@ -114,15 +118,18 @@ function ProjectPlayerPage() {
             {projectName}
           </h1>
         </div>
-        <Button
-          component={Link}
-          leftSection={<IconArrowLeft className="size-4" />}
-          params={{ projectId } as never}
-          to="/projects/$projectId/play"
-          variant="default"
-        >
-          Back
-        </Button>
+        <div className="flex items-center gap-2">
+          <PlayRuntimeSettings />
+          <Button
+            component={Link}
+            leftSection={<IconArrowLeft className="size-4" />}
+            params={{ projectId } as never}
+            to="/projects/$projectId/play"
+            variant="default"
+          >
+            Back
+          </Button>
+        </div>
       </div>
 
       {playSettings.mode === "camera" ? (
