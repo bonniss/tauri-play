@@ -1,4 +1,4 @@
-import { Button, Group, Modal, Radio, Stack, Text } from "@mantine/core"
+import { Button, Group, Modal, Radio, Text } from "@mantine/core"
 import { FunctionComponent } from "react"
 import usFlag from "~/assets/flags/us.svg"
 import vnFlag from "~/assets/flags/vn.svg"
@@ -31,31 +31,32 @@ const AppSettings: FunctionComponent<AppSettingsProps> = () => {
             </Text>
             <Radio.Group onChange={setLocale} value={locale}>
               <div className="flex gap-4">
-              {[
-                { flag: usFlag, label: "English", value: "en" },
-                { flag: vnFlag, label: "Tieng Viet", value: "vi" },
-              ].map((item) => (
-                <Radio.Card
-                  checked={locale === item.value}
-                  key={item.value}
-                  p="xs"
-                  value={item.value}
-                >
-                  <Group align="center" justify="space-between" wrap="nowrap">
-                    <Group align="center" gap="sm" wrap="nowrap">
-                      <img
-                        alt={item.label}
-                        className="h-6 w-6 rounded-xl"
-                        src={item.flag}
+                {[
+                  { flag: usFlag, label: "English", value: "en" },
+                  { flag: vnFlag, label: "Tieng Viet", value: "vi" },
+                ].map((item) => (
+                  <Radio.Card
+                    checked={locale === item.value}
+                    key={item.value}
+                    p="xs"
+                    value={item.value}
+                  >
+                    <Group align="center" justify="space-between" wrap="nowrap">
+                      <Group align="center" gap="sm" wrap="nowrap">
+                        <img
+                          alt={item.label}
+                          className="h-6 w-6 rounded-xl"
+                          src={item.flag}
+                        />
+                        <span className="text-sm">{item.label}</span>
+                      </Group>
+                      <Radio.Indicator
+                        size="xs"
+                        checked={locale === item.value}
                       />
-                      <span className="text-sm">
-                        {item.label}
-                      </span>
                     </Group>
-                    <Radio.Indicator size="xs" checked={locale === item.value} />
-                  </Group>
-                </Radio.Card>
-              ))}
+                  </Radio.Card>
+                ))}
               </div>
             </Radio.Group>
           </div>
