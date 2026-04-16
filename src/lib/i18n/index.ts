@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { get as getProperty } from "react-headless-form"
 import { default as vi } from "./locales/vi/app.json"
-export { vi }
+import { default as en } from "./locales/en/app.json"
+export { vi, en }
 
 const RX_PARAM = /\{\{(\w+)\}\}/g
 
@@ -15,9 +16,10 @@ export interface I18nConfig {
 
 let config: I18nConfig = {
   resources: {
+    en,
     vi,
   },
-  getLocale: () => "vi",
+  getLocale: () => "en",
 }
 
 export function setupI18n(_config: Partial<I18nConfig>) {
