@@ -665,6 +665,7 @@ function CameraCapturePanel({
   return (
     <div>
       <CameraUI
+        autoConnect
         className="w-full"
         onCaptureSession={(session) => {
           void onCaptureSession(session);
