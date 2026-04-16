@@ -69,6 +69,7 @@ interface ProjectDirectoryProps {
 function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [createRequestDismissed, setCreateRequestDismissed] = useState(false);
   const [projectSeed, setProjectSeed] = useState(
     generateRandomProjectIdentity(),
   );
@@ -219,10 +220,13 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
   }, [projectPendingDelete]);
 
   useEffect(() => {
-    if (createRequested) {
+    if (createRequested && !createRequestDismissed) {
       createProjectHandlers.open();
     }
-  }, [createProjectHandlers, createRequested]);
+    if (!createRequested) {
+      setCreateRequestDismissed(false);
+    }
+  }, [createProjectHandlers, createRequestDismissed, createRequested]);
 
   useEffect(() => {
     if (page > totalPages) {
@@ -237,6 +241,7 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
           createProjectHandlers.close();
 
           if (createRequested) {
+            setCreateRequestDismissed(true);
             void navigate({
               to: '/projects',
               search: { create: false },
@@ -295,6 +300,7 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
                 createProjectHandlers.close();
 
                 if (createRequested) {
+                  setCreateRequestDismissed(true);
                   void navigate({
                     to: '/projects',
                     search: { create: false },
@@ -380,10 +386,8 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
               const nextSeed = generateRandomProjectIdentity();
               setProjectSeed(nextSeed);
               setSelectedProjectIcon(nextSeed.icon);
-              void navigate({
-                to: '/projects',
-                search: { create: true },
-              });
+              setCreateRequestDismissed(false);
+              createProjectHandlers.open();
             }}
           >
             New Project
