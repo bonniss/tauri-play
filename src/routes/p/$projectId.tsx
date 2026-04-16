@@ -6,24 +6,27 @@ import {
   IconUpload,
   IconX,
 } from "@tabler/icons-react"
-import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
-import type { MobileNet } from "@tensorflow-models/mobilenet"
-import type * as tf from "@tensorflow/tfjs"
 import clsx from "clsx"
-import { FunctionComponent, useEffect, useMemo, useRef, useState } from "react"
+import {
+  FunctionComponent,
+  ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
+import CameraUI from "~/components/camera/CameraUI"
 import PlayRuntimeSettings from "~/components/project/play/PlayRuntimeSettings"
 import { ProjectPlayProvider } from "~/components/project/play/ProjectPlayProvider"
+import {
+  ProjectPlayRuntimeProvider,
+  useProjectPlayRuntime,
+} from "~/components/project/play/ProjectPlayRuntimeProvider"
 import {
   ProjectOneProvider,
   useProjectOne,
 } from "~/components/project/ProjectOneProvider"
-import { getProjectModel } from "~/lib/db/domain/models"
-import { initTf } from "~/lib/ml/backend"
-import { loadMobilenetModel } from "~/lib/ml/mobilenet/model"
-import { predictWithMobilenetClassifier } from "~/lib/ml/mobilenet/predict"
-import { loadMobilenetClassifierModel } from "~/lib/ml/mobilenet/storage"
-import { fileToImageTensor } from "~/lib/ml/sample/image"
 import {
   createSamplePreviewUrl,
   revokeSamplePreviewUrl,
@@ -39,7 +42,9 @@ function ProjectPlayerRoute() {
   return (
     <ProjectOneProvider defaultValue={{ projectId }}>
       <ProjectPlayProvider>
-        <ProjectPlayerPage />
+        <ProjectPlayRuntimeProvider>
+          <ProjectPlayerPage />
+        </ProjectPlayRuntimeProvider>
       </ProjectPlayProvider>
     </ProjectOneProvider>
   )
@@ -133,17 +138,7 @@ function ProjectPlayerPage() {
       </div>
 
       {playSettings.mode === "camera" ? (
-        <div className="rounded-3xl border border-zinc-200 bg-white p-10 dark:border-zinc-800 dark:bg-zinc-950">
-          <div className="mx-auto max-w-xl text-center">
-            <h2 className="text-2xl font-semibold text-zinc-950 dark:text-zinc-50">
-              Camera mode is coming next
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-              Switch this project back to upload mode for now if you want to
-              test the current model immediately.
-            </p>
-          </div>
-        </div>
+        <CameraPlayExperience />
       ) : (
         <UploadPlayExperience />
       )}
@@ -152,31 +147,17 @@ function ProjectPlayerPage() {
 }
 
 const UploadPlayExperience: FunctionComponent = () => {
-  const { classes, playSettings, projectDescription, projectId } =
-    useProjectOne()
-  const projectModelQuery = useQuery({
-    queryKey: ["project-model", projectId],
-    queryFn: () => getProjectModel(projectId),
-  })
+  const { playSettings } = useProjectOne()
+  const {
+    clearPrediction,
+    isAnalyzing,
+    prediction,
+    projectModel,
+    runPredictionFromFile,
+    runtimeError,
+  } = useProjectPlayRuntime()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [selectedFileUrl, setSelectedFileUrl] = useState<string | null>(null)
-  const [prediction, setPrediction] = useState<{
-    confidences: number[]
-    predictedClass: number
-    predictTimeMs: number
-  } | null>(null)
-  const [runtimeError, setRuntimeError] = useState<string | null>(null)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [predictionTick, setPredictionTick] = useState(0)
-  const classifierRef = useRef<tf.LayersModel | null>(null)
-  const embeddingModelRef = useRef<MobileNet | null>(null)
-  const modelClassNamesRef = useRef<string[]>(classes.map((item) => item.name))
-
-  useEffect(() => {
-    return () => {
-      classifierRef.current?.dispose()
-    }
-  }, [])
 
   useEffect(() => {
     if (!selectedFile) {
@@ -192,84 +173,11 @@ const UploadPlayExperience: FunctionComponent = () => {
     }
   }, [selectedFile])
 
-  async function ensureModelsReady() {
-    if (!projectModelQuery.data?.artifactPath) {
-      throw new Error("No trained model found for this project.")
-    }
-
-    if (!embeddingModelRef.current) {
-      await initTf()
-      embeddingModelRef.current = await loadMobilenetModel()
-    }
-
-    if (!classifierRef.current) {
-      const result = await loadMobilenetClassifierModel(
-        projectModelQuery.data.artifactPath,
-      )
-      classifierRef.current = result.model
-      modelClassNamesRef.current =
-        result.metadata.classNames?.length === classes.length
-          ? result.metadata.classNames
-          : classes.map((item) => item.name)
-    }
-  }
-
-  async function runPrediction(file: File) {
-    setIsAnalyzing(true)
-    setRuntimeError(null)
-
-    try {
-      await ensureModelsReady()
-
-      const result = await predictWithMobilenetClassifier({
-        classifier: classifierRef.current as tf.LayersModel,
-        embeddingModel: embeddingModelRef.current as MobileNet,
-        file,
-        fileToTensor: fileToImageTensor,
-        imageSize: 224,
-      })
-
-      setPrediction(result)
-      setPredictionTick((current) => current + 1)
-    } catch (error) {
-      setPrediction(null)
-      setRuntimeError(
-        error instanceof Error ? error.message : "Prediction failed.",
-      )
-    } finally {
-      setIsAnalyzing(false)
-    }
-  }
-
-  const rankedResults = useMemo(() => {
-    if (!prediction) {
-      return []
-    }
-
-    return prediction.confidences
-      .map((confidence, index) => ({
-        className:
-          modelClassNamesRef.current[index] ??
-          classes[index]?.name ??
-          `Class ${index + 1}`,
-        confidence,
-        index,
-      }))
-      .sort((left, right) => right.confidence - left.confidence)
-  }, [classes, prediction])
-
-  const visibleResults = playSettings.showAllClasses
-    ? rankedResults
-    : rankedResults.slice(0, playSettings.topK)
-  const topResult = rankedResults[0] ?? null
   const hasPreview = Boolean(selectedFileUrl)
-  const meetsThreshold =
-    topResult != null &&
-    topResult.confidence >= playSettings.confidenceThreshold
   const shouldShowPredictionPanel =
     hasPreview && (isAnalyzing || runtimeError != null || prediction != null)
 
-  if (!projectModelQuery.data) {
+  if (!projectModel) {
     return (
       <Alert color="yellow" variant="light">
         This project does not have a trained model yet.
@@ -278,48 +186,7 @@ const UploadPlayExperience: FunctionComponent = () => {
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[320px_minmax(0,1fr)]">
-      <aside className="space-y-6">
-        <section className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
-            Model
-          </p>
-          <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-            Updated{" "}
-            <span className="font-medium text-zinc-900 dark:text-zinc-100">
-              {formatRelativeTime(projectModelQuery.data.trainedAt)}
-            </span>
-          </p>
-        </section>
-
-        <section className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
-            Classes
-          </p>
-          <div className="space-y-4">
-            {classes.map((projectClass) => (
-              <ClassPreviewItem
-                classId={projectClass.id}
-                key={projectClass.id}
-                name={projectClass.name}
-                samples={projectClass.samples}
-              />
-            ))}
-          </div>
-        </section>
-
-        <section className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
-            Description
-          </p>
-          <div className="max-h-72 overflow-y-auto pr-2 text-sm leading-7 text-zinc-600 dark:text-zinc-300">
-            <div className="whitespace-pre-wrap">
-              {projectDescription || "No project description yet."}
-            </div>
-          </div>
-        </section>
-      </aside>
-
+    <PlayExperienceShell trainedAt={projectModel.trainedAt}>
       <div className="flex min-w-0 flex-col gap-6">
         <div
           className={clsx(
@@ -334,7 +201,7 @@ const UploadPlayExperience: FunctionComponent = () => {
           >
             <Dropzone
               className={clsx(
-                "p-4 flex justify-center items-center absolute inset-0",
+                "absolute inset-0 flex items-center justify-center p-4",
               )}
               accept={IMAGE_MIME_TYPE}
               loading={false}
@@ -348,20 +215,19 @@ const UploadPlayExperience: FunctionComponent = () => {
                 }
 
                 setSelectedFile(file)
-                setPrediction(null)
-                setRuntimeError(null)
+                clearPrediction()
 
                 if (playSettings.autoPredictOnUpload) {
-                  void runPrediction(file)
+                  void runPredictionFromFile(file)
                 }
               }}
               onReject={() => {
-                setRuntimeError("Please upload a valid image file.")
+                clearPrediction()
               }}
             >
               <div
                 className={clsx(
-                  "flex gap-4 items-center",
+                  "flex items-center gap-4",
                   hasPreview ? "flex-col" : "flex-row",
                 )}
               >
@@ -406,7 +272,7 @@ const UploadPlayExperience: FunctionComponent = () => {
                         return
                       }
 
-                      void runPrediction(selectedFile)
+                      void runPredictionFromFile(selectedFile)
                     }}
                     size="md"
                     variant="default"
@@ -420,7 +286,7 @@ const UploadPlayExperience: FunctionComponent = () => {
 
           {hasPreview ? (
             <Paper
-              className="h-[500px] relative overflow-hidden
+              className="relative h-[500px] overflow-hidden
     bg-[repeating-linear-gradient(135deg,rgba(229,231,235,0.5)_0px,rgba(229,231,235,0.5)_1px,transparent_1px,transparent_12px)]
     dark:bg-[repeating-linear-gradient(135deg,rgba(55,65,81,0.5)_0px,rgba(55,65,81,0.5)_1px,transparent_1px,transparent_12px)] drop-shadow-md"
               withBorder
@@ -434,70 +300,217 @@ const UploadPlayExperience: FunctionComponent = () => {
           ) : null}
         </div>
 
-        {shouldShowPredictionPanel ? (
-          <div className="rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
-            <div className="space-y-6" key={predictionTick}>
-              <div className="flex items-center justify-between gap-4">
-                <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
-                  <span
-                    className={
-                      !isAnalyzing && prediction && topResult && meetsThreshold
-                        ? "inline-block motion-preset-confetti"
-                        : ""
-                    }
-                  >
-                    {isAnalyzing
-                      ? "Analyzing..."
-                      : meetsThreshold && topResult
-                        ? topResult.className
-                        : "Not confident enough"}
-                  </span>
-                </h2>
-                {playSettings.showConfidenceScores &&
-                prediction &&
-                topResult ? (
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                    Confidence {(topResult.confidence * 100).toFixed(1)}% ·{" "}
-                    {prediction.predictTimeMs.toFixed(1)} ms
-                  </p>
-                ) : null}
-              </div>
+        {shouldShowPredictionPanel ? <PredictionPanel /> : null}
+      </div>
+    </PlayExperienceShell>
+  )
+}
 
-              {isAnalyzing ? (
-                <AnalyzeSkeleton />
-              ) : runtimeError ? (
-                <Alert color="red" variant="light">
-                  {runtimeError}
-                </Alert>
-              ) : prediction && topResult ? (
-                <div className="space-y-4">
-                  {playSettings.showConfidenceScores ? (
-                    visibleResults.map((result) => (
-                      <div key={result.index}>
-                        <div className="mb-2 flex items-center justify-between gap-3">
-                          <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-                            {result.className}
-                          </span>
-                          <span className="text-sm text-zinc-500 dark:text-zinc-400">
-                            {(result.confidence * 100).toFixed(1)}%
-                          </span>
-                        </div>
-                        <Progress
-                          animated={false}
-                          radius="xl"
-                          size="sm"
-                          value={result.confidence * 100}
-                        />
-                      </div>
-                    ))
-                  ) : (
-                    <div className="rounded-2xl bg-zinc-100 px-4 py-4 text-sm text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
-                      Confidence display is disabled for this play mode.
+const CameraPlayExperience: FunctionComponent = () => {
+  const { prediction, projectModel, runPredictionFromVideo, runtimeError } =
+    useProjectPlayRuntime()
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+
+  useEffect(() => {
+    if (!projectModel) {
+      return
+    }
+
+    const timer = window.setInterval(() => {
+      const video = videoRef.current
+
+      if (!video || video.readyState < 2) {
+        return
+      }
+
+      void runPredictionFromVideo(video, {
+        stableCommitCount: 2,
+      })
+    }, 700)
+
+    return () => {
+      window.clearInterval(timer)
+    }
+  }, [projectModel, runPredictionFromVideo])
+
+  if (!projectModel) {
+    return (
+      <Alert color="yellow" variant="light">
+        This project does not have a trained model yet.
+      </Alert>
+    )
+  }
+
+  return (
+    <PlayExperienceShell trainedAt={projectModel.trainedAt}>
+      <div className="flex min-w-0 flex-col gap-6">
+        <Paper
+          className="relative min-h-[500px] overflow-hidden border border-zinc-200 dark:border-zinc-800"
+          withBorder
+        >
+          <CameraUI
+            autoConnect
+            className="h-full"
+            showModeControls={false}
+            showSettings={false}
+            showShutter={false}
+            viewportOverlay={(context) => {
+              videoRef.current = context.videoRef.current
+
+              return (
+                <div className="flex h-full flex-col justify-between p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-xs font-medium uppercase tracking-[0.18em] text-white/80 backdrop-blur-sm">
+                      Live Camera
                     </div>
-                  )}
+                    <div className="rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-xs text-white/70 backdrop-blur-sm">
+                      {context.cameraState === "ready"
+                        ? "Analyzing live feed"
+                        : "Waiting for camera"}
+                    </div>
+                  </div>
+                  {runtimeError ? (
+                    <div className="self-center rounded-full border border-red-400/30 bg-red-500/15 px-4 py-2 text-xs text-red-100 backdrop-blur-sm">
+                      {runtimeError}
+                    </div>
+                  ) : null}
                 </div>
-              ) : null}
+              )
+            }}
+          />
+        </Paper>
+
+        {prediction || runtimeError ? <PredictionPanel /> : null}
+      </div>
+    </PlayExperienceShell>
+  )
+}
+
+const PlayExperienceShell: FunctionComponent<{
+  children: ReactNode
+  trainedAt: string
+}> = ({ children, trainedAt }) => {
+  const { classes, projectDescription } = useProjectOne()
+
+  return (
+    <div className="grid gap-8 lg:grid-cols-[320px_minmax(0,1fr)]">
+      <aside className="space-y-6">
+        <section className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
+            Model
+          </p>
+          <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+            Updated{" "}
+            <span className="font-medium text-zinc-900 dark:text-zinc-100">
+              {formatRelativeTime(trainedAt)}
+            </span>
+          </p>
+        </section>
+
+        <section className="space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
+            Classes
+          </p>
+          <div className="space-y-4">
+            {classes.map((projectClass) => (
+              <ClassPreviewItem
+                classId={projectClass.id}
+                key={projectClass.id}
+                name={projectClass.name}
+                samples={projectClass.samples}
+              />
+            ))}
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
+            Description
+          </p>
+          <div className="max-h-72 overflow-y-auto pr-2 text-sm leading-7 text-zinc-600 dark:text-zinc-300">
+            <div className="whitespace-pre-wrap">
+              {projectDescription || "No project description yet."}
             </div>
+          </div>
+        </section>
+      </aside>
+
+      {children}
+    </div>
+  )
+}
+
+const PredictionPanel: FunctionComponent = () => {
+  const { playSettings } = useProjectOne()
+  const {
+    isAnalyzing,
+    meetsThreshold,
+    prediction,
+    predictionTick,
+    runtimeError,
+    topResult,
+    visibleResults,
+  } = useProjectPlayRuntime()
+
+  return (
+    <div className="rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+      <div className="space-y-6" key={predictionTick}>
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+            <span
+              className={
+                !isAnalyzing && prediction && topResult && meetsThreshold
+                  ? "inline-block motion-preset-confetti"
+                  : ""
+              }
+            >
+              {isAnalyzing
+                ? "Analyzing..."
+                : meetsThreshold && topResult
+                  ? topResult.className
+                  : "Not confident enough"}
+            </span>
+          </h2>
+          {playSettings.showConfidenceScores && prediction && topResult ? (
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              Confidence {(topResult.confidence * 100).toFixed(1)}% ·{" "}
+              {prediction.predictTimeMs.toFixed(1)} ms
+            </p>
+          ) : null}
+        </div>
+
+        {isAnalyzing ? (
+          <AnalyzeSkeleton />
+        ) : runtimeError ? (
+          <Alert color="red" variant="light">
+            {runtimeError}
+          </Alert>
+        ) : prediction && topResult ? (
+          <div className="space-y-4">
+            {playSettings.showConfidenceScores ? (
+              visibleResults.map((result) => (
+                <div key={result.index}>
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
+                      {result.className}
+                    </span>
+                    <span className="text-sm text-zinc-500 dark:text-zinc-400">
+                      {(result.confidence * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <Progress
+                    animated={false}
+                    radius="xl"
+                    size="sm"
+                    value={result.confidence * 100}
+                  />
+                </div>
+              ))
+            ) : (
+              <div className="rounded-2xl bg-zinc-100 px-4 py-4 text-sm text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
+                Confidence display is disabled for this play mode.
+              </div>
+            )}
           </div>
         ) : null}
       </div>

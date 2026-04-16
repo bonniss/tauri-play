@@ -5,27 +5,6 @@ import { useProjectPlay } from "~/components/project/play/ProjectPlayProvider"
 import { ProjectPlaySettingsFormValues } from "~/lib/project/settings"
 
 const playSettingsForm = defineConfig<ProjectPlaySettingsFormValues>({
-  mode: {
-    type: "radio",
-    label: "Demo mode",
-    props: {
-      className: "col-span-full",
-      orientation: "horizontal",
-      gap: 6,
-      options: [
-        {
-          label: "Upload",
-          value: "upload",
-          description: "Upload an image to get a prediction",
-        },
-        {
-          label: "Live",
-          value: "camera",
-          description: "Use your camera for real-time predictions",
-        },
-      ],
-    },
-  },
   autoPredictOnUpload: {
     type: "switch",
     label: "Auto predict on upload",

@@ -1,4 +1,4 @@
-import { useState, type FunctionComponent } from "react"
+import { useEffect, useState, type FunctionComponent } from "react"
 import CameraCapture, {
   type CameraCaptureContext,
   type CapturedFrame,
@@ -7,8 +7,12 @@ import CameraCapture, {
 } from "./CameraCapture"
 
 interface CameraUIProps {
+  autoConnect?: boolean
   className?: string
   defaultSettings?: Partial<CaptureSettings>
+  showModeControls?: boolean
+  showSettings?: boolean
+  showShutter?: boolean
   onCapture?: (frame: CapturedFrame) => void
   onCaptureSession?: (session: CaptureSession) => void
   children?: (frames: CapturedFrame[]) => React.ReactNode
@@ -16,8 +20,12 @@ interface CameraUIProps {
 }
 
 const CameraUI: FunctionComponent<CameraUIProps> = ({
+  autoConnect = false,
   className = "",
   defaultSettings,
+  showModeControls = true,
+  showSettings = true,
+  showShutter = true,
   onCapture,
   onCaptureSession,
   children,
@@ -30,7 +38,15 @@ const CameraUI: FunctionComponent<CameraUIProps> = ({
       onCaptureSession={onCaptureSession}
     >
       {(ctx) => (
-        <CameraUIInner ctx={ctx} className={className} viewportOverlay={viewportOverlay}>
+        <CameraUIInner
+          autoConnect={autoConnect}
+          className={className}
+          ctx={ctx}
+          showModeControls={showModeControls}
+          showSettings={showSettings}
+          showShutter={showShutter}
+          viewportOverlay={viewportOverlay}
+        >
           {children}
         </CameraUIInner>
       )}
@@ -39,16 +55,24 @@ const CameraUI: FunctionComponent<CameraUIProps> = ({
 }
 
 interface CameraUIInnerProps {
+  autoConnect?: boolean
   ctx: CameraCaptureContext
   className?: string
   children?: (frames: CapturedFrame[]) => React.ReactNode
+  showModeControls?: boolean
+  showSettings?: boolean
+  showShutter?: boolean
   viewportOverlay?: (context: CameraCaptureContext) => React.ReactNode
 }
 
 const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
+  autoConnect = false,
   ctx,
   className = "",
   children,
+  showModeControls = true,
+  showSettings = true,
+  showShutter = true,
   viewportOverlay,
 }) => {
   const {
@@ -69,6 +93,12 @@ const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
 
   const [settingsOpen, setSettingsOpen] = useState(false)
   const isReady = cameraState === "ready"
+
+  useEffect(() => {
+    if (autoConnect && cameraState === "idle") {
+      connect()
+    }
+  }, [autoConnect, cameraState, connect])
 
   return (
     <div className={`flex flex-col gap-3 ${className}`}>
@@ -130,36 +160,40 @@ const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
         )}
 
         {/* top bar overlay */}
-        {isReady && (
+        {isReady && (showModeControls || showSettings) && (
           <div className="absolute top-0 left-0 right-0 p-3">
             <div className="flex items-start justify-between gap-2">
               {/* mode segmented */}
-              <div className="flex rounded-lg border border-white/10 bg-black/40 p-0.5 backdrop-blur-sm">
-                {(["photo", "rec"] as const).map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => setMode(m)}
-                    className={`rounded-md px-3 py-1 text-xs font-medium tracking-wide transition-all ${
-                      mode === m
-                        ? "bg-white/15 text-white"
-                        : "text-white/50 hover:text-white/80"
-                    }`}
-                  >
-                    {m}
-                  </button>
-                ))}
-              </div>
+              {showModeControls ? (
+                <div className="flex rounded-lg border border-white/10 bg-black/40 p-0.5 backdrop-blur-sm">
+                  {(["photo", "rec"] as const).map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => setMode(m)}
+                      className={`rounded-md px-3 py-1 text-xs font-medium tracking-wide transition-all ${
+                        mode === m
+                          ? "bg-white/15 text-white"
+                          : "text-white/50 hover:text-white/80"
+                      }`}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div />
+              )}
 
               {/* settings */}
               <div className="min-w-0 flex-shrink-0">
-                {settingsOpen ? (
+                {showSettings && settingsOpen ? (
                   <SettingsPanel
                     mode={mode}
                     settings={settings}
                     setSettings={setSettings}
                     onClose={() => setSettingsOpen(false)}
                   />
-                ) : (
+                ) : showSettings ? (
                   <button
                     onClick={() => setSettingsOpen(true)}
                     className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/40 px-3 py-1.5 backdrop-blur-sm transition-colors hover:bg-white/10"
@@ -171,7 +205,7 @@ const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
                     </span>
                     <ChevronDownIcon />
                   </button>
-                )}
+                ) : null}
               </div>
             </div>
           </div>
@@ -188,7 +222,7 @@ const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
         )}
 
         {/* shutter bottom center */}
-        {isReady && (
+        {isReady && showShutter && (
           <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-4">
             <ShutterButton
               onShutterDown={onShutterDown}
