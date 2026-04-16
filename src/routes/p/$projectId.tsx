@@ -1,16 +1,17 @@
-import type { MobileNet } from "@tensorflow-models/mobilenet"
-import type * as tf from "@tensorflow/tfjs"
-import { Alert, Button, FileButton, Loader, Progress, Skeleton } from "@mantine/core"
-import { IconArrowLeft, IconUpload } from "@tabler/icons-react"
+import { Alert, Button, Loader, Paper, Progress, Skeleton } from "@mantine/core"
+import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone"
+import {
+  IconArrowLeft,
+  IconPhoto,
+  IconUpload,
+  IconX,
+} from "@tabler/icons-react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
-import {
-  FunctionComponent,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react"
+import type { MobileNet } from "@tensorflow-models/mobilenet"
+import type * as tf from "@tensorflow/tfjs"
+import clsx from "clsx"
+import { FunctionComponent, useEffect, useMemo, useRef, useState } from "react"
 import {
   ProjectOneProvider,
   useProjectOne,
@@ -129,8 +130,8 @@ function ProjectPlayerPage() {
               Camera mode is coming next
             </h2>
             <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-              Switch this project back to upload mode for now if you want to test
-              the current model immediately.
+              Switch this project back to upload mode for now if you want to
+              test the current model immediately.
             </p>
           </div>
         </div>
@@ -142,7 +143,8 @@ function ProjectPlayerPage() {
 }
 
 const UploadPlayExperience: FunctionComponent = () => {
-  const { classes, playSettings, projectDescription, projectId } = useProjectOne()
+  const { classes, playSettings, projectDescription, projectId } =
+    useProjectOne()
   const projectModelQuery = useQuery({
     queryKey: ["project-model", projectId],
     queryFn: () => getProjectModel(projectId),
@@ -251,8 +253,12 @@ const UploadPlayExperience: FunctionComponent = () => {
     ? rankedResults
     : rankedResults.slice(0, playSettings.topK)
   const topResult = rankedResults[0] ?? null
+  const hasPreview = Boolean(selectedFileUrl)
   const meetsThreshold =
-    topResult != null && topResult.confidence >= playSettings.confidenceThreshold
+    topResult != null &&
+    topResult.confidence >= playSettings.confidenceThreshold
+  const shouldShowPredictionPanel =
+    hasPreview && (isAnalyzing || runtimeError != null || prediction != null)
 
   if (!projectModelQuery.data) {
     return (
@@ -306,103 +312,146 @@ const UploadPlayExperience: FunctionComponent = () => {
       </aside>
 
       <div className="flex min-w-0 flex-col gap-6">
-        <div className="flex flex-wrap items-center gap-3">
-          <FileButton
-            accept="image/*"
-            multiple={false}
-            onChange={(file) => {
-              if (!file) {
-                return
-              }
-
-              setSelectedFile(file)
-              setPrediction(null)
-              setRuntimeError(null)
-
-              if (playSettings.autoPredictOnUpload) {
-                void runPrediction(file)
-              }
-            }}
-          >
-            {(props) => (
-              <Button
-                {...props}
-                leftSection={<IconUpload className="size-4" />}
-                size="md"
-              >
-                Upload Image
-              </Button>
+        <div
+          className={clsx(
+            hasPreview &&
+              "grid gap-6 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)]",
+          )}
+        >
+          <Paper
+            className={clsx(
+              "min-h-[400px] relative border border-dashed border-zinc-400 dark:border-zinc-500 order-2",
             )}
-          </FileButton>
+          >
+            <Dropzone
+              className={clsx(
+                "p-4 flex justify-center items-center absolute inset-0",
+              )}
+              accept={IMAGE_MIME_TYPE}
+              loading={false}
+              maxFiles={1}
+              multiple={false}
+              onDrop={(files: File[]) => {
+                const file = files[0]
 
-          {!playSettings.autoPredictOnUpload ? (
-            <Button
-              disabled={!selectedFile}
-              loading={isAnalyzing}
-              onClick={() => {
-                if (!selectedFile) {
+                if (!file) {
                   return
                 }
 
-                void runPrediction(selectedFile)
-              }}
-              size="md"
-              variant="default"
-            >
-              Predict
-            </Button>
-          ) : null}
+                setSelectedFile(file)
+                setPrediction(null)
+                setRuntimeError(null)
 
-          {selectedFile ? (
-            <span className="truncate text-sm text-zinc-500 dark:text-zinc-400">
-              {selectedFile.name}
-            </span>
+                if (playSettings.autoPredictOnUpload) {
+                  void runPrediction(file)
+                }
+              }}
+              onReject={() => {
+                setRuntimeError("Please upload a valid image file.")
+              }}
+            >
+              <div
+                className={clsx(
+                  "flex gap-4 items-center",
+                  hasPreview ? "flex-col" : "flex-row",
+                )}
+              >
+                <div>
+                  <Dropzone.Accept>
+                    <IconUpload className="size-10" />
+                  </Dropzone.Accept>
+                  <Dropzone.Reject>
+                    <IconX className="size-10" />
+                  </Dropzone.Reject>
+                  <Dropzone.Idle>
+                    <IconPhoto className="size-10" />
+                  </Dropzone.Idle>
+                </div>
+
+                <div>
+                  <p
+                    className={`text-zinc-500 dark:text-zinc-400 ${
+                      hasPreview ? "text-sm" : "text-base leading-7"
+                    }`}
+                  >
+                    Drop an image here, <br /> or click to browse from your
+                    device.
+                  </p>
+                  {selectedFile ? (
+                    <p className="truncate text-sm text-zinc-500 dark:text-zinc-400">
+                      Current file: {selectedFile.name}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+
+              {!playSettings.autoPredictOnUpload ? (
+                <div className="pt-4">
+                  <Button
+                    disabled={!selectedFile}
+                    loading={isAnalyzing}
+                    onClick={(event) => {
+                      event.stopPropagation()
+
+                      if (!selectedFile) {
+                        return
+                      }
+
+                      void runPrediction(selectedFile)
+                    }}
+                    size="md"
+                    variant="default"
+                  >
+                    Predict
+                  </Button>
+                </div>
+              ) : null}
+            </Dropzone>
+          </Paper>
+
+          {hasPreview ? (
+            <Paper
+              className="h-[500px] relative overflow-hidden
+    bg-[repeating-linear-gradient(135deg,rgba(229,231,235,0.5)_0px,rgba(229,231,235,0.5)_1px,transparent_1px,transparent_12px)]
+    dark:bg-[repeating-linear-gradient(135deg,rgba(55,65,81,0.5)_0px,rgba(55,65,81,0.5)_1px,transparent_1px,transparent_12px)]"
+              withBorder
+            >
+              <img
+                alt={selectedFile?.name ?? "Selected upload"}
+                className="h-full w-full object-contain relative z-10"
+                src={selectedFileUrl as string}
+              />
+            </Paper>
           ) : null}
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="min-h-[420px] overflow-hidden rounded-3xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/60">
-            {selectedFileUrl ? (
-              <img
-                alt={selectedFile?.name ?? "Selected upload"}
-                className="h-full max-h-[680px] w-full object-contain"
-                src={selectedFileUrl}
-              />
-            ) : (
-              <div className="flex h-full min-h-[420px] items-center justify-center px-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
-                Upload an image to try the model.
-              </div>
-            )}
-          </div>
-
+        {shouldShowPredictionPanel ? (
           <div className="rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
-            <div
-              className="space-y-6 motion-duration-300 motion-preset-expand"
-              key={predictionTick}
-            >
-              <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
-                  Result
-                </p>
+            <div className="space-y-6" key={predictionTick}>
+              <div className="flex items-center justify-between gap-4">
                 <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
-                  {isAnalyzing
-                    ? "Analyzing..."
-                    : !prediction || !topResult
-                      ? "Ready to test"
-                      : meetsThreshold
+                  <span
+                    className={
+                      !isAnalyzing && prediction && topResult && meetsThreshold
+                        ? "inline-block motion-preset-confetti"
+                        : ""
+                    }
+                  >
+                    {isAnalyzing
+                      ? "Analyzing..."
+                      : meetsThreshold && topResult
                         ? topResult.className
                         : "Not confident enough"}
+                  </span>
                 </h2>
-                {playSettings.showConfidenceScores && prediction && topResult ? (
+                {playSettings.showConfidenceScores &&
+                prediction &&
+                topResult ? (
                   <p className="text-sm text-zinc-500 dark:text-zinc-400">
                     Confidence {(topResult.confidence * 100).toFixed(1)}% ·{" "}
                     {prediction.predictTimeMs.toFixed(1)} ms
                   </p>
-                ) : (
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                    Upload an image to see how the model responds.
-                  </p>
-                )}
+                ) : null}
               </div>
 
               {isAnalyzing ? (
@@ -411,37 +460,7 @@ const UploadPlayExperience: FunctionComponent = () => {
                 <Alert color="red" variant="light">
                   {runtimeError}
                 </Alert>
-              ) : !prediction || !topResult ? (
-                <div className="space-y-4 rounded-2xl border border-dashed border-zinc-200 px-4 py-5 dark:border-zinc-800">
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-                      Ready to test
-                    </p>
-                    <p className="text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-                      Upload a fresh image to compare it against {classes.length} trained
-                      classes. The result panel will rank the most likely matches.
-                    </p>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-xl bg-zinc-100 px-3 py-3 dark:bg-zinc-900">
-                      <p className="text-xs uppercase tracking-[0.14em] text-zinc-400 dark:text-zinc-500">
-                        Mode
-                      </p>
-                      <p className="mt-2 text-sm font-medium text-zinc-800 dark:text-zinc-200">
-                        Upload
-                      </p>
-                    </div>
-                    <div className="rounded-xl bg-zinc-100 px-3 py-3 dark:bg-zinc-900">
-                      <p className="text-xs uppercase tracking-[0.14em] text-zinc-400 dark:text-zinc-500">
-                        Threshold
-                      </p>
-                      <p className="mt-2 text-sm font-medium text-zinc-800 dark:text-zinc-200">
-                        {(playSettings.confidenceThreshold * 100).toFixed(0)}%
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
+              ) : prediction && topResult ? (
                 <div className="space-y-4">
                   {playSettings.showConfidenceScores ? (
                     visibleResults.map((result) => (
@@ -455,8 +474,9 @@ const UploadPlayExperience: FunctionComponent = () => {
                           </span>
                         </div>
                         <Progress
+                          animated={false}
                           radius="xl"
-                          size="lg"
+                          size="sm"
                           value={result.confidence * 100}
                         />
                       </div>
@@ -467,10 +487,10 @@ const UploadPlayExperience: FunctionComponent = () => {
                     </div>
                   )}
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
-        </div>
+        ) : null}
       </div>
     </div>
   )
@@ -519,7 +539,9 @@ const ClassPreviewItem: FunctionComponent<{
 
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{name}</p>
+      <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+        {name}
+      </p>
       <div className="flex gap-2">
         {previewUrls.length ? (
           previewUrls.map((url, index) => (
@@ -545,11 +567,9 @@ function AnalyzeSkeleton() {
     <div className="space-y-4">
       <div className="space-y-3">
         <Skeleton height={14} radius="xl" width="24%" />
-        <Skeleton height={32} radius="xl" width="58%" />
-        <Skeleton height={12} radius="xl" width="42%" />
       </div>
       <div className="space-y-4">
-        {[0, 1, 2].map((index) => (
+        {[0].map((index) => (
           <div className="space-y-2 motion-preset-fade" key={index}>
             <div className="flex items-center justify-between gap-3">
               <Skeleton height={12} radius="xl" width={`${48 - index * 6}%`} />
