@@ -15,6 +15,7 @@ import { Route as CameraRouteImport } from './routes/camera'
 import { Route as ProjectsRouteRouteImport } from './routes/projects/route'
 import { Route as PRouteRouteImport } from './routes/p/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProjectsIndexRouteImport } from './routes/projects/index'
 import { Route as PProjectIdRouteImport } from './routes/p/$projectId'
 import { Route as ProjectsProjectIdRouteRouteImport } from './routes/projects/$projectId/route'
 import { Route as ProjectsProjectIdIndexRouteImport } from './routes/projects/$projectId/index'
@@ -52,6 +53,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ProjectsRouteRoute,
 } as any)
 const PProjectIdRoute = PProjectIdRouteImport.update({
   id: '/$projectId',
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/todos': typeof TodosRoute
   '/projects/$projectId': typeof ProjectsProjectIdRouteRouteWithChildren
   '/p/$projectId': typeof PProjectIdRoute
+  '/projects/': typeof ProjectsIndexRoute
   '/projects/$projectId/play': typeof ProjectsProjectIdPlayRoute
   '/projects/$projectId/train': typeof ProjectsProjectIdTrainRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
@@ -109,11 +116,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/p': typeof PRouteRouteWithChildren
-  '/projects': typeof ProjectsRouteRouteWithChildren
   '/camera': typeof CameraRoute
   '/ml-lab': typeof MlLabRoute
   '/todos': typeof TodosRoute
   '/p/$projectId': typeof PProjectIdRoute
+  '/projects': typeof ProjectsIndexRoute
   '/projects/$projectId/play': typeof ProjectsProjectIdPlayRoute
   '/projects/$projectId/train': typeof ProjectsProjectIdTrainRoute
   '/projects/$projectId': typeof ProjectsProjectIdIndexRoute
@@ -130,6 +137,7 @@ export interface FileRoutesById {
   '/todos': typeof TodosRoute
   '/projects/$projectId': typeof ProjectsProjectIdRouteRouteWithChildren
   '/p/$projectId': typeof PProjectIdRoute
+  '/projects/': typeof ProjectsIndexRoute
   '/projects/$projectId/play': typeof ProjectsProjectIdPlayRoute
   '/projects/$projectId/train': typeof ProjectsProjectIdTrainRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
@@ -147,6 +155,7 @@ export interface FileRouteTypes {
     | '/todos'
     | '/projects/$projectId'
     | '/p/$projectId'
+    | '/projects/'
     | '/projects/$projectId/play'
     | '/projects/$projectId/train'
     | '/projects/$projectId/'
@@ -156,11 +165,11 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/p'
-    | '/projects'
     | '/camera'
     | '/ml-lab'
     | '/todos'
     | '/p/$projectId'
+    | '/projects'
     | '/projects/$projectId/play'
     | '/projects/$projectId/train'
     | '/projects/$projectId'
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
     | '/todos'
     | '/projects/$projectId'
     | '/p/$projectId'
+    | '/projects/'
     | '/projects/$projectId/play'
     | '/projects/$projectId/train'
     | '/projects/$projectId/'
@@ -235,6 +245,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/projects/': {
+      id: '/projects/'
+      path: '/'
+      fullPath: '/projects/'
+      preLoaderRoute: typeof ProjectsIndexRouteImport
+      parentRoute: typeof ProjectsRouteRoute
     }
     '/p/$projectId': {
       id: '/p/$projectId'
@@ -323,10 +340,12 @@ const ProjectsProjectIdRouteRouteWithChildren =
 
 interface ProjectsRouteRouteChildren {
   ProjectsProjectIdRouteRoute: typeof ProjectsProjectIdRouteRouteWithChildren
+  ProjectsIndexRoute: typeof ProjectsIndexRoute
 }
 
 const ProjectsRouteRouteChildren: ProjectsRouteRouteChildren = {
   ProjectsProjectIdRouteRoute: ProjectsProjectIdRouteRouteWithChildren,
+  ProjectsIndexRoute: ProjectsIndexRoute,
 }
 
 const ProjectsRouteRouteWithChildren = ProjectsRouteRoute._addFileChildren(

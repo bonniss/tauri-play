@@ -193,6 +193,7 @@ function ProjectCardPreview({
   const btnFavorite = (
     <ActionIcon
       aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+      loading={isUpdatingFavorite}
       onClick={(event) => {
         event.stopPropagation()
         void onToggleFavorite()
