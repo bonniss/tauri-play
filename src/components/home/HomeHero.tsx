@@ -1,126 +1,129 @@
 import { Button } from '@mantine/core';
-import { Link } from '@tanstack/react-router';
 import { IconArrowRight } from '@tabler/icons-react';
+import { Link } from '@tanstack/react-router';
 import { FunctionComponent } from 'react';
 import antlerDeer from '~/assets/animals/antler-deer.svg';
 import bear from '~/assets/animals/bear.svg';
 import crocodile from '~/assets/animals/crocodile.svg';
 import elephant from '~/assets/animals/elephant.svg';
-import kangaroo from '~/assets/animals/kangaroo.svg';
+import hippo from '~/assets/animals/hippo.svg';
 import tiger from '~/assets/animals/tiger.svg';
+import { t, useLocale } from '~/lib/i18n';
 
 const heroAnimals = [
   {
-    accent: 'from-emerald-300/85 to-teal-200/55',
-    confidence: '98.1%',
+    accent: "from-emerald-300/85 to-teal-200/55",
+    confidence: "98.1%",
     image: tiger,
-    label: 'Tiger',
-    position: 'left-[4%] top-[8%] z-20',
-    scoreColor: 'text-emerald-500 dark:text-emerald-300',
-    size: 'w-[182px]',
+    label: "Tiger",
+    position: "left-[4%] top-[8%] z-20",
+    scoreColor: "text-emerald-500 dark:text-emerald-300",
+    size: "w-[182px]",
     style: {
-      ['--drift-duration' as string]: '10s',
-      ['--drift-x' as string]: '10px',
-      ['--drift-y' as string]: '-12px',
-      ['--float-duration' as string]: '7.5s',
-      ['--float-rotate' as string]: '-8deg',
-      ['--float-tilt' as string]: '2deg',
-      ['--float-y' as string]: '-14px',
+      ["--drift-duration" as string]: "10s",
+      ["--drift-x" as string]: "10px",
+      ["--drift-y" as string]: "-12px",
+      ["--float-duration" as string]: "7.5s",
+      ["--float-rotate" as string]: "-8deg",
+      ["--float-tilt" as string]: "2deg",
+      ["--float-y" as string]: "-14px",
     },
   },
   {
-    accent: 'from-sky-300/80 to-cyan-200/55',
-    confidence: '96.7%',
-    image: kangaroo,
-    label: 'Kangaroo',
-    position: 'right-[8%] top-[2%] z-10',
-    scoreColor: 'text-sky-500 dark:text-sky-300',
-    size: 'w-[176px]',
+    accent: "from-sky-300/80 to-cyan-200/55",
+    confidence: "96.7%",
+    image: hippo,
+    label: "Hippo",
+    position: "right-[8%] top-[2%] z-10",
+    scoreColor: "text-sky-500 dark:text-sky-300",
+    size: "w-[176px]",
     style: {
-      ['--drift-duration' as string]: '11.4s',
-      ['--drift-x' as string]: '-10px',
-      ['--drift-y' as string]: '-8px',
-      ['--float-duration' as string]: '8.6s',
-      ['--float-rotate' as string]: '9deg',
-      ['--float-tilt' as string]: '-2deg',
-      ['--float-y' as string]: '-12px',
+      ["--drift-duration" as string]: "11.4s",
+      ["--drift-x" as string]: "-10px",
+      ["--drift-y" as string]: "-8px",
+      ["--float-duration" as string]: "8.6s",
+      ["--float-rotate" as string]: "9deg",
+      ["--float-tilt" as string]: "-2deg",
+      ["--float-y" as string]: "-12px",
     },
   },
   {
-    accent: 'from-amber-300/80 to-orange-200/55',
-    confidence: '95.3%',
+    accent: "from-amber-300/80 to-orange-200/55",
+    confidence: "95.3%",
     image: antlerDeer,
-    label: 'Deer',
-    position: 'left-[18%] top-[42%] z-30',
-    scoreColor: 'text-amber-500 dark:text-amber-300',
-    size: 'w-[175px]',
+    label: "Deer",
+    position: "left-[18%] top-[42%] z-30",
+    scoreColor: "text-amber-500 dark:text-amber-300",
+    size: "w-[175px]",
     style: {
-      ['--drift-duration' as string]: '9.6s',
-      ['--drift-x' as string]: '8px',
-      ['--drift-y' as string]: '-12px',
-      ['--float-duration' as string]: '6.9s',
-      ['--float-rotate' as string]: '-4deg',
-      ['--float-tilt' as string]: '2deg',
-      ['--float-y' as string]: '-16px',
+      ["--drift-duration" as string]: "9.6s",
+      ["--drift-x" as string]: "8px",
+      ["--drift-y" as string]: "-12px",
+      ["--float-duration" as string]: "6.9s",
+      ["--float-rotate" as string]: "-4deg",
+      ["--float-tilt" as string]: "2deg",
+      ["--float-y" as string]: "-16px",
     },
   },
   {
-    accent: 'from-fuchsia-300/75 to-violet-200/50',
-    confidence: '93.9%',
+    accent: "from-fuchsia-300/75 to-violet-200/50",
+    confidence: "93.9%",
     image: elephant,
-    label: 'Elephant',
-    position: 'right-[20%] top-[57%] z-20',
-    scoreColor: 'text-fuchsia-500 dark:text-fuchsia-300',
-    size: 'w-[160px]',
+    label: "Elephant",
+    position: "right-[20%] top-[57%] z-20",
+    scoreColor: "text-fuchsia-500 dark:text-fuchsia-300",
+    size: "w-[160px]",
     style: {
-      ['--drift-duration' as string]: '12s',
-      ['--drift-x' as string]: '-8px',
-      ['--drift-y' as string]: '-10px',
-      ['--float-duration' as string]: '8.2s',
-      ['--float-rotate' as string]: '6deg',
-      ['--float-tilt' as string]: '-2deg',
-      ['--float-y' as string]: '-14px',
+      ["--drift-duration" as string]: "12s",
+      ["--drift-x" as string]: "-8px",
+      ["--drift-y" as string]: "-10px",
+      ["--float-duration" as string]: "8.2s",
+      ["--float-rotate" as string]: "6deg",
+      ["--float-tilt" as string]: "-2deg",
+      ["--float-y" as string]: "-14px",
     },
   },
   {
-    accent: 'from-rose-300/75 to-pink-200/50',
-    confidence: '91.4%',
+    accent: "from-rose-300/75 to-pink-200/50",
+    confidence: "91.4%",
     image: crocodile,
-    label: 'Crocodile',
-    position: 'right-[-1%] top-[34%] z-20',
-    scoreColor: 'text-rose-500 dark:text-rose-300',
-    size: 'w-[150px]',
+    label: "Crocodile",
+    position: "right-[-1%] top-[34%] z-20",
+    scoreColor: "text-rose-500 dark:text-rose-300",
+    size: "w-[150px]",
     style: {
-      ['--drift-duration' as string]: '13s',
-      ['--drift-x' as string]: '-12px',
-      ['--drift-y' as string]: '-6px',
-      ['--float-duration' as string]: '9.8s',
-      ['--float-rotate' as string]: '12deg',
-      ['--float-tilt' as string]: '-3deg',
-      ['--float-y' as string]: '-10px',
+      ["--drift-duration" as string]: "13s",
+      ["--drift-x" as string]: "-12px",
+      ["--drift-y" as string]: "-6px",
+      ["--float-duration" as string]: "9.8s",
+      ["--float-rotate" as string]: "12deg",
+      ["--float-tilt" as string]: "-3deg",
+      ["--float-y" as string]: "-10px",
     },
   },
   {
-    accent: 'from-zinc-300/80 to-stone-200/55',
-    confidence: '89.8%',
+    accent: "from-zinc-300/80 to-stone-200/55",
+    confidence: "89.8%",
     image: bear,
-    label: 'Bear',
-    position: 'left-[-2%] top-[63%] z-10',
-    scoreColor: 'text-zinc-500 dark:text-zinc-300',
-    size: 'w-[148px]',
+    label: "Bear",
+    position: "left-[-2%] top-[63%] z-10",
+    scoreColor: "text-zinc-500 dark:text-zinc-300",
+    size: "w-[148px]",
     style: {
-      ['--drift-duration' as string]: '10.8s',
-      ['--drift-x' as string]: '10px',
-      ['--drift-y' as string]: '-8px',
-      ['--float-duration' as string]: '7.9s',
-      ['--float-rotate' as string]: '-10deg',
-      ['--float-tilt' as string]: '2deg',
-      ['--float-y' as string]: '-12px',
+      ["--drift-duration" as string]: "10.8s",
+      ["--drift-x" as string]: "10px",
+      ["--drift-y" as string]: "-8px",
+      ["--float-duration" as string]: "7.9s",
+      ["--float-rotate" as string]: "-10deg",
+      ["--float-tilt" as string]: "2deg",
+      ["--float-y" as string]: "-12px",
     },
   },
-] as const;
+] as const
 
 const HomeHero: FunctionComponent = () => {
+  useLocale()
+
   return (
     <section className="relative left-1/2 mt-[-60px] w-screen -translate-x-1/2 py-16 pt-[108px]">
       <div className="pointer-events-none absolute inset-x-0 -top-32 bottom-0">
@@ -133,11 +136,10 @@ const HomeHero: FunctionComponent = () => {
         <div className="space-y-5 lg:max-w-3xl">
           <div className="space-y-4">
             <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-zinc-950 md:text-5xl dark:text-zinc-50">
-              Teach your model with your own images, then test it live.
+              {t('home.hero.title')}
             </h1>
             <p className="max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300">
-              Collect examples, organize classes, train locally, and open a playable
-              experience without leaving the app.
+              {t('home.hero.description')}
             </p>
           </div>
 
@@ -149,7 +151,7 @@ const HomeHero: FunctionComponent = () => {
               size="md"
               to="/projects"
             >
-              Get Started
+              {t('home.hero.cta')}
             </Button>
           </div>
         </div>
@@ -189,7 +191,7 @@ const HomeHero: FunctionComponent = () => {
                     className={`pointer-events-none absolute text-3xl font-semibold tracking-tight ${animal.scoreColor} opacity-95 ${
                       animal.label === 'Tiger'
                         ? 'left-4 -top-5'
-                        : animal.label === 'Kangaroo'
+                        : animal.label === 'Hippo'
                           ? 'right-3 -top-3'
                           : '-bottom-3 right-3'
                     }`}
