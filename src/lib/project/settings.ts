@@ -27,6 +27,7 @@ export interface ProjectPlaySettings {
 }
 
 export interface ProjectSettings {
+  favorite: boolean
   icon: string
   label: ProjectLabelSettings
   play: ProjectPlaySettings
@@ -86,6 +87,7 @@ export const DEFAULT_PROJECT_PLAY_SETTINGS: ProjectPlaySettings = {
 }
 
 export const DEFAULT_PROJECT_SETTINGS: ProjectSettings = {
+  favorite: false,
   icon: "🦊",
   label: DEFAULT_PROJECT_LABEL_SETTINGS,
   play: DEFAULT_PROJECT_PLAY_SETTINGS,
@@ -119,6 +121,7 @@ const playSettingsInputSchema = type({
 })
 
 const projectSettingsInputSchema = type({
+  favorite: "boolean | undefined",
   icon: "string | undefined",
   label: labelSettingsInputSchema.or("undefined"),
   play: playSettingsInputSchema.or("undefined"),
@@ -167,6 +170,7 @@ export function normalizeProjectSettings(
   value: ProjectSettingsInput | undefined,
 ): ProjectSettings {
   const source = value ?? {
+    favorite: undefined,
     icon: undefined,
     label: undefined,
     play: undefined,
@@ -174,6 +178,7 @@ export function normalizeProjectSettings(
   }
 
   return {
+    favorite: source.favorite ?? DEFAULT_PROJECT_SETTINGS.favorite,
     icon: source.icon?.trim() || DEFAULT_PROJECT_SETTINGS.icon,
     label: normalizeProjectLabelSettings(source.label),
     play: normalizeProjectPlaySettings(source.play),

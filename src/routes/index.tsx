@@ -1,8 +1,6 @@
 import {
   Alert,
-  ActionIcon,
   Button,
-  Divider,
   Loader,
   Modal,
   Paper,
@@ -12,25 +10,18 @@ import {
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
-import {
-  IconPhoto,
-  IconPlayerPlay,
-  IconTrash,
-  IconWaveSawTool,
-} from '@tabler/icons-react';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { startTransition, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { Form, defineConfig } from '~/components/form';
+import ProjectCard from '~/components/project/ProjectCard';
+import { listProjectClassSampleCounts } from '~/lib/db/domain/classes';
 import {
   createProject,
   deleteProject,
   listProjects,
+  updateProject,
 } from '~/lib/db/domain/projects';
 import { listProjectSamplePreviews } from '~/lib/db/domain/samples';
-import {
-  createSamplePreviewUrl,
-  revokeSamplePreviewUrl,
-} from '~/lib/project/sample-preview';
 import { genProjectId } from '~/lib/project/id-generator';
 import {
   ANIMAL_ICON_OPTIONS,
@@ -135,6 +126,12 @@ function HomePage() {
     queryFn: async () =>
       listProjectSamplePreviews(projectsQuery.data?.map((item) => item.id) ?? []),
   });
+  const projectClassCountsQuery = useQuery({
+    enabled: !!projectsQuery.data?.length,
+    queryKey: ['project-class-counts', projectsQuery.data?.map((item) => item.id).join(',')],
+    queryFn: () =>
+      listProjectClassSampleCounts(projectsQuery.data?.map((item) => item.id) ?? []),
+  });
   const projectPreviewSampleMap = useMemo(() => {
     const grouped = new Map<string, Awaited<
       ReturnType<typeof listProjectSamplePreviews>
@@ -148,6 +145,50 @@ function HomePage() {
 
     return grouped;
   }, [projectPreviewSamplesQuery.data]);
+  const projectClassCountMap = useMemo(() => {
+    const grouped = new Map<string, number[]>();
+
+    projectClassCountsQuery.data?.forEach((item) => {
+      const list = grouped.get(item.projectId) ?? [];
+      list.push(item.sampleCount);
+      grouped.set(item.projectId, list);
+    });
+
+    return grouped;
+  }, [projectClassCountsQuery.data]);
+  const sortedProjects = useMemo(() => {
+    const items = [...(projectsQuery.data ?? [])];
+
+    items.sort((left, right) => {
+      const leftSettings = parseProjectSettings(left.settings);
+      const rightSettings = parseProjectSettings(right.settings);
+
+      if (leftSettings.favorite !== rightSettings.favorite) {
+        return leftSettings.favorite ? -1 : 1;
+      }
+
+      return new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime();
+    });
+
+    return items;
+  }, [projectsQuery.data]);
+  const updateProjectSettingsMutation = useMutation({
+    mutationFn: async ({
+      projectId,
+      settings,
+    }: {
+      projectId: string;
+      settings: string;
+    }) => {
+      await updateProject({
+        projectId,
+        settings,
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+  });
 
   useEffect(() => {
     if (!projectPendingDelete) {
@@ -310,89 +351,56 @@ function HomePage() {
         </Alert>
       ) : null}
 
-      {projectsQuery.data?.length ? (
+      {sortedProjects.length ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {projectsQuery.data.map((project) => (
-            <Paper className="p-5" key={project.id} radius="lg" withBorder>
-              <Stack gap="md">
-                <ProjectCardPreview
-                  icon={parseProjectSettings(project.settings).icon}
-                  projectId={project.id}
-                  sampleFilePaths={
-                    projectPreviewSampleMap.get(project.id)?.map((item) => item.filePath) ??
-                    []
-                  }
-                />
+          {sortedProjects.map((project) => {
+            const projectSettings = parseProjectSettings(project.settings);
+            const classSampleCounts = projectClassCountMap.get(project.id) ?? [];
+            const canTrain =
+              project.classCount >= projectSettings.label.minClasses &&
+              classSampleCounts.length >= projectSettings.label.minClasses &&
+              classSampleCounts.every(
+                (sampleCount) => sampleCount >= projectSettings.label.minSamplesPerClass,
+              );
+            const canPlay = project.hasModel;
 
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 space-y-1">
-                    <h2 className="truncate text-lg font-semibold leading-tight">
-                      {project.name}
-                    </h2>
-                    <Text c="dimmed" lineClamp={2} size="sm">
-                      {project.description || 'No description yet.'}
-                    </Text>
-                  </div>
-                  <ActionIcon
-                    aria-label={`Delete ${project.name}`}
-                    color="red"
-                    onClick={() => {
-                      setProjectPendingDelete(project);
-                    }}
-                    variant="subtle"
-                  >
-                    <IconTrash className="size-4" />
-                  </ActionIcon>
-                </div>
-
-                <Divider />
-
-                <div className="space-y-2">
-                  <ProjectMetaItem label="Classes" value={String(project.classCount)} />
-                  <ProjectMetaItem label="Samples" value={String(project.sampleCount)} />
-                  <ProjectMetaItem
-                    label="Updated"
-                    value={formatRelativeTime(project.updatedAt)}
-                  />
-                  <ProjectMetaItem
-                    label="Trained"
-                    value={project.trainedAt ? formatRelativeTime(project.trainedAt) : '-'}
-                  />
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    component={Link}
-                    leftSection={<IconWaveSawTool className="size-4" />}
-                    params={{ projectId: project.id } as never}
-                    to="/projects/$projectId/train"
-                    variant="light"
-                  >
-                    Train
-                  </Button>
-                  {project.hasModel ? (
-                    <Button
-                      component={Link}
-                      leftSection={<IconPlayerPlay className="size-4" />}
-                      params={{ projectId: project.id } as never}
-                      to="/projects/$projectId/play"
-                      variant="light"
-                    >
-                      Play
-                    </Button>
-                  ) : null}
-                  <Button
-                    component={Link}
-                    params={{ projectId: project.id } as never}
-                    to="/projects/$projectId/label"
-                    variant="default"
-                  >
-                    Open
-                  </Button>
-                </div>
-              </Stack>
-            </Paper>
-          ))}
+            return (
+              <ProjectCard
+                canPlay={canPlay}
+                canTrain={canTrain}
+                  icon={projectSettings.icon}
+                isFavorite={projectSettings.favorite}
+                isUpdatingFavorite={
+                  updateProjectSettingsMutation.isPending &&
+                  updateProjectSettingsMutation.variables?.projectId === project.id
+                }
+                key={project.id}
+                onDelete={() => {
+                  setProjectPendingDelete(project);
+                }}
+                onOpen={() => {
+                  void navigate({
+                    to: '/projects/$projectId/label',
+                    params: { projectId: project.id },
+                  });
+                }}
+                onToggleFavorite={async () => {
+                  await updateProjectSettingsMutation.mutateAsync({
+                    projectId: project.id,
+                    settings: stringifyProjectSettings({
+                      ...projectSettings,
+                      favorite: !projectSettings.favorite,
+                    }),
+                  });
+                }}
+                project={project}
+                sampleFilePaths={
+                  projectPreviewSampleMap.get(project.id)?.map((item) => item.filePath) ??
+                  []
+                }
+              />
+            );
+          })}
         </div>
       ) : null}
 
@@ -416,147 +424,6 @@ function HomePage() {
       ) : null}
     </section>
   );
-}
-
-function ProjectMetaItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-3 text-sm">
-      <Text c="dimmed" size="sm">
-        {label}
-      </Text>
-      <Text fw={500} size="sm">
-        {value}
-      </Text>
-    </div>
-  );
-}
-
-function ProjectCardPreview({
-  icon,
-  projectId,
-  sampleFilePaths,
-}: {
-  icon: string;
-  projectId: string;
-  sampleFilePaths: string[];
-}) {
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const seededSamplePaths = useMemo(
-    () => [...sampleFilePaths].sort((left, right) => seededSampleScore(projectId, left) - seededSampleScore(projectId, right)),
-    [projectId, sampleFilePaths],
-  );
-
-  useEffect(() => {
-    let cancelled = false;
-    let nextUrls: string[] = [];
-
-    if (!seededSamplePaths.length) {
-      setPreviewUrls([]);
-      return;
-    }
-
-    void Promise.all(seededSamplePaths.slice(0, 5).map((filePath) => createSamplePreviewUrl(filePath)))
-      .then((urls) => {
-        if (cancelled) {
-          urls.forEach((url) => revokeSamplePreviewUrl(url));
-          return;
-        }
-
-        nextUrls = urls;
-        setPreviewUrls(urls);
-      });
-
-    return () => {
-      cancelled = true;
-      nextUrls.forEach((url) => revokeSamplePreviewUrl(url));
-    };
-  }, [seededSamplePaths]);
-
-  if (!previewUrls.length) {
-    return (
-      <div className="relative flex h-40 items-center justify-center overflow-hidden rounded-2xl border border-zinc-200 bg-[linear-gradient(to_right,rgba(15,23,42,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.06)_1px,transparent_1px),linear-gradient(135deg,#f8fafc,#eef2f7)] bg-[size:20px_20px,20px_20px,100%_100%] dark:border-zinc-800 dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(135deg,#09090b,#111827)] dark:bg-[size:20px_20px,20px_20px,100%_100%]">
-        <div className="absolute left-4 top-4 text-3xl leading-none">{icon}</div>
-        <IconPhoto className="size-16 text-zinc-300 dark:text-zinc-700" stroke={1.5} />
-      </div>
-    );
-  }
-
-  return (
-    <div className="group relative h-40 overflow-hidden rounded-2xl border border-zinc-200 bg-[linear-gradient(to_right,rgba(15,23,42,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.06)_1px,transparent_1px),linear-gradient(135deg,#f8fafc,#eef2f7)] bg-[size:20px_20px,20px_20px,100%_100%] dark:border-zinc-800 dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(135deg,#09090b,#111827)] dark:bg-[size:20px_20px,20px_20px,100%_100%]">
-      <div className="absolute left-4 top-4 z-10 text-3xl leading-none drop-shadow-sm">
-        {icon}
-      </div>
-      <div className="absolute inset-0 flex items-center justify-center">
-        {previewUrls.map((url, index) => {
-          const spreadIndex = index - (previewUrls.length - 1) / 2;
-          const offset = spreadIndex * 24;
-          const hoverOffset = spreadIndex * 38;
-          const rotate = spreadIndex * 7;
-
-          return (
-            <div
-              className="absolute h-28 w-24 overflow-hidden rounded-xl border border-white/70 bg-white shadow-lg transition-transform duration-300 ease-out [transform:translateX(var(--offset))_rotate(var(--rotate))] group-hover:[transform:translateX(var(--hover-offset))_rotate(var(--rotate))]"
-              key={url}
-              style={{
-                ['--hover-offset' as string]: `${hoverOffset}px`,
-                ['--offset' as string]: `${offset}px`,
-                ['--rotate' as string]: `${rotate}deg`,
-                zIndex: index + 1,
-              }}
-            >
-              <img
-                alt={`Project preview ${index + 1}`}
-                className="size-full object-cover"
-                src={url}
-              />
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function seededSampleScore(projectId: string, samplePath: string) {
-  const source = `${projectId}:${samplePath}`;
-  let hash = 2166136261;
-
-  for (let index = 0; index < source.length; index += 1) {
-    hash ^= source.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-
-  return hash >>> 0;
-}
-
-function formatRelativeTime(input: string) {
-  const now = Date.now();
-  const target = new Date(input).getTime();
-  const diffMs = target - now;
-  const absMs = Math.abs(diffMs);
-  const formatter = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
-
-  if (absMs < 60_000) {
-    return formatter.format(Math.round(diffMs / 1000), 'second');
-  }
-
-  if (absMs < 3_600_000) {
-    return formatter.format(Math.round(diffMs / 60_000), 'minute');
-  }
-
-  if (absMs < 86_400_000) {
-    return formatter.format(Math.round(diffMs / 3_600_000), 'hour');
-  }
-
-  if (absMs < 2_592_000_000) {
-    return formatter.format(Math.round(diffMs / 86_400_000), 'day');
-  }
-
-  if (absMs < 31_536_000_000) {
-    return formatter.format(Math.round(diffMs / 2_592_000_000), 'month');
-  }
-
-  return formatter.format(Math.round(diffMs / 31_536_000_000), 'year');
 }
 
 export default HomePage;

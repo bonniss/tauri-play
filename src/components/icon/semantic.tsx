@@ -2,6 +2,7 @@ import {
   IconBarbell,
   IconBrain,
   IconDeviceImac,
+  IconEye,
   IconLayersSelected,
   IconMoonStars,
   IconSun,
@@ -16,3 +17,4 @@ export const IconThemeAuto = IconDeviceImac;
 export const IconDataLabel = IconLayersSelected;
 export const IconDataTrain = IconBarbell;
 export const IconDataPlay = IconBrain;
+export const IconView=  IconEye

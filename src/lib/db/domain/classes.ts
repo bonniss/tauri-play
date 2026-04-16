@@ -22,6 +22,12 @@ type ProjectClassRow = {
   updated_at?: string;
 };
 
+type ProjectClassSampleCountRow = {
+  project_id: string;
+  class_id: string;
+  sampleCount: number | string;
+};
+
 function mapProjectClass(row: ProjectClassRow): ProjectClass {
   return {
     id: row.id,
@@ -64,6 +70,31 @@ export async function listProjectClasses(projectId: string) {
     .execute();
 
   return rows.map((row) => mapProjectClass(row as ProjectClassRow));
+}
+
+export async function listProjectClassSampleCounts(projectIds: string[]) {
+  if (!projectIds.length) {
+    return [];
+  }
+
+  const db = getKysely();
+  const rows = await db
+    .selectFrom('classes as c')
+    .leftJoin('samples as s', 's.class_id', 'c.id')
+    .select(({ fn, ref }) => [
+      'c.project_id',
+      'c.id as class_id',
+      fn.count<string>(ref('s.id')).as('sampleCount'),
+    ])
+    .where('c.project_id', 'in', projectIds)
+    .groupBy(['c.project_id', 'c.id'])
+    .execute();
+
+  return rows.map((row) => ({
+    projectId: (row as ProjectClassSampleCountRow).project_id,
+    classId: (row as ProjectClassSampleCountRow).class_id,
+    sampleCount: Number((row as ProjectClassSampleCountRow).sampleCount),
+  }));
 }
 
 export async function createClass({
