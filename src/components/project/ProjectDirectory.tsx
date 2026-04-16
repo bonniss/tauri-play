@@ -62,7 +62,11 @@ const createProjectForm = defineConfig<{
   },
 });
 
-function ProjectDirectory() {
+interface ProjectDirectoryProps {
+  createRequested?: boolean;
+}
+
+function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [projectSeed, setProjectSeed] = useState(
@@ -215,6 +219,12 @@ function ProjectDirectory() {
   }, [projectPendingDelete]);
 
   useEffect(() => {
+    if (createRequested) {
+      createProjectHandlers.open();
+    }
+  }, [createProjectHandlers, createRequested]);
+
+  useEffect(() => {
     if (page > totalPages) {
       setPage(totalPages);
     }
@@ -223,7 +233,17 @@ function ProjectDirectory() {
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-6 py-4">
       <Modal
-        onClose={createProjectHandlers.close}
+        onClose={() => {
+          createProjectHandlers.close();
+
+          if (createRequested) {
+            void navigate({
+              to: '/projects',
+              search: { create: false },
+              replace: true,
+            });
+          }
+        }}
         opened={createProjectOpened}
         withCloseButton={false}
       >
@@ -271,7 +291,17 @@ function ProjectDirectory() {
           </div>
           <div className="mt-4 flex justify-end gap-3">
             <Button
-              onClick={createProjectHandlers.close}
+              onClick={() => {
+                createProjectHandlers.close();
+
+                if (createRequested) {
+                  void navigate({
+                    to: '/projects',
+                    search: { create: false },
+                    replace: true,
+                  });
+                }
+              }}
               type="button"
               variant="default"
             >
@@ -350,7 +380,10 @@ function ProjectDirectory() {
               const nextSeed = generateRandomProjectIdentity();
               setProjectSeed(nextSeed);
               setSelectedProjectIcon(nextSeed.icon);
-              createProjectHandlers.open();
+              void navigate({
+                to: '/projects',
+                search: { create: true },
+              });
             }}
           >
             New Project
