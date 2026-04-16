@@ -16,18 +16,18 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
-import { Form, defineConfig } from "~/components/form"
-import SampleGrid from "~/components/project/SampleGrid"
+import { defineConfig, Form } from "~/components/form"
 import { useProjectOne } from "~/components/project/ProjectOneProvider"
+import SampleGrid from "~/components/project/SampleGrid"
 import {
   appendModelTrainLogEvent,
   createModelTrainLog,
   ModelTrainLogDatasetSnapshot,
   ModelTrainLogEvent,
   ModelTrainLogSummary,
-  upsertProjectModel,
   updateModelTrainLogDatasetSnapshot,
   updateModelTrainLogStatus,
+  upsertProjectModel,
 } from "~/lib/db/domain/models"
 import { trainProjectMobilenetModel } from "~/lib/ml/mobilenet/project-train"
 import { ProjectTrainSettingsFormValues } from "~/lib/project/settings"
@@ -179,7 +179,8 @@ function renderEventMessage(event: ModelTrainLogEvent) {
   }
 
   const acc = event.acc != null ? ` acc ${event.acc.toFixed(3)}` : ""
-  const valAcc = event.valAcc != null ? ` val_acc ${event.valAcc.toFixed(3)}` : ""
+  const valAcc =
+    event.valAcc != null ? ` val_acc ${event.valAcc.toFixed(3)}` : ""
   const valLoss =
     event.valLoss != null ? ` val_loss ${event.valLoss.toFixed(3)}` : ""
 
@@ -222,7 +223,9 @@ function ProjectTrainPage() {
   } = useProjectOne()
   const queryClient = useQueryClient()
   const [trainSettingsOpened, setTrainSettingsOpened] = useState(false)
-  const [activeSession, setActiveSession] = useState<ActiveTrainSession | null>(null)
+  const [activeSession, setActiveSession] = useState<ActiveTrainSession | null>(
+    null,
+  )
   const [trainDataView, setTrainDataView] = useState<TrainDataView>("train")
   const [now, setNow] = useState(() => Date.now())
   const activeTrainLogIdRef = useRef<string | null>(null)
@@ -318,7 +321,8 @@ function ProjectTrainPage() {
                   summary:
                     event.type === "epoch"
                       ? {
-                          accuracy: event.acc ?? current.summary?.accuracy ?? null,
+                          accuracy:
+                            event.acc ?? current.summary?.accuracy ?? null,
                           durationMs: current.summary?.durationMs ?? null,
                           endedAt: current.summary?.endedAt ?? "",
                           loss: event.loss,
@@ -377,16 +381,21 @@ function ProjectTrainPage() {
       setActiveSession((current) =>
         current
           ? {
-                  ...current,
-                  datasetSnapshot: result.datasetSnapshot,
-                  endedAt: summary.endedAt,
-                  status: "completed",
-                  summary,
-                }
-              : current,
-          )
+              ...current,
+              datasetSnapshot: result.datasetSnapshot,
+              endedAt: summary.endedAt,
+              status: "completed",
+              summary,
+            }
+          : current,
+      )
 
-      return { modelId, summary, trainLogId, datasetSnapshot: latestDatasetSnapshot }
+      return {
+        modelId,
+        summary,
+        trainLogId,
+        datasetSnapshot: latestDatasetSnapshot,
+      }
     },
     onError: async (error) => {
       const errorMessage = getErrorMessage(error)
@@ -434,7 +443,9 @@ function ProjectTrainPage() {
       )
       activeTrainLogIdRef.current = null
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["project-model", projectId] }),
+        queryClient.invalidateQueries({
+          queryKey: ["project-model", projectId],
+        }),
         queryClient.invalidateQueries({
           queryKey: ["project-train-log", projectId],
         }),
@@ -446,7 +457,9 @@ function ProjectTrainPage() {
     onSuccess: async () => {
       activeTrainLogIdRef.current = null
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["project-model", projectId] }),
+        queryClient.invalidateQueries({
+          queryKey: ["project-model", projectId],
+        }),
         queryClient.invalidateQueries({
           queryKey: ["project-train-log", projectId],
         }),
@@ -472,7 +485,8 @@ function ProjectTrainPage() {
     }
   }, [displayedTrainLog?.settingsSnapshot])
   const epochEvents = useMemo(
-    () => displayedTrainLog?.events.filter((event) => event.type === "epoch") ?? [],
+    () =>
+      displayedTrainLog?.events.filter((event) => event.type === "epoch") ?? [],
     [displayedTrainLog?.events],
   )
   const latestEpoch =
@@ -534,102 +548,104 @@ function ProjectTrainPage() {
 
   return (
     <Paper className="p-4">
-      <Stack gap="md">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-2xl font-semibold tracking-tight">Train</h2>
-          <Group gap="sm">
-            <Button
-              disabled={!isReadyForTrain}
-              leftSection={<IconPlayerPlay className="size-4" />}
-              loading={trainMutation.isPending}
-              onClick={() => {
-                void trainMutation.mutateAsync()
-              }}
-            >
-              Start Training
-            </Button>
-            <Popover
-              onDismiss={() => {
-                setTrainSettingsOpened(false)
-              }}
-              opened={trainSettingsOpened}
-              position="bottom-end"
-              shadow="md"
-              width={360}
-              withArrow
-            >
-              <Popover.Target>
-                <Button
-                  leftSection={<IconSettings className="size-4" />}
-                  onClick={() => {
-                    setTrainSettingsOpened((current) => !current)
-                  }}
-                  variant="default"
-                >
-                  Settings
-                </Button>
-              </Popover.Target>
-              <Popover.Dropdown>
-                <Form
-                  key={JSON.stringify(getTrainSettingsFormValues())}
-                  config={trainSettingsForm}
-                  defaultValues={getTrainSettingsFormValues()}
-                  onSubmit={async (values) => {
-                    await applyTrainSettings(values)
-                    setTrainSettingsOpened(false)
-                  }}
-                  renderRoot={({ children, onSubmit }) => (
-                    <form className="space-y-3" onSubmit={onSubmit}>
-                      <Text fw={600} size="sm">
-                        Train Settings
-                      </Text>
-                      {children}
-                      <Group justify="flex-end">
-                        <Button
-                          onClick={() => {
-                            setTrainSettingsOpened(false)
-                          }}
-                          type="button"
-                          variant="default"
-                        >
-                          Cancel
-                        </Button>
-                        <Button loading={isApplyingTrainSettings} type="submit">
-                          Apply
-                        </Button>
-                      </Group>
-                    </form>
-                  )}
-                />
-              </Popover.Dropdown>
-            </Popover>
+      <div className="space-y-4">
+        <div className="space-y-1">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-2xl font-semibold tracking-tight">Train</h2>
+            <div className="flex gap-2">
+              <Button
+                disabled={!isReadyForTrain}
+                leftSection={<IconPlayerPlay className="size-4" />}
+                loading={trainMutation.isPending}
+                onClick={() => {
+                  void trainMutation.mutateAsync()
+                }}
+              >
+                Start Training
+              </Button>
+              <Popover
+                onDismiss={() => {
+                  setTrainSettingsOpened(false)
+                }}
+                opened={trainSettingsOpened}
+                position="bottom-end"
+                shadow="md"
+                width={360}
+                withArrow
+              >
+                <Popover.Target>
+                  <Button
+                    leftSection={<IconSettings className="size-4" />}
+                    onClick={() => {
+                      setTrainSettingsOpened((current) => !current)
+                    }}
+                    variant="default"
+                  >
+                    Settings
+                  </Button>
+                </Popover.Target>
+                <Popover.Dropdown>
+                  <Form
+                    key={JSON.stringify(getTrainSettingsFormValues())}
+                    config={trainSettingsForm}
+                    defaultValues={getTrainSettingsFormValues()}
+                    onSubmit={async (values) => {
+                      await applyTrainSettings(values)
+                      setTrainSettingsOpened(false)
+                    }}
+                    renderRoot={({ children, onSubmit }) => (
+                      <form className="space-y-3" onSubmit={onSubmit}>
+                        <Text fw={600} size="sm">
+                          Train Settings
+                        </Text>
+                        {children}
+                        <Group justify="flex-end">
+                          <Button
+                            onClick={() => {
+                              setTrainSettingsOpened(false)
+                            }}
+                            type="button"
+                            variant="default"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            loading={isApplyingTrainSettings}
+                            type="submit"
+                          >
+                            Apply
+                          </Button>
+                        </Group>
+                      </form>
+                    )}
+                  />
+                </Popover.Dropdown>
+              </Popover>
+            </div>
+          </div>
+
+          <Group gap="xs">
+            <Badge color={isReadyForTrain ? "teal" : "yellow"} variant="light">
+              {isReadyForTrain ? "Ready to train" : "Need more label data"}
+            </Badge>
+            <Badge variant="light">
+              Validation {Math.round(trainSettings.validationSplit * 100)}%
+            </Badge>
+            <Badge variant="light">{trainSettings.epochs} epochs</Badge>
+            <Badge variant="light">Batch {trainSettings.batchSize}</Badge>
+            <Badge variant="light">LR {trainSettings.learningRate}</Badge>
           </Group>
         </div>
 
-        <Text c="dimmed" size="sm">
-          Current dataset: {classes.length} classes, {totalSamples} samples.
-        </Text>
-
-        <Group gap="xs">
-          <Badge color={isReadyForTrain ? "teal" : "yellow"} variant="light">
-            {isReadyForTrain ? "Ready to train" : "Need more label data"}
-          </Badge>
-          <Badge variant="light">
-            Validation {Math.round(trainSettings.validationSplit * 100)}%
-          </Badge>
-          <Badge variant="light">{trainSettings.epochs} epochs</Badge>
-          <Badge variant="light">Batch {trainSettings.batchSize}</Badge>
-          <Badge variant="light">LR {trainSettings.learningRate}</Badge>
-        </Group>
-
         {!isReadyForTrain ? (
           <Alert color="yellow" variant="light">
-            Label data is not ready yet. Complete the minimum class and sample requirements first.
+            Label data is not ready yet. Complete the minimum class and sample
+            requirements first.
           </Alert>
         ) : null}
 
         {displayedTrainLog ? (
-          <Paper className="border border-zinc-200 p-4 dark:border-zinc-800" radius="lg">
+          <Paper>
             <Stack gap="sm">
               <Group justify="space-between">
                 <div>
@@ -647,9 +663,17 @@ function ProjectTrainPage() {
                   </Text>
                 </div>
               </Group>
-              <Progress animated={displayedTrainLog.status === "started"} radius="xl" size="lg" value={trainProgress * 100} />
+              <Progress
+                animated={displayedTrainLog.status === "started"}
+                radius="xl"
+                size="lg"
+                value={trainProgress * 100}
+              />
               <div className="grid gap-3 text-sm text-zinc-600 dark:text-zinc-300 md:grid-cols-4">
-                <MetricInline label="Elapsed" value={formatDuration(elapsedMs)} />
+                <MetricInline
+                  label="Elapsed"
+                  value={formatDuration(elapsedMs)}
+                />
                 <MetricInline
                   label="Loss"
                   value={formatMetric(
@@ -681,14 +705,19 @@ function ProjectTrainPage() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <Paper className="h-full border border-zinc-200 p-4 dark:border-zinc-800" radius="lg">
+            <Paper
+              className="h-full border border-zinc-200 p-4 dark:border-zinc-800"
+              radius="lg"
+            >
               <Stack gap="sm">
                 <Text fw={600}>Current model</Text>
                 {displayedModel ? (
                   <>
                     <MetricRow
                       label="Trained at"
-                      value={new Date(displayedModel.trainedAt).toLocaleString()}
+                      value={new Date(
+                        displayedModel.trainedAt,
+                      ).toLocaleString()}
                     />
                     <MetricRow
                       label="Accuracy"
@@ -717,7 +746,10 @@ function ProjectTrainPage() {
           </div>
 
           <div>
-            <Paper className="h-full border border-zinc-200 p-4 dark:border-zinc-800" radius="lg">
+            <Paper
+              className="h-full border border-zinc-200 p-4 dark:border-zinc-800"
+              radius="lg"
+            >
               <Stack gap="sm">
                 <Text fw={600}>Latest run log</Text>
                 {displayedTrainLog ? (
@@ -727,17 +759,17 @@ function ProjectTrainPage() {
                         train@{projectId}
                       </div>
                       <div className="space-y-1 px-3 py-3 font-mono text-xs">
-                      {displayedTrainLog.events.map((event, index) => (
-                        <div
-                          className="leading-5"
-                          key={`${event.at}-${index}`}
-                        >
-                          <span className="mr-2 text-zinc-500">
-                            {new Date(event.at).toLocaleTimeString()}
-                          </span>
-                          <span>{renderEventMessage(event)}</span>
-                        </div>
-                      ))}
+                        {displayedTrainLog.events.map((event, index) => (
+                          <div
+                            className="leading-5"
+                            key={`${event.at}-${index}`}
+                          >
+                            <span className="mr-2 text-zinc-500">
+                              {new Date(event.at).toLocaleTimeString()}
+                            </span>
+                            <span>{renderEventMessage(event)}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </ScrollArea.Autosize>
@@ -752,7 +784,10 @@ function ProjectTrainPage() {
         </div>
 
         {displayedTrainLog ? (
-          <Paper className="border border-zinc-200 p-4 dark:border-zinc-800" radius="lg">
+          <Paper
+            className="border border-zinc-200 p-4 dark:border-zinc-800"
+            radius="lg"
+          >
             <Stack gap="sm">
               <Group justify="space-between">
                 <Text fw={600}>Train Data</Text>
@@ -777,7 +812,7 @@ function ProjectTrainPage() {
             </Stack>
           </Paper>
         ) : null}
-      </Stack>
+      </div>
     </Paper>
   )
 }
