@@ -94,7 +94,8 @@ function pickSeededSamples<T extends { id: string }>(
 }
 
 function ProjectPlayerPage() {
-  const { isLoading, playSettings, projectId, projectName } = useProjectOne()
+  const { isLoading, playSettings, projectIcon, projectId, projectName } =
+    useProjectOne()
 
   if (isLoading) {
     return (
@@ -108,7 +109,8 @@ function ProjectPlayerPage() {
     <section className="mx-auto w-full max-w-7xl px-4 py-8 md:px-6">
       <div className="mb-8 flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="text-4xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+          <h1 className="flex items-center gap-3 text-4xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+            <span className="text-3xl leading-none">{projectIcon}</span>
             {projectName}
           </h1>
         </div>
