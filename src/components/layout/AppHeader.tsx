@@ -1,6 +1,7 @@
 import { Button } from "@mantine/core"
 import { Link } from "@tanstack/react-router"
 import { FunctionComponent } from "react"
+import { t } from "~/lib/i18n"
 import AppSettings from "./AppSettings"
 
 interface AppHeaderProps {}
@@ -11,7 +12,7 @@ const AppHeader: FunctionComponent<AppHeaderProps> = () => {
       <div className="mx-auto flex h-full max-w-6xl items-center justify-center px-4">
         <div className="flex items-center gap-2">
           <Button component={Link} size="compact-sm" to="/" variant="subtle">
-            Home
+            {t("header.home")}
           </Button>
           <Button
             component={Link}
@@ -19,7 +20,7 @@ const AppHeader: FunctionComponent<AppHeaderProps> = () => {
             to="/projects"
             variant="subtle"
           >
-            Projects
+            {t("header.projects")}
           </Button>
           <AppSettings />
         </div>

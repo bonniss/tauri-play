@@ -1,3 +1,17 @@
 {
-  "welcome": "Hello {{name}}"
+  "welcome": "Hello {{name}}",
+  "header": {
+    "home": "Home",
+    "projects": "Projects"
+  },
+  "settings": {
+    "language": "Language"
+  },
+  "home": {
+    "hero": {
+      "title": "Teach your model with your own images, then test it live.",
+      "description": "Collect examples, organize classes, train locally, and open a playable experience without leaving the app.",
+      "cta": "Get Started"
+    }
+  }
 }

@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { useSyncExternalStore } from "react"
 import { get as getProperty } from "react-headless-form"
 import { default as vi } from "./locales/vi/app.json"
 import { default as en } from "./locales/en/app.json"
 export { vi, en }
 
 const RX_PARAM = /\{\{(\w+)\}\}/g
+const localeListeners = new Set<() => void>()
 
 export interface I18nConfig {
   resources: Record<string, any>
@@ -40,6 +42,19 @@ export function getLocale() {
 export function setLocale(locale: string) {
   config.setLocale?.(locale)
   config.onLocaleChange?.(locale)
+  localeListeners.forEach((listener) => listener())
+}
+
+export function subscribeLocale(listener: () => void) {
+  localeListeners.add(listener)
+
+  return () => {
+    localeListeners.delete(listener)
+  }
+}
+
+export function useLocale() {
+  return useSyncExternalStore(subscribeLocale, getLocale, getLocale)
 }
 
 export interface TranslateOptions {
