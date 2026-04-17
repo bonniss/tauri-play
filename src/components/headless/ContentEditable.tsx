@@ -54,12 +54,14 @@ const ContentEditable: FunctionComponent<ContentEditableProps> = ({
 
   useEffect(() => {
     draftValueRef.current = value
-    setIsEmpty(value.trim().length === 0)
+    const nextIsEmpty = value.trim().length === 0
+    setIsEmpty(nextIsEmpty)
 
     if (!focusedRef.current && elementRef.current) {
-      elementRef.current.textContent = value
+      elementRef.current.textContent =
+        nextIsEmpty && placeholder ? placeholder : value
     }
-  }, [value])
+  }, [value, placeholder])
 
   useEffect(() => {
     if (autoFocus && elementRef.current) {
@@ -76,7 +78,7 @@ const ContentEditable: FunctionComponent<ContentEditableProps> = ({
       setIsEmpty(value.trim().length === 0)
 
       if (elementRef.current) {
-        elementRef.current.textContent = value
+        elementRef.current.textContent = placeholder ?? value
       }
 
       return
@@ -143,7 +145,7 @@ const ContentEditable: FunctionComponent<ContentEditableProps> = ({
       role={role ?? "textbox"}
       suppressContentEditableWarning={suppressContentEditableWarning ?? true}
     >
-      {!isActive && isEmpty && placeholder ? placeholder : value}
+      {value}
     </Element>
   )
 }
