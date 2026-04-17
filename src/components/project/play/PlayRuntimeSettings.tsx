@@ -2,24 +2,25 @@ import { Button, Drawer, Group, Text } from "@mantine/core"
 import { IconSettings } from "@tabler/icons-react"
 import { defineConfig, Form } from "~/components/form"
 import { useProjectPlay } from "~/components/project/play/ProjectPlayProvider"
+import { t } from "~/lib/i18n"
 import { ProjectPlaySettingsFormValues } from "~/lib/project/settings"
 
 const playSettingsForm = defineConfig<ProjectPlaySettingsFormValues>({
   autoPredictOnUpload: {
     type: "switch",
-    label: "Auto predict on upload",
+    label: "project.play.form.autoPredictOnUpload",
   },
   showConfidenceScores: {
     type: "switch",
-    label: "Show confidence scores",
+    label: "project.play.form.showConfidenceScores",
   },
   showAllClasses: {
     type: "switch",
-    label: "Show all classes",
+    label: "project.play.form.showAllClasses",
   },
   topK: {
     type: "numeric",
-    label: "Top results",
+    label: "project.play.form.topK",
     props: {
       allowDecimal: false,
       min: 1,
@@ -27,7 +28,7 @@ const playSettingsForm = defineConfig<ProjectPlaySettingsFormValues>({
   },
   confidenceThreshold: {
     type: "numeric",
-    label: "Confidence threshold",
+    label: "project.play.form.confidenceThreshold",
     props: {
       allowDecimal: true,
       decimalScale: 2,
@@ -56,7 +57,7 @@ function PlayRuntimeSettings() {
         }}
         variant="default"
       >
-        Settings
+        {t("common.settings")}
       </Button>
 
       <Drawer
@@ -67,7 +68,7 @@ function PlayRuntimeSettings() {
         padding="md"
         position="right"
         size="md"
-        title="Play Settings"
+        title={t("project.play.settingsTitle")}
       >
         <Form
           key={JSON.stringify(getPlaySettingsFormValues())}
@@ -85,14 +86,14 @@ function PlayRuntimeSettings() {
                   type="button"
                   variant="default"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
                 <Button loading={isApplyingPlaySettings} type="submit">
-                  Save
+                  {t("common.save")}
                 </Button>
               </Group>
               <Text c="dimmed" size="sm">
-                These settings apply to this project demo page.
+                {t("project.play.settingsDescription")}
               </Text>
             </form>
           )}

@@ -22,7 +22,10 @@
     "export": "Xuất",
     "close": "Đóng",
     "upload": "Tải lên",
-    "unlimited": "Không giới hạn"
+    "unlimited": "Không giới hạn",
+    "name": "Tên",
+    "description": "Mô tả",
+    "save": "Lưu"
   },
   "project": {
     "sidebar": {
@@ -64,6 +67,8 @@
     },
     "play": {
       "title": "Play",
+      "settingsTitle": "Cài đặt Play",
+      "settingsDescription": "Các cài đặt này áp dụng cho trang demo của dự án.",
       "description": "Cấu hình cách người dùng trải nghiệm {{name}}, sau đó khởi chạy trang demo.",
       "currentMode": "Chế độ hiện tại: {{mode}}",
       "start": "Bắt đầu",

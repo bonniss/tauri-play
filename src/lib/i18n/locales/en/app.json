@@ -22,7 +22,10 @@
     "export": "Export",
     "close": "Close",
     "upload": "Upload",
-    "unlimited": "Unlimited"
+    "unlimited": "Unlimited",
+    "name": "Name",
+    "description": "Description",
+    "save": "Save"
   },
   "project": {
     "sidebar": {
@@ -64,6 +67,8 @@
     },
     "play": {
       "title": "Play",
+      "settingsTitle": "Play Settings",
+      "settingsDescription": "These settings apply to this project demo page.",
       "description": "Configure how people will experience {{name}}, then launch the project demo page.",
       "currentMode": "Current mode: {{mode}}",
       "start": "Start",

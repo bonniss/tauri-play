@@ -23,7 +23,6 @@ const AppHeader: FunctionComponent<AppHeaderProps> = () => {
           : "backdrop-blur-md bg-white/60 dark:bg-zinc-900/60 border-b border-zinc-200/50 dark:border-zinc-800/50",
       )}
       style={{
-        zIndex: 1000000,
         transform: `translate3d(0, ${pinned ? 0 : "-110px"}, 0)`,
         transition: "transform 400ms ease",
       }}

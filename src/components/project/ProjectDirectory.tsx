@@ -48,7 +48,7 @@ const createProjectForm = defineConfig<{
 }>({
   name: {
     type: 'text',
-    label: 'Name',
+    label: 'common.name',
     rules: {
       required: true,
     },
@@ -58,7 +58,7 @@ const createProjectForm = defineConfig<{
   },
   description: {
     type: 'longText',
-    label: 'Description',
+    label: 'common.description',
   },
 });
 
