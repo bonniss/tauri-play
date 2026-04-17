@@ -9,8 +9,7 @@ import AppSettings from "./AppSettings"
 interface AppHeaderProps {}
 
 const AppHeader: FunctionComponent<AppHeaderProps> = () => {
-  const { pinned, scrollProgress } = useHeadroom({ fixedAt: 80 })
-  console.log("🚀 ~ AppHeader ~ scrollProgress:", scrollProgress)
+  const { pinned } = useHeadroom({ fixedAt: 80 })
   const [scroll] = useWindowScroll()
 
   const isTop = scroll.y < 80
@@ -24,7 +23,9 @@ const AppHeader: FunctionComponent<AppHeaderProps> = () => {
           : "backdrop-blur-md bg-white/60 dark:bg-zinc-900/60 border-b border-zinc-200/50 dark:border-zinc-800/50",
       )}
       style={{
-        transform: `translateY(${(scrollProgress - 1) * 100}%)`,
+        zIndex: 1000000,
+        transform: `translate3d(0, ${pinned ? 0 : "-110px"}, 0)`,
+        transition: "transform 400ms ease",
       }}
     >
       <div className="mx-auto flex h-full max-w-6xl items-center justify-center px-4">
