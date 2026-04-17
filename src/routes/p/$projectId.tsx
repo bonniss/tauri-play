@@ -1,13 +1,20 @@
-import { Alert, Button, Loader, Paper, Progress, Skeleton } from "@mantine/core"
-import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone"
+import {
+  Alert,
+  Button,
+  Loader,
+  Paper,
+  Progress,
+  Skeleton,
+} from '@mantine/core';
+import { Dropzone, IMAGE_MIME_TYPE } from '@mantine/dropzone';
 import {
   IconArrowLeft,
   IconPhoto,
   IconUpload,
   IconX,
-} from "@tabler/icons-react"
-import { Link, createFileRoute } from "@tanstack/react-router"
-import clsx from "clsx"
+} from '@tabler/icons-react';
+import { Link, createFileRoute } from '@tanstack/react-router';
+import clsx from 'clsx';
 import {
   FunctionComponent,
   ReactNode,
@@ -15,30 +22,30 @@ import {
   useMemo,
   useRef,
   useState,
-} from "react"
-import CameraUI from "~/components/camera/CameraUI"
-import PlayRuntimeSettings from "~/components/project/play/PlayRuntimeSettings"
-import { ProjectPlayProvider } from "~/components/project/play/ProjectPlayProvider"
+} from 'react';
+import CameraUI from '~/components/camera/CameraUI';
+import PlayRuntimeSettings from '~/components/project/play/PlayRuntimeSettings';
+import { ProjectPlayProvider } from '~/components/project/play/ProjectPlayProvider';
 import {
   ProjectPlayRuntimeProvider,
   useProjectPlayRuntime,
-} from "~/components/project/play/ProjectPlayRuntimeProvider"
+} from '~/components/project/play/ProjectPlayRuntimeProvider';
 import {
   ProjectOneProvider,
   useProjectOne,
-} from "~/components/project/ProjectOneProvider"
-import { t, useLocale } from "~/lib/i18n"
+} from '~/components/project/ProjectOneProvider';
+import { t, useLocale } from '~/lib/i18n';
 import {
   createSamplePreviewUrl,
   revokeSamplePreviewUrl,
-} from "~/lib/project/sample-preview"
+} from '~/lib/project/sample-preview';
 
-export const Route = createFileRoute("/p/$projectId")({
+export const Route = createFileRoute('/p/$projectId')({
   component: ProjectPlayerRoute,
-})
+});
 
 function ProjectPlayerRoute() {
-  const { projectId } = Route.useParams()
+  const { projectId } = Route.useParams();
 
   return (
     <ProjectOneProvider defaultValue={{ projectId }}>
@@ -48,37 +55,37 @@ function ProjectPlayerRoute() {
         </ProjectPlayRuntimeProvider>
       </ProjectPlayProvider>
     </ProjectOneProvider>
-  )
+  );
 }
 
 function formatRelativeTime(input: string, locale: string) {
-  const value = new Date(input).getTime()
-  const diffMs = value - Date.now()
-  const diffMinutes = Math.round(diffMs / 60000)
-  const formatter = new Intl.RelativeTimeFormat(locale, { numeric: "auto" })
+  const value = new Date(input).getTime();
+  const diffMs = value - Date.now();
+  const diffMinutes = Math.round(diffMs / 60000);
+  const formatter = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
 
   if (Math.abs(diffMinutes) < 60) {
-    return formatter.format(diffMinutes, "minute")
+    return formatter.format(diffMinutes, 'minute');
   }
 
-  const diffHours = Math.round(diffMinutes / 60)
+  const diffHours = Math.round(diffMinutes / 60);
 
   if (Math.abs(diffHours) < 24) {
-    return formatter.format(diffHours, "hour")
+    return formatter.format(diffHours, 'hour');
   }
 
-  const diffDays = Math.round(diffHours / 24)
-  return formatter.format(diffDays, "day")
+  const diffDays = Math.round(diffHours / 24);
+  return formatter.format(diffDays, 'day');
 }
 
 function hashString(value: string) {
-  let hash = 0
+  let hash = 0;
 
   for (let index = 0; index < value.length; index += 1) {
-    hash = (hash * 31 + value.charCodeAt(index)) >>> 0
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
   }
 
-  return hash
+  return hash;
 }
 
 function pickSeededSamples<T extends { id: string }>(
@@ -87,33 +94,33 @@ function pickSeededSamples<T extends { id: string }>(
   count: number,
 ) {
   if (items.length <= count) {
-    return items
+    return items;
   }
 
-  const pool = [...items]
-  const picked: T[] = []
-  let hash = hashString(seed)
+  const pool = [...items];
+  const picked: T[] = [];
+  let hash = hashString(seed);
 
   while (pool.length > 0 && picked.length < count) {
-    const index = hash % pool.length
-    picked.push(pool.splice(index, 1)[0])
-    hash = hashString(`${seed}:${hash}:${picked.length}`)
+    const index = hash % pool.length;
+    picked.push(pool.splice(index, 1)[0]);
+    hash = hashString(`${seed}:${hash}:${picked.length}`);
   }
 
-  return picked
+  return picked;
 }
 
 function ProjectPlayerPage() {
-  useLocale()
+  useLocale();
   const { isLoading, playSettings, projectIcon, projectId, projectName } =
-    useProjectOne()
+    useProjectOne();
 
   if (isLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <Loader />
       </div>
-    )
+    );
   }
 
   return (
@@ -139,18 +146,18 @@ function ProjectPlayerPage() {
         </div>
       </div>
 
-      {playSettings.mode === "camera" ? (
+      {playSettings.mode === 'camera' ? (
         <CameraPlayExperience />
       ) : (
         <UploadPlayExperience />
       )}
     </section>
-  )
+  );
 }
 
 const UploadPlayExperience: FunctionComponent = () => {
-  useLocale()
-  const { playSettings } = useProjectOne()
+  useLocale();
+  const { playSettings } = useProjectOne();
   const {
     clearPrediction,
     isAnalyzing,
@@ -158,34 +165,34 @@ const UploadPlayExperience: FunctionComponent = () => {
     projectModel,
     runPredictionFromFile,
     runtimeError,
-  } = useProjectPlayRuntime()
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [selectedFileUrl, setSelectedFileUrl] = useState<string | null>(null)
+  } = useProjectPlayRuntime();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFileUrl, setSelectedFileUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!selectedFile) {
-      setSelectedFileUrl(null)
-      return
+      setSelectedFileUrl(null);
+      return;
     }
 
-    const nextUrl = URL.createObjectURL(selectedFile)
-    setSelectedFileUrl(nextUrl)
+    const nextUrl = URL.createObjectURL(selectedFile);
+    setSelectedFileUrl(nextUrl);
 
     return () => {
-      URL.revokeObjectURL(nextUrl)
-    }
-  }, [selectedFile])
+      URL.revokeObjectURL(nextUrl);
+    };
+  }, [selectedFile]);
 
-  const hasPreview = Boolean(selectedFileUrl)
+  const hasPreview = Boolean(selectedFileUrl);
   const shouldShowPredictionPanel =
-    hasPreview && (isAnalyzing || runtimeError != null || prediction != null)
+    hasPreview && (isAnalyzing || runtimeError != null || prediction != null);
 
   if (!projectModel) {
     return (
       <Alert color="yellow" variant="light">
         {t('project.play.demo.noModel')}
       </Alert>
-    )
+    );
   }
 
   return (
@@ -194,44 +201,44 @@ const UploadPlayExperience: FunctionComponent = () => {
         <div
           className={clsx(
             hasPreview &&
-              "grid gap-6 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)]",
+              'grid gap-6 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)]',
           )}
         >
           <Paper
             className={clsx(
-              "min-h-[400px] relative border border-dashed border-zinc-400 dark:border-zinc-500 order-2",
+              'min-h-[400px] relative border border-dashed border-zinc-400 dark:border-zinc-500 order-2',
             )}
           >
             <Dropzone
               className={clsx(
-                "absolute inset-0 flex items-center justify-center p-4",
+                'absolute inset-0 flex items-center justify-center p-4',
               )}
               accept={IMAGE_MIME_TYPE}
               loading={false}
               maxFiles={1}
               multiple={false}
               onDrop={(files: File[]) => {
-                const file = files[0]
+                const file = files[0];
 
                 if (!file) {
-                  return
+                  return;
                 }
 
-                setSelectedFile(file)
-                clearPrediction()
+                setSelectedFile(file);
+                clearPrediction();
 
                 if (playSettings.autoPredictOnUpload) {
-                  void runPredictionFromFile(file)
+                  void runPredictionFromFile(file);
                 }
               }}
               onReject={() => {
-                clearPrediction()
+                clearPrediction();
               }}
             >
               <div
                 className={clsx(
-                  "flex items-center gap-4",
-                  hasPreview ? "flex-col" : "flex-row",
+                  'flex items-center gap-4',
+                  hasPreview ? 'flex-col' : 'flex-row',
                 )}
               >
                 <div>
@@ -249,14 +256,16 @@ const UploadPlayExperience: FunctionComponent = () => {
                 <div>
                   <p
                     className={`text-zinc-500 dark:text-zinc-400 ${
-                      hasPreview ? "text-sm" : "text-base leading-7"
+                      hasPreview ? 'text-sm' : 'text-base leading-7'
                     }`}
                   >
                     {t('project.play.demo.dropzone')}
                   </p>
                   {selectedFile ? (
                     <p className="truncate text-sm text-zinc-500 dark:text-zinc-400">
-                      {t('project.play.demo.currentFile', { params: { name: selectedFile.name } })}
+                      {t('project.play.demo.currentFile', {
+                        params: { name: selectedFile.name },
+                      })}
                     </p>
                   ) : null}
                 </div>
@@ -268,13 +277,13 @@ const UploadPlayExperience: FunctionComponent = () => {
                     disabled={!selectedFile}
                     loading={isAnalyzing}
                     onClick={(event) => {
-                      event.stopPropagation()
+                      event.stopPropagation();
 
                       if (!selectedFile) {
-                        return
+                        return;
                       }
 
-                      void runPredictionFromFile(selectedFile)
+                      void runPredictionFromFile(selectedFile);
                     }}
                     size="md"
                     variant="default"
@@ -288,13 +297,14 @@ const UploadPlayExperience: FunctionComponent = () => {
 
           {hasPreview ? (
             <Paper
-              className="relative h-[500px] overflow-hidden
-    bg-[repeating-linear-gradient(135deg,rgba(229,231,235,0.5)_0px,rgba(229,231,235,0.5)_1px,transparent_1px,transparent_12px)]
-    dark:bg-[repeating-linear-gradient(135deg,rgba(55,65,81,0.5)_0px,rgba(55,65,81,0.5)_1px,transparent_1px,transparent_12px)] drop-shadow-md"
+              className={clsx(
+                'relative h-[500px] overflow-hidden',
+                'bg-[linear-gradient(to_right,rgba(15,23,42,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.06)_1px,transparent_1px),linear-gradient(135deg,#f8fafc,#eef2f7)] bg-[size:20px_20px,20px_20px,100%_100%] dark:border-zinc-800 dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(135deg,#09090b,#111827)] dark:bg-[size:20px_20px,20px_20px,100%_100%]',
+              )}
               withBorder
             >
               <img
-                alt={selectedFile?.name ?? "Selected upload"}
+                alt={selectedFile?.name ?? 'Selected upload'}
                 className="h-full w-full object-contain"
                 src={selectedFileUrl as string}
               />
@@ -305,43 +315,43 @@ const UploadPlayExperience: FunctionComponent = () => {
         {shouldShowPredictionPanel ? <PredictionPanel /> : null}
       </div>
     </PlayExperienceShell>
-  )
-}
+  );
+};
 
 const CameraPlayExperience: FunctionComponent = () => {
-  useLocale()
+  useLocale();
   const { prediction, projectModel, runPredictionFromVideo, runtimeError } =
-    useProjectPlayRuntime()
-  const videoRef = useRef<HTMLVideoElement | null>(null)
+    useProjectPlayRuntime();
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     if (!projectModel) {
-      return
+      return;
     }
 
     const timer = window.setInterval(() => {
-      const video = videoRef.current
+      const video = videoRef.current;
 
       if (!video || video.readyState < 2) {
-        return
+        return;
       }
 
       void runPredictionFromVideo(video, {
         stableCommitCount: 2,
-      })
-    }, 700)
+      });
+    }, 700);
 
     return () => {
-      window.clearInterval(timer)
-    }
-  }, [projectModel, runPredictionFromVideo])
+      window.clearInterval(timer);
+    };
+  }, [projectModel, runPredictionFromVideo]);
 
   if (!projectModel) {
     return (
       <Alert color="yellow" variant="light">
         {t('project.play.demo.noModel')}
       </Alert>
-    )
+    );
   }
 
   return (
@@ -358,7 +368,7 @@ const CameraPlayExperience: FunctionComponent = () => {
             showSettings={false}
             showShutter={false}
             viewportOverlay={(context) => {
-              videoRef.current = context.videoRef.current
+              videoRef.current = context.videoRef.current;
 
               return (
                 <div className="flex h-full flex-col justify-between p-4">
@@ -367,7 +377,7 @@ const CameraPlayExperience: FunctionComponent = () => {
                       {t('project.play.demo.liveCamera')}
                     </div>
                     <div className="rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-xs text-white/70 backdrop-blur-sm">
-                      {context.cameraState === "ready"
+                      {context.cameraState === 'ready'
                         ? t('project.play.demo.analyzingFeed')
                         : t('project.play.demo.waitingCamera')}
                     </div>
@@ -378,7 +388,7 @@ const CameraPlayExperience: FunctionComponent = () => {
                     </div>
                   ) : null}
                 </div>
-              )
+              );
             }}
           />
         </Paper>
@@ -386,15 +396,15 @@ const CameraPlayExperience: FunctionComponent = () => {
         {prediction || runtimeError ? <PredictionPanel /> : null}
       </div>
     </PlayExperienceShell>
-  )
-}
+  );
+};
 
 const PlayExperienceShell: FunctionComponent<{
-  children: ReactNode
-  trainedAt: string
+  children: ReactNode;
+  trainedAt: string;
 }> = ({ children, trainedAt }) => {
-  const locale = useLocale()
-  const { classes, projectDescription } = useProjectOne()
+  const locale = useLocale();
+  const { classes, projectDescription } = useProjectOne();
 
   return (
     <div className="grid gap-8 lg:grid-cols-[320px_minmax(0,1fr)]">
@@ -404,7 +414,9 @@ const PlayExperienceShell: FunctionComponent<{
             {t('project.play.demo.modelSection')}
           </p>
           <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-            {t('project.play.demo.updatedAt', { params: { time: formatRelativeTime(trainedAt, locale) } })}
+            {t('project.play.demo.updatedAt', {
+              params: { time: formatRelativeTime(trainedAt, locale) },
+            })}
           </p>
         </section>
 
@@ -438,12 +450,12 @@ const PlayExperienceShell: FunctionComponent<{
 
       {children}
     </div>
-  )
-}
+  );
+};
 
 const PredictionPanel: FunctionComponent = () => {
-  useLocale()
-  const { playSettings } = useProjectOne()
+  useLocale();
+  const { playSettings } = useProjectOne();
   const {
     isAnalyzing,
     meetsThreshold,
@@ -452,7 +464,7 @@ const PredictionPanel: FunctionComponent = () => {
     runtimeError,
     topResult,
     visibleResults,
-  } = useProjectPlayRuntime()
+  } = useProjectPlayRuntime();
 
   return (
     <div className="rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
@@ -462,8 +474,8 @@ const PredictionPanel: FunctionComponent = () => {
             <span
               className={
                 !isAnalyzing && prediction && topResult && meetsThreshold
-                  ? "inline-block motion-preset-confetti"
-                  : ""
+                  ? 'inline-block motion-preset-confetti'
+                  : ''
               }
             >
               {isAnalyzing
@@ -521,50 +533,50 @@ const PredictionPanel: FunctionComponent = () => {
         ) : null}
       </div>
     </div>
-  )
-}
+  );
+};
 
 const ClassPreviewItem: FunctionComponent<{
-  classId: string
-  name: string
+  classId: string;
+  name: string;
   samples: Array<{
-    filePath: string
-    id: string
-  }>
+    filePath: string;
+    id: string;
+  }>;
 }> = ({ classId, name, samples }) => {
-  useLocale()
-  const [previewUrls, setPreviewUrls] = useState<string[]>([])
+  useLocale();
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const previewSamples = useMemo(
     () => pickSeededSamples(samples, classId, 4),
     [classId, samples],
-  )
+  );
 
   useEffect(() => {
-    let cancelled = false
-    let nextUrls: string[] = []
+    let cancelled = false;
+    let nextUrls: string[] = [];
 
     if (!previewSamples.length) {
-      setPreviewUrls([])
-      return
+      setPreviewUrls([]);
+      return;
     }
 
     void Promise.all(
       previewSamples.map((sample) => createSamplePreviewUrl(sample.filePath)),
     ).then((urls) => {
       if (cancelled) {
-        urls.forEach((url) => revokeSamplePreviewUrl(url))
-        return
+        urls.forEach((url) => revokeSamplePreviewUrl(url));
+        return;
       }
 
-      nextUrls = urls
-      setPreviewUrls(urls)
-    })
+      nextUrls = urls;
+      setPreviewUrls(urls);
+    });
 
     return () => {
-      cancelled = true
-      nextUrls.forEach((url) => revokeSamplePreviewUrl(url))
-    }
-  }, [previewSamples])
+      cancelled = true;
+      nextUrls.forEach((url) => revokeSamplePreviewUrl(url));
+    };
+  }, [previewSamples]);
 
   return (
     <div className="space-y-2">
@@ -588,8 +600,8 @@ const ClassPreviewItem: FunctionComponent<{
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
 function AnalyzeSkeleton() {
   return (
@@ -609,5 +621,5 @@ function AnalyzeSkeleton() {
         ))}
       </div>
     </div>
-  )
+  );
 }
