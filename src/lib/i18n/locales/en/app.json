@@ -52,6 +52,14 @@
         "title": "Delete class?",
         "description": "Delete \"{{name}}\" and all of its samples? This cannot be undone.",
         "confirm": "Delete"
+      },
+      "addImages": {
+        "title": "Add images for each class you want to recognize",
+        "subtitle": "Variety within each class helps the model generalize to images it has never seen.",
+        "guide1": "Mix angles, backgrounds, and lighting — avoid repetitive shots",
+        "guide2": "Keep subjects sharp and centered — model input is 224×224px",
+        "guide3": "Keep image counts balanced across all classes",
+        "tip": "Capture in conditions similar to where the model will actually run."
       }
     }
   }

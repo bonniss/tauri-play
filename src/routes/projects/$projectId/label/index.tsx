@@ -8,9 +8,13 @@ import {
   Text,
 } from '@mantine/core';
 import {
+  IconArrowsShuffle,
+  IconBulb,
   IconChevronRight,
   IconDots,
   IconDownload,
+  IconFocusCentered,
+  IconScale,
   IconSettings,
   IconTrash,
 } from '@tabler/icons-react';
@@ -436,6 +440,34 @@ function ProjectLabelPage() {
             </Popover.Dropdown>
           </Popover>
         </div>
+        <div className="overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-700">
+          <div className="px-4 py-3">
+            <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
+              {t('project.label.addImages.title')}
+            </p>
+            <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+              {t('project.label.addImages.subtitle')}
+            </p>
+          </div>
+          <div className="grid grid-cols-3 gap-4 border-t border-zinc-100 px-4 py-3 dark:border-zinc-800">
+            <div className="flex items-start gap-2">
+              <IconArrowsShuffle className="mt-0.5 size-3.5 shrink-0 text-zinc-400" stroke={1.8} />
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('project.label.addImages.guide1')}</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <IconFocusCentered className="mt-0.5 size-3.5 shrink-0 text-zinc-400" stroke={1.8} />
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('project.label.addImages.guide2')}</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <IconScale className="mt-0.5 size-3.5 shrink-0 text-zinc-400" stroke={1.8} />
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('project.label.addImages.guide3')}</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-2 border-t border-zinc-100 px-4 py-2.5 dark:border-zinc-800">
+            <IconBulb className="mt-0.5 size-3.5 shrink-0 text-amber-500" stroke={1.8} />
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('project.label.addImages.tip')}</p>
+          </div>
+        </div>
         <Group grow wrap="nowrap">
           <ProjectActionButton
             action="camera"
@@ -495,7 +527,7 @@ function ProjectLabelPage() {
                   <ContentEditable
                     as="span"
                     aria-label={`Class name ${item.name}`}
-                    className="inline-block w-fit max-w-full truncate rounded px-1 py-0.5 text-sm font-semibold"
+                    className="font-serif font-semibold inline-block w-fit max-w-full truncate rounded px-1 py-0.5 text-sm font-semibold"
                     focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
                     onBlur={(value) => {
                       updateClassName(item.id, value);
