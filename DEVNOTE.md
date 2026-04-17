@@ -222,3 +222,63 @@ Tauri uses WebKit:
 
 - `earlyStopping` exists in settings and UI, but is not fully wired into the TensorFlow.js fit flow yet.
 - Training still runs correctly; this is currently a known follow-up item rather than a blocker.
+
+## MobileNet Self-Hosting (Production Fix)
+
+### Why self-hosting
+
+Tauri production builds enforce a strict CSP (`default-src 'self'`). This blocks `fetch()` to external CDNs at runtime, including TFHub. The model must be bundled into the app's `public/` directory and served locally.
+
+### Model source
+
+The app uses: **MobileNet v2, alpha=1.0, input 224×224, feature-vector variant**
+
+Downloaded from: `https://www.kaggle.com/models/google/mobilenet-v2/tfJs/100-224-feature-vector`
+
+Stored at: `public/models/mobilenet/v2/` (gitignored — large binary files)
+
+Files: `model.json` + `group1-shard1of3.bin`, `group1-shard2of3.bin`, `group1-shard3of3.bin`
+
+Loaded via: `mobilenet.load({ version: 2, alpha: 1, modelUrl: '/models/mobilenet/v2/model.json' })`
+
+### Why feature-vector, not classification
+
+The `@tensorflow-models/mobilenet` package's `infer(img, true)` extracts embeddings by executing the graph up to node `module_apply_default/MobilenetV2/Logits/AvgPool`. This node exists in both the classification and feature-vector variants. The feature-vector model is the canonical source for transfer learning.
+
+### TFHub URL resolution (for reference)
+
+The mobilenet package constructs the TFHub fetch URL as:
+```
+https://tfhub.dev/google/imagenet/mobilenet_v2_100_224/classification/2/model.json?tfjs-format=file
+```
+(via `getTFHubUrl()` in `@tensorflow/tfjs-converter`, appends `/model.json?tfjs-format=file`)
+
+As of mid-2025, TFHub redirects to Kaggle GCS (`storage.googleapis.com/kagglesdsdata/...`) which returns 403. Self-hosting is the only viable offline path.
+
+### Critical: input normalization
+
+`mobilenet.infer()` **always** normalizes its input from `[0, 255]` to `[0, 1]` internally using:
+```
+normalized = img * normalizationConstant + inputMin
+           = img * (1/255) + 0   // for inputRange: [0, 1]
+```
+The model graph then applies its own `hub_input` ops: `[0, 1] → [-1, 1]` (standard MobileNet preprocessing).
+
+**Do NOT pre-normalize images before passing to `infer()`.** Pass raw `[0, 255]` float tensors.
+
+If you divide by 255 before calling `infer()`, the effective input becomes `[0, 0.004]`, which after hub_input normalization collapses to `[-1, -0.99]` for all images — completely degenerate embeddings → random-chance accuracy.
+
+**`fileToImageTensor` returns `[0, 255]` floats (no `.div(255)`) for this reason.**
+
+### Sample file reading in production
+
+Sample images are stored with `BaseDirectory.AppData` (relative path `projects/{id}/samples/{classId}/{sampleId}.ext`).
+
+Always read with:
+```ts
+readFile(sample.filePath, { baseDir: BaseDirectory.AppData })
+```
+
+Omitting `baseDir` resolves the path against the wrong directory in production builds. In dev, Tauri may be more permissive, masking this bug.
+
+Using `fetch()` with `convertFileSrc()` (asset:// URLs) for reading sample bytes also fails in production — the CSP has no `connect-src` for `asset:`, so `fetch()` is blocked. `asset://` URLs are valid only as `<img src>` (covered by `img-src asset:`), not as fetch targets.

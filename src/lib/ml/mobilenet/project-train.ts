@@ -1,8 +1,11 @@
+import { BaseDirectory, readFile } from "@tauri-apps/plugin-fs"
 import type * as tf from "@tensorflow/tfjs"
+import type {
+  ModelTrainLogDatasetSnapshot,
+  ModelTrainLogEvent,
+} from "~/lib/db/domain/models"
 import { initTf } from "~/lib/ml/backend"
-import {
-  buildMobilenetEmbeddingDatasetFromGroups,
-} from "~/lib/ml/mobilenet/dataset"
+import { buildMobilenetEmbeddingDatasetFromGroups } from "~/lib/ml/mobilenet/dataset"
 import {
   MOBILENET_ALPHA,
   MOBILENET_VERSION,
@@ -12,11 +15,6 @@ import {
 import { saveMobilenetClassifierModel } from "~/lib/ml/mobilenet/storage"
 import { trainMobilenetClassifier } from "~/lib/ml/mobilenet/train"
 import { fileToImageTensor } from "~/lib/ml/sample/image"
-import type {
-  ModelTrainLogDatasetSnapshot,
-  ModelTrainLogEvent,
-} from "~/lib/db/domain/models"
-import { createSamplePreviewUrl } from "~/lib/project/sample-preview"
 
 type TrainableSample = {
   filePath: string
@@ -47,7 +45,9 @@ function splitClassSamples(
   validationSplit: number,
 ): SplitClassResult {
   const orderedSamples = [...trainableClass.samples].sort((left, right) =>
-    createDeterministicOrder(left).localeCompare(createDeterministicOrder(right)),
+    createDeterministicOrder(left).localeCompare(
+      createDeterministicOrder(right),
+    ),
   )
   const rawValidationCount = Math.round(orderedSamples.length * validationSplit)
   const validationCount = Math.min(
@@ -59,33 +59,44 @@ function splitClassSamples(
     classId: trainableClass.id,
     className: trainableClass.name,
     allSamples: orderedSamples.length,
-    trainSamples: orderedSamples.slice(0, orderedSamples.length - validationCount),
-    validationSamples: orderedSamples.slice(orderedSamples.length - validationCount),
+    trainSamples: orderedSamples.slice(
+      0,
+      orderedSamples.length - validationCount,
+    ),
+    validationSamples: orderedSamples.slice(
+      orderedSamples.length - validationCount,
+    ),
   }
 }
 
+function guessMimeType(filePath: string) {
+  const lower = filePath.toLowerCase()
+
+  if (lower.endsWith(".png")) return "image/png"
+  if (lower.endsWith(".webp")) return "image/webp"
+  if (lower.endsWith(".gif")) return "image/gif"
+  if (lower.endsWith(".bmp")) return "image/bmp"
+  if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg"
+
+  return "application/octet-stream"
+}
+
 async function loadSampleAsFile(sample: TrainableSample) {
-  const previewUrl = await createSamplePreviewUrl(sample.filePath)
+  const bytes = await readFile(sample.filePath, {
+    baseDir: BaseDirectory.AppData,
+  })
 
-  try {
-    const response = await fetch(previewUrl)
+  const fileName =
+    sample.originalFileName ??
+    sample.filePath.split(/[\\/]/).pop() ??
+    `${sample.id}.jpg`
 
-    if (!response.ok) {
-      throw new Error(`Failed to read sample ${sample.id}.`)
-    }
+  const type = guessMimeType(fileName)
 
-    const blob = await response.blob()
-    const fileName =
-      sample.originalFileName ??
-      sample.filePath.split("/").pop() ??
-      `${sample.id}.jpg`
-
-    return new File([blob], fileName, {
-      type: blob.type || "image/jpeg",
-    })
-  } finally {
-    URL.revokeObjectURL(previewUrl)
-  }
+  return new File([bytes], fileName, {
+    type,
+    lastModified: Date.now(),
+  })
 }
 
 export type ProjectTrainDatasetSnapshot = ModelTrainLogDatasetSnapshot
@@ -194,7 +205,10 @@ export async function trainProjectMobilenetModel({
     )
     const datasetSnapshot: ProjectTrainDatasetSnapshot = {
       classCount: splitResults.length,
-      totalSamples: splitResults.reduce((sum, item) => sum + item.allSamples, 0),
+      totalSamples: splitResults.reduce(
+        (sum, item) => sum + item.allSamples,
+        0,
+      ),
       trainSamples: splitResults.reduce(
         (sum, item) => sum + item.trainSamples.length,
         0,
@@ -223,7 +237,9 @@ export async function trainProjectMobilenetModel({
 
     const trainGroups = await Promise.all(
       splitResults.map(async (item, labelIndex) => ({
-        files: await Promise.all(item.trainSamples.map((sample) => loadSampleAsFile(sample))),
+        files: await Promise.all(
+          item.trainSamples.map((sample) => loadSampleAsFile(sample)),
+        ),
         labelIndex,
       })),
     )
