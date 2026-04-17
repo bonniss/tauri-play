@@ -16,8 +16,8 @@ const MarkdownField: FunctionComponent<MarkdownFieldProps> = (props) => {
     label,
     description,
     required,
-    disabled,
-    readOnly,
+    // disabled,
+    // readOnly,
     ref,
   } = useField()
 
