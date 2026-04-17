@@ -114,6 +114,22 @@ const Component: FunctionComponent<ComponentProps> = () => {
 export default Component
 ```
 
+### i18n
+
+- All user-facing strings go through `t()` from `~/lib/i18n`. No hardcoded strings in components.
+- Locale files live in `src/lib/i18n/locales/{locale}/app.json`.
+- Group keys by feature area (`home.hero.title`, `settings.language`). Put repeated cross-feature strings under `common.*`.
+- Use imperative, neutral tone for actions. No second-person address (`"Tạo dự án"` not `"Bạn hãy tạo"`).
+
+#### Terms to keep in English (do not translate)
+
+Domain and workflow terms that practitioners use in English regardless of locale:
+
+- Workflow tabs: `Label`, `Train`, `Play`
+- ML concepts: `Model`, `Class`, `Sample`, `Dataset`, `Epoch`, `Batch Size`, `Learning Rate`, `Validation Split`, `Accuracy`, `Loss`, `MobileNet`, `Transfer Learning`
+
+Everything else should be translated, including `Project`, `Settings`, `Description`, and general UI copy.
+
 ### UI
 
 - Use Tailwind for layout, spacing, flex/grid, sizing, positioning, and basic text styling.
