@@ -13,5 +13,46 @@
       "description": "Thu thập ảnh, gán nhãn, train model và thử nghiệm trực tiếp — tất cả chạy ngay trên máy của bạn.",
       "cta": "Dự án mới"
     }
+  },
+  "common": {
+    "cancel": "Hủy",
+    "apply": "Áp dụng",
+    "settings": "Cài đặt",
+    "delete": "Xóa",
+    "export": "Xuất",
+    "close": "Đóng",
+    "upload": "Tải lên",
+    "unlimited": "Không giới hạn"
+  },
+  "project": {
+    "sidebar": {
+      "descriptionPlaceholder": "Thêm mô tả dự án",
+      "dataset": "Dataset",
+      "allImages": "Tất cả ảnh"
+    },
+    "nav": {
+      "label": "Label",
+      "train": "Train",
+      "play": "Play"
+    },
+    "label": {
+      "title": "Label",
+      "settingsTitle": "Cài đặt Label",
+      "camera": "Camera",
+      "closeCamera": "Đóng Camera",
+      "noImages": "Class này chưa có ảnh nào.",
+      "exportSoon": "Tính năng xuất sẽ sớm có.",
+      "settings": {
+        "minClasses": "Số class tối thiểu",
+        "maxClasses": "Số class tối đa",
+        "minSamplesPerClass": "Số Sample tối thiểu mỗi class",
+        "maxSamplesPerClass": "Số Sample tối đa mỗi class"
+      },
+      "deleteClass": {
+        "title": "Xóa class?",
+        "description": "Xóa \"{{name}}\" và toàn bộ ảnh trong class? Thao tác này không thể hoàn tác.",
+        "confirm": "Xóa"
+      }
+    }
   }
 }

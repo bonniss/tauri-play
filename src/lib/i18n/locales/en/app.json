@@ -13,5 +13,46 @@
       "description": "Collect photos, label classes, train a model, and test it live — everything runs locally on your device.",
       "cta": "New Project"
     }
+  },
+  "common": {
+    "cancel": "Cancel",
+    "apply": "Apply",
+    "settings": "Settings",
+    "delete": "Delete",
+    "export": "Export",
+    "close": "Close",
+    "upload": "Upload",
+    "unlimited": "Unlimited"
+  },
+  "project": {
+    "sidebar": {
+      "descriptionPlaceholder": "Add project description",
+      "dataset": "Dataset",
+      "allImages": "All Images"
+    },
+    "nav": {
+      "label": "Label",
+      "train": "Train",
+      "play": "Play"
+    },
+    "label": {
+      "title": "Label",
+      "settingsTitle": "Label Settings",
+      "camera": "Camera",
+      "closeCamera": "Close Camera",
+      "noImages": "No images in this class yet.",
+      "exportSoon": "Export will come next.",
+      "settings": {
+        "minClasses": "Min classes",
+        "maxClasses": "Max classes",
+        "minSamplesPerClass": "Min samples per class",
+        "maxSamplesPerClass": "Max samples per class"
+      },
+      "deleteClass": {
+        "title": "Delete class?",
+        "description": "Delete \"{{name}}\" and all of its samples? This cannot be undone.",
+        "confirm": "Delete"
+      }
+    }
   }
 }

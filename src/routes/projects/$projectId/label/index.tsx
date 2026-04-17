@@ -19,6 +19,7 @@ import {
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useMemo, useState } from 'react';
+import { t, useLocale } from '~/lib/i18n';
 import { toast } from 'sonner';
 import CameraUI from '~/components/camera/CameraUI';
 import { CaptureSession } from '~/components/camera/types';
@@ -41,42 +42,6 @@ export const Route = createFileRoute('/projects/$projectId/label/')({
   component: ProjectLabelPage,
 });
 
-const labelSettingsForm = defineConfig<ProjectLabelSettingsFormValues>({
-  minClasses: {
-    type: 'numeric',
-    label: 'Min classes',
-    props: {
-      allowDecimal: false,
-      min: 2,
-    },
-  },
-  maxClasses: {
-    type: 'numeric',
-    label: 'Max classes',
-    props: {
-      allowDecimal: false,
-      min: 2,
-      placeholder: 'Unlimited',
-    },
-  },
-  minSamplesPerClass: {
-    type: 'numeric',
-    label: 'Min samples per class',
-    props: {
-      allowDecimal: false,
-      min: 10,
-    },
-  },
-  maxSamplesPerClass: {
-    type: 'numeric',
-    label: 'Max samples per class',
-    props: {
-      allowDecimal: false,
-      min: 10,
-      placeholder: 'Unlimited',
-    },
-  },
-});
 
 type CameraTargetState = {
   classId: string;
@@ -85,6 +50,29 @@ type CameraTargetState = {
 };
 
 function ProjectLabelPage() {
+  useLocale()
+  const labelSettingsForm = useMemo(() => defineConfig<ProjectLabelSettingsFormValues>({
+    minClasses: {
+      type: 'numeric',
+      label: t('project.label.settings.minClasses'),
+      props: { allowDecimal: false, min: 2 },
+    },
+    maxClasses: {
+      type: 'numeric',
+      label: t('project.label.settings.maxClasses'),
+      props: { allowDecimal: false, min: 2, placeholder: t('common.unlimited') },
+    },
+    minSamplesPerClass: {
+      type: 'numeric',
+      label: t('project.label.settings.minSamplesPerClass'),
+      props: { allowDecimal: false, min: 10 },
+    },
+    maxSamplesPerClass: {
+      type: 'numeric',
+      label: t('project.label.settings.maxSamplesPerClass'),
+      props: { allowDecimal: false, min: 10, placeholder: t('common.unlimited') },
+    },
+  }), [])
   const {
     addSamplesToClass,
     applyLabelSettings,
@@ -393,7 +381,7 @@ function ProjectLabelPage() {
     <Paper className="p-4">
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-2xl font-semibold tracking-tight">Label</h2>
+          <h2 className="text-2xl font-semibold tracking-tight">{t('project.label.title')}</h2>
           <Popover
             onDismiss={() => {
               setLabelSettingsOpened(false);
@@ -412,7 +400,7 @@ function ProjectLabelPage() {
                 }}
                 variant="default"
               >
-                Settings
+                {t('common.settings')}
               </Button>
             </Popover.Target>
             <Popover.Dropdown>
@@ -427,7 +415,7 @@ function ProjectLabelPage() {
                 renderRoot={({ children, onSubmit }) => (
                   <form className="space-y-3" onSubmit={onSubmit}>
                     <Text fw={600} size="sm">
-                      Label Settings
+                      {t('project.label.settingsTitle')}
                     </Text>
                     {children}
                     <Group justify="flex-end">
@@ -438,10 +426,10 @@ function ProjectLabelPage() {
                         type="button"
                         variant="default"
                       >
-                        Cancel
+                        {t('common.cancel')}
                       </Button>
                       <Button loading={isApplyingLabelSettings} type="submit">
-                        Apply
+                        {t('common.apply')}
                       </Button>
                     </Group>
                   </form>
@@ -464,10 +452,10 @@ function ProjectLabelPage() {
               void openInlineCamera({ slot: 'top' });
             }}
           >
-            {isTopCameraOpen ? 'Close Camera' : 'Camera'}
+            {isTopCameraOpen ? t('project.label.closeCamera') : t('project.label.camera')}
           </ProjectActionButton>
           <UploadSamplesButton
-            buttonLabel="Upload"
+            buttonLabel={t('common.upload')}
             className="flex-1"
           />
         </Group>
@@ -548,11 +536,11 @@ function ProjectLabelPage() {
                     >
                       {cameraTargetState?.slot === 'class' &&
                       cameraTargetState.classId === item.id
-                        ? 'Close'
-                        : 'Camera'}
+                        ? t('common.close')
+                        : t('project.label.camera')}
                     </ProjectActionButton>
                   <UploadSamplesButton
-                      buttonLabel="Upload"
+                      buttonLabel={t('common.upload')}
                       classId={item.id}
                       onUploadStateChange={handleUploadStateChange}
                       size="xs"
@@ -571,15 +559,15 @@ function ProjectLabelPage() {
                             setDeleteClassId(item.id);
                           }}
                         >
-                          Delete
+                          {t('common.delete')}
                         </Menu.Item>
                         <Menu.Item
                           leftSection={<IconDownload size={14} />}
                           onClick={() => {
-                            toast.message('Export will come next.');
+                            toast.message(t('project.label.exportSoon'));
                           }}
                         >
-                          Export
+                          {t('common.export')}
                         </Menu.Item>
                       </Menu.Dropdown>
                     </Menu>
@@ -606,7 +594,7 @@ function ProjectLabelPage() {
                   />
                   {!item.samples.length ? (
                     <Text c="dimmed" className="mt-3" size="sm">
-                      No images in this class yet.
+                      {t('project.label.noImages')}
                     </Text>
                   ) : null}
                 </Box>
@@ -622,12 +610,12 @@ function ProjectLabelPage() {
           setDeleteClassId(null);
         }}
         opened={pendingDeleteClass != null}
-        title="Delete class?"
+        title={t('project.label.deleteClass.title')}
       >
         <div className="space-y-4">
           <Text c="dimmed" size="sm">
             {pendingDeleteClass
-              ? `Delete "${pendingDeleteClass.name}" and all of its samples? This cannot be undone.`
+              ? t('project.label.deleteClass.description', { params: { name: pendingDeleteClass.name } })
               : ''}
           </Text>
           <Group justify="flex-end">
@@ -637,10 +625,10 @@ function ProjectLabelPage() {
               }}
               variant="default"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button color="red" onClick={() => void handleDeleteClass()}>
-              Delete
+              {t('project.label.deleteClass.confirm')}
             </Button>
           </Group>
         </div>

@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, Outlet, useRouterState } from '@tanstack/react-router';
 import { FunctionComponent, ReactNode } from 'react';
 import ContentEditable from '~/components/headless/ContentEditable';
+import { t, useLocale } from '~/lib/i18n';
 import { type ProjectWorkspace, updateProject } from '~/lib/db/domain/projects';
 import { IconDataLabel, IconDataPlay, IconDataTrain } from '../icon/semantic';
 import { useProjectOne } from './ProjectOneProvider';
@@ -15,6 +16,7 @@ import { useProjectOne } from './ProjectOneProvider';
 interface ProjectOneLayoutProps {}
 
 const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
+  useLocale()
   const {
     projectId,
     classes,
@@ -139,7 +141,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
             onBlur={async (value) => {
               await saveProjectField({ description: value });
             }}
-            placeholder="Add project description"
+            placeholder={t('project.sidebar.descriptionPlaceholder')}
             value={project?.description ?? ''}
           />
         </div>
@@ -149,14 +151,14 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
             <ProjectNavItem
               current={pathname === `/projects/${projectId}/label`}
               icon={IconDataLabel}
-              label="Label"
+              label={t('project.nav.label')}
               projectId={projectId}
               to="/projects/$projectId/label"
             />
             <ProjectNavItem
               current={pathname === `/projects/${projectId}/train`}
               icon={IconDataTrain}
-              label="Train"
+              label={t('project.nav.train')}
               progress={trainNavProgress}
               projectId={projectId}
               trainStatus={trainStatus}
@@ -166,7 +168,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
               current={pathname === `/projects/${projectId}/play`}
               disabled={!canPlay}
               icon={IconDataPlay}
-              label="Play"
+              label={t('project.nav.play')}
               projectId={projectId}
               to="/projects/$projectId/play"
             />
@@ -175,11 +177,11 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
 
         <div className="px-4 py-4">
           <Text c="dimmed" fw={600} size="xs" tt="uppercase" className="tracking-widest">
-            Dataset
+            {t('project.sidebar.dataset')}
           </Text>
           <div className="mt-3 space-y-3">
             <SidebarDatasetItem
-              label="All Images"
+              label={t('project.sidebar.allImages')}
               progress={trainProgress}
               trailing={`${totalSamples}`}
             />
