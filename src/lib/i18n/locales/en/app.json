@@ -62,6 +62,49 @@
         "tip": "Capture in conditions similar to where the model will actually run."
       }
     },
+    "play": {
+      "title": "Play",
+      "description": "Configure how people will experience {{name}}, then launch the project demo page.",
+      "currentMode": "Current mode: {{mode}}",
+      "start": "Start",
+      "back": "Back",
+      "form": {
+        "mode": "Demo mode",
+        "modeUploadLabel": "Upload",
+        "modeUploadDescription": "Upload an image to get a prediction",
+        "modeLiveLabel": "Live",
+        "modeLiveDescription": "Use your camera for real-time predictions",
+        "autoPredictOnUpload": "Auto predict on upload",
+        "autoPredictOnUploadDescription": "Automatically run predictions after uploading an image or video",
+        "showConfidenceScores": "Show confidence scores",
+        "showConfidenceScoresDescription": "Display how confident the model is for each prediction",
+        "showAllClasses": "Show all classes",
+        "showAllClassesDescription": "Show predictions for all classes instead of only the top results",
+        "topK": "Top results",
+        "topKDescription": "Number of highest-confidence predictions to display",
+        "confidenceThreshold": "Confidence threshold",
+        "confidenceThresholdDescription": "Only show predictions with confidence above this value"
+      },
+      "demo": {
+        "noModel": "This project does not have a trained model yet.",
+        "dropzone": "Drop an image here, or click to browse from your device.",
+        "currentFile": "Current file: {{name}}",
+        "predict": "Predict",
+        "liveCamera": "Live Camera",
+        "analyzingFeed": "Analyzing live feed",
+        "waitingCamera": "Waiting for camera",
+        "modelSection": "Model",
+        "classesSection": "Classes",
+        "descriptionSection": "Description",
+        "noDescription": "No project description yet.",
+        "noSamples": "No samples yet",
+        "updatedAt": "Updated {{time}}",
+        "analyzing": "Analyzing...",
+        "notConfident": "Not confident enough",
+        "confidence": "Confidence {{percent}}% · {{ms}} ms",
+        "confidenceDisabled": "Confidence display is disabled for this play mode."
+      }
+    },
     "train": {
       "title": "Train",
       "startTraining": "Start Training",

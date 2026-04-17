@@ -27,6 +27,7 @@ import {
   ProjectOneProvider,
   useProjectOne,
 } from "~/components/project/ProjectOneProvider"
+import { t, useLocale } from "~/lib/i18n"
 import {
   createSamplePreviewUrl,
   revokeSamplePreviewUrl,
@@ -50,11 +51,11 @@ function ProjectPlayerRoute() {
   )
 }
 
-function formatRelativeTime(input: string) {
+function formatRelativeTime(input: string, locale: string) {
   const value = new Date(input).getTime()
   const diffMs = value - Date.now()
   const diffMinutes = Math.round(diffMs / 60000)
-  const formatter = new Intl.RelativeTimeFormat("en", { numeric: "auto" })
+  const formatter = new Intl.RelativeTimeFormat(locale, { numeric: "auto" })
 
   if (Math.abs(diffMinutes) < 60) {
     return formatter.format(diffMinutes, "minute")
@@ -103,6 +104,7 @@ function pickSeededSamples<T extends { id: string }>(
 }
 
 function ProjectPlayerPage() {
+  useLocale()
   const { isLoading, playSettings, projectIcon, projectId, projectName } =
     useProjectOne()
 
@@ -132,7 +134,7 @@ function ProjectPlayerPage() {
             to="/projects/$projectId/play"
             variant="default"
           >
-            Back
+            {t('project.play.back')}
           </Button>
         </div>
       </div>
@@ -147,6 +149,7 @@ function ProjectPlayerPage() {
 }
 
 const UploadPlayExperience: FunctionComponent = () => {
+  useLocale()
   const { playSettings } = useProjectOne()
   const {
     clearPrediction,
@@ -180,7 +183,7 @@ const UploadPlayExperience: FunctionComponent = () => {
   if (!projectModel) {
     return (
       <Alert color="yellow" variant="light">
-        This project does not have a trained model yet.
+        {t('project.play.demo.noModel')}
       </Alert>
     )
   }
@@ -249,12 +252,11 @@ const UploadPlayExperience: FunctionComponent = () => {
                       hasPreview ? "text-sm" : "text-base leading-7"
                     }`}
                   >
-                    Drop an image here, <br /> or click to browse from your
-                    device.
+                    {t('project.play.demo.dropzone')}
                   </p>
                   {selectedFile ? (
                     <p className="truncate text-sm text-zinc-500 dark:text-zinc-400">
-                      Current file: {selectedFile.name}
+                      {t('project.play.demo.currentFile', { params: { name: selectedFile.name } })}
                     </p>
                   ) : null}
                 </div>
@@ -277,7 +279,7 @@ const UploadPlayExperience: FunctionComponent = () => {
                     size="md"
                     variant="default"
                   >
-                    Predict
+                    {t('project.play.demo.predict')}
                   </Button>
                 </div>
               ) : null}
@@ -307,6 +309,7 @@ const UploadPlayExperience: FunctionComponent = () => {
 }
 
 const CameraPlayExperience: FunctionComponent = () => {
+  useLocale()
   const { prediction, projectModel, runPredictionFromVideo, runtimeError } =
     useProjectPlayRuntime()
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -336,7 +339,7 @@ const CameraPlayExperience: FunctionComponent = () => {
   if (!projectModel) {
     return (
       <Alert color="yellow" variant="light">
-        This project does not have a trained model yet.
+        {t('project.play.demo.noModel')}
       </Alert>
     )
   }
@@ -361,12 +364,12 @@ const CameraPlayExperience: FunctionComponent = () => {
                 <div className="flex h-full flex-col justify-between p-4">
                   <div className="flex items-center justify-between gap-2">
                     <div className="rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-xs font-medium uppercase tracking-[0.18em] text-white/80 backdrop-blur-sm">
-                      Live Camera
+                      {t('project.play.demo.liveCamera')}
                     </div>
                     <div className="rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-xs text-white/70 backdrop-blur-sm">
                       {context.cameraState === "ready"
-                        ? "Analyzing live feed"
-                        : "Waiting for camera"}
+                        ? t('project.play.demo.analyzingFeed')
+                        : t('project.play.demo.waitingCamera')}
                     </div>
                   </div>
                   {runtimeError ? (
@@ -390,6 +393,7 @@ const PlayExperienceShell: FunctionComponent<{
   children: ReactNode
   trainedAt: string
 }> = ({ children, trainedAt }) => {
+  const locale = useLocale()
   const { classes, projectDescription } = useProjectOne()
 
   return (
@@ -397,19 +401,16 @@ const PlayExperienceShell: FunctionComponent<{
       <aside className="space-y-6">
         <section className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
-            Model
+            {t('project.play.demo.modelSection')}
           </p>
           <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-            Updated{" "}
-            <span className="font-medium text-zinc-900 dark:text-zinc-100">
-              {formatRelativeTime(trainedAt)}
-            </span>
+            {t('project.play.demo.updatedAt', { params: { time: formatRelativeTime(trainedAt, locale) } })}
           </p>
         </section>
 
         <section className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
-            Classes
+            {t('project.play.demo.classesSection')}
           </p>
           <div className="space-y-4">
             {classes.map((projectClass) => (
@@ -425,11 +426,11 @@ const PlayExperienceShell: FunctionComponent<{
 
         <section className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
-            Description
+            {t('project.play.demo.descriptionSection')}
           </p>
           <div className="max-h-72 overflow-y-auto pr-2 text-sm leading-7 text-zinc-600 dark:text-zinc-300">
             <div className="whitespace-pre-wrap">
-              {projectDescription || "No project description yet."}
+              {projectDescription || t('project.play.demo.noDescription')}
             </div>
           </div>
         </section>
@@ -441,6 +442,7 @@ const PlayExperienceShell: FunctionComponent<{
 }
 
 const PredictionPanel: FunctionComponent = () => {
+  useLocale()
   const { playSettings } = useProjectOne()
   const {
     isAnalyzing,
@@ -465,16 +467,20 @@ const PredictionPanel: FunctionComponent = () => {
               }
             >
               {isAnalyzing
-                ? "Analyzing..."
+                ? t('project.play.demo.analyzing')
                 : meetsThreshold && topResult
                   ? topResult.className
-                  : "Not confident enough"}
+                  : t('project.play.demo.notConfident')}
             </span>
           </h2>
           {playSettings.showConfidenceScores && prediction && topResult ? (
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Confidence {(topResult.confidence * 100).toFixed(1)}% ·{" "}
-              {prediction.predictTimeMs.toFixed(1)} ms
+              {t('project.play.demo.confidence', {
+                params: {
+                  percent: (topResult.confidence * 100).toFixed(1),
+                  ms: prediction.predictTimeMs.toFixed(1),
+                },
+              })}
             </p>
           ) : null}
         </div>
@@ -508,7 +514,7 @@ const PredictionPanel: FunctionComponent = () => {
               ))
             ) : (
               <div className="rounded-2xl bg-zinc-100 px-4 py-4 text-sm text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
-                Confidence display is disabled for this play mode.
+                {t('project.play.demo.confidenceDisabled')}
               </div>
             )}
           </div>
@@ -526,6 +532,7 @@ const ClassPreviewItem: FunctionComponent<{
     id: string
   }>
 }> = ({ classId, name, samples }) => {
+  useLocale()
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
   const previewSamples = useMemo(
     () => pickSeededSamples(samples, classId, 4),
@@ -576,7 +583,7 @@ const ClassPreviewItem: FunctionComponent<{
           ))
         ) : (
           <div className="flex h-[60px] w-full items-center rounded-xl border border-dashed border-zinc-200 px-3 text-xs text-zinc-400 dark:border-zinc-800">
-            No samples yet
+            {t('project.play.demo.noSamples')}
           </div>
         )}
       </div>

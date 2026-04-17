@@ -62,6 +62,49 @@
         "tip": "Chụp trong điều kiện tương tự thực tế khi model được dùng."
       }
     },
+    "play": {
+      "title": "Play",
+      "description": "Cấu hình cách người dùng trải nghiệm {{name}}, sau đó khởi chạy trang demo.",
+      "currentMode": "Chế độ hiện tại: {{mode}}",
+      "start": "Bắt đầu",
+      "back": "Quay lại",
+      "form": {
+        "mode": "Chế độ demo",
+        "modeUploadLabel": "Upload",
+        "modeUploadDescription": "Tải ảnh lên để nhận dự đoán",
+        "modeLiveLabel": "Live",
+        "modeLiveDescription": "Dùng camera để nhận dự đoán theo thời gian thực",
+        "autoPredictOnUpload": "Tự động dự đoán khi tải lên",
+        "autoPredictOnUploadDescription": "Tự động chạy dự đoán sau khi tải ảnh hoặc video",
+        "showConfidenceScores": "Hiển thị độ tin cậy",
+        "showConfidenceScoresDescription": "Hiển thị mức độ tin cậy của model cho từng dự đoán",
+        "showAllClasses": "Hiển thị tất cả class",
+        "showAllClassesDescription": "Hiển thị dự đoán cho tất cả class thay vì chỉ kết quả hàng đầu",
+        "topK": "Số kết quả hàng đầu",
+        "topKDescription": "Số dự đoán có độ tin cậy cao nhất cần hiển thị",
+        "confidenceThreshold": "Ngưỡng độ tin cậy",
+        "confidenceThresholdDescription": "Chỉ hiển thị dự đoán có độ tin cậy vượt ngưỡng này"
+      },
+      "demo": {
+        "noModel": "Dự án này chưa có model được train.",
+        "dropzone": "Kéo ảnh vào đây, hoặc click để chọn từ thiết bị.",
+        "currentFile": "File hiện tại: {{name}}",
+        "predict": "Dự đoán",
+        "liveCamera": "Live Camera",
+        "analyzingFeed": "Đang phân tích",
+        "waitingCamera": "Đang chờ camera",
+        "modelSection": "Model",
+        "classesSection": "Classes",
+        "descriptionSection": "Mô tả",
+        "noDescription": "Dự án chưa có mô tả.",
+        "noSamples": "Chưa có ảnh",
+        "updatedAt": "Cập nhật {{time}}",
+        "analyzing": "Đang phân tích...",
+        "notConfident": "Không đủ độ tin cậy",
+        "confidence": "Độ tin cậy {{percent}}% · {{ms}} ms",
+        "confidenceDisabled": "Tắt hiển thị độ tin cậy ở chế độ này."
+      }
+    },
     "train": {
       "title": "Train",
       "startTraining": "Bắt đầu Train",
