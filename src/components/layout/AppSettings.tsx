@@ -1,7 +1,5 @@
 import { Button, Group, Modal, Radio, Text } from "@mantine/core"
 import { FunctionComponent } from "react"
-import usFlag from "~/assets/flags/us.svg"
-import vnFlag from "~/assets/flags/vn.svg"
 import { setLocale, t, useLocale } from "~/lib/i18n"
 import { useAppProvider } from "./AppProvider"
 import AppInfo from "./settings/AppInfo"
@@ -32,8 +30,8 @@ const AppSettings: FunctionComponent<AppSettingsProps> = () => {
             <Radio.Group onChange={setLocale} value={locale}>
               <div className="flex gap-4">
                 {[
-                  { flag: usFlag, label: "English", value: "en" },
-                  { flag: vnFlag, label: "Tieng Viet", value: "vi" },
+                  { flag: '/flags/us.svg', label: "English", value: "en" },
+                  { flag: '/flags/vn.svg', label: "Tieng Viet", value: "vi" },
                 ].map((item) => (
                   <Radio.Card
                     checked={locale === item.value}

@@ -4,7 +4,7 @@ import { AppProvider } from "./components/layout/AppProvider"
 import { isProd } from "./lib/env"
 import { setupI18n } from "./lib/i18n"
 import { AppRouter } from "./router"
-
+import "./styles/index.css"
 ;(function setup() {
   console.info("Setup app")
   // disable right click menu

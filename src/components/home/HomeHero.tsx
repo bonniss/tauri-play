@@ -2,19 +2,13 @@ import { Button } from '@mantine/core';
 import { IconArrowRight } from '@tabler/icons-react';
 import { Link } from '@tanstack/react-router';
 import { FunctionComponent } from 'react';
-import antlerDeer from '~/assets/animals/antler-deer.svg';
-import bear from '~/assets/animals/bear.svg';
-import crocodile from '~/assets/animals/crocodile.svg';
-import elephant from '~/assets/animals/elephant.svg';
-import hippo from '~/assets/animals/hippo.svg';
-import tiger from '~/assets/animals/tiger.svg';
 import { t, useLocale } from '~/lib/i18n';
 
 const heroAnimals = [
   {
     accent: "from-emerald-300/85 to-teal-200/55",
     confidence: "98.1%",
-    image: tiger,
+    image: '/animals/tiger.svg',
     label: "Tiger",
     position: "left-[4%] top-[8%] z-20",
     scoreColor: "text-emerald-500 dark:text-emerald-300",
@@ -32,7 +26,7 @@ const heroAnimals = [
   {
     accent: "from-sky-300/80 to-cyan-200/55",
     confidence: "96.7%",
-    image: hippo,
+    image: '/animals/hippo.svg',
     label: "Hippo",
     position: "right-[8%] top-[2%] z-10",
     scoreColor: "text-sky-500 dark:text-sky-300",
@@ -50,7 +44,7 @@ const heroAnimals = [
   {
     accent: "from-amber-300/80 to-orange-200/55",
     confidence: "95.3%",
-    image: antlerDeer,
+    image: '/animals/deer.svg',
     label: "Deer",
     position: "left-[18%] top-[42%] z-30",
     scoreColor: "text-amber-500 dark:text-amber-300",
@@ -68,7 +62,7 @@ const heroAnimals = [
   {
     accent: "from-fuchsia-300/75 to-violet-200/50",
     confidence: "93.9%",
-    image: elephant,
+    image: '/animals/elephant.svg',
     label: "Elephant",
     position: "right-[20%] top-[57%] z-20",
     scoreColor: "text-fuchsia-500 dark:text-fuchsia-300",
@@ -86,7 +80,7 @@ const heroAnimals = [
   {
     accent: "from-rose-300/75 to-pink-200/50",
     confidence: "91.4%",
-    image: crocodile,
+    image: '/animals/crocodile.svg',
     label: "Crocodile",
     position: "right-[-1%] top-[34%] z-20",
     scoreColor: "text-rose-500 dark:text-rose-300",
@@ -104,7 +98,7 @@ const heroAnimals = [
   {
     accent: "from-zinc-300/80 to-stone-200/55",
     confidence: "89.8%",
-    image: bear,
+    image: '/animals/bear.svg',
     label: "Bear",
     position: "left-[-2%] top-[63%] z-10",
     scoreColor: "text-zinc-500 dark:text-zinc-300",

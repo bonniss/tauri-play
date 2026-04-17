@@ -1,17 +1,17 @@
 {
-  "welcome": "Xin chao {{name}}",
+  "welcome": "Xin chào {{name}}",
   "header": {
-    "home": "Trang chu",
-    "projects": "Du an"
+    "home": "Trang chủ",
+    "projects": "Dự án"
   },
   "settings": {
-    "language": "Ngon ngu"
+    "language": "Ngôn ngữ"
   },
   "home": {
     "hero": {
-      "title": "Day model bang chinh bo anh cua ban, roi thu nghiem ngay lap tuc.",
-      "description": "Thu thap mau, sap xep class, train local va mo trai nghiem play ma khong can roi khoi ung dung.",
-      "cta": "Bat dau"
+      "title": "Dạy máy tính nhận diện hình ảnh.",
+      "description": "Thu thập ảnh, gán nhãn, train model và thử nghiệm trực tiếp — tất cả chạy ngay trên máy của bạn.",
+      "cta": "Dự án mới"
     }
   }
 }

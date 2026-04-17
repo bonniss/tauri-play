@@ -9,9 +9,9 @@
   },
   "home": {
     "hero": {
-      "title": "Teach your model with your own images, then test it live.",
-      "description": "Collect examples, organize classes, train locally, and open a playable experience without leaving the app.",
-      "cta": "Get Started"
+      "title": "Teach your computer to see.",
+      "description": "Collect photos, label classes, train a model, and test it live — everything runs locally on your device.",
+      "cta": "New Project"
     }
   }
 }
