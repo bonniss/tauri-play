@@ -6,11 +6,14 @@ let mobilenetPromise: Promise<mobilenet.MobileNet> | null = null
 export const MOBILENET_VERSION = 2
 export const MOBILENET_ALPHA = 1
 
+const LOCAL_MODEL_URL = `/models/mobilenet/v${MOBILENET_VERSION}/model.json`
+
 export function loadMobilenetModel() {
   if (!mobilenetPromise) {
     mobilenetPromise = mobilenet.load({
       version: MOBILENET_VERSION,
       alpha: MOBILENET_ALPHA,
+      modelUrl: LOCAL_MODEL_URL,
     })
   }
 
