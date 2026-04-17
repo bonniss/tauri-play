@@ -1,16 +1,16 @@
 import { defineMapping, setupForm } from "react-headless-form"
 import { t } from "~/lib/i18n"
 import InputField from "./fields/InputField"
+import MarkdownField from "./fields/MarkdownField"
 import NumberField from "./fields/NumberField"
 import RadioField from "./fields/RadioField"
 import SwitchField from "./fields/SwitchField"
-import TextAreaField from "./fields/TextAreaField"
 
 export const [Form, defineConfig] = setupForm({
   fieldMapping: defineMapping({
     text: InputField,
     numeric: NumberField,
-    longText: TextAreaField,
+    longText: MarkdownField,
     switch: SwitchField,
     radio: RadioField,
   }),

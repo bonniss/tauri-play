@@ -15,6 +15,7 @@
     }
   },
   "common": {
+    "icon": "Icon",
     "cancel": "Cancel",
     "apply": "Apply",
     "settings": "Settings",
