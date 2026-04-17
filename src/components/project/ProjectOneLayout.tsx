@@ -1,8 +1,7 @@
-import { NavLink, Progress, Text } from '@mantine/core';
+import { Progress, Text } from '@mantine/core';
 import {
   IconCircleCheck,
   IconLoader2,
-  IconPencil,
   IconX,
 } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -112,18 +111,18 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
   }
 
   return (
-    <section className="min-h-[calc(100vh-6rem)] flex flex-col lg:flex-row gap-8">
-      <aside className="lg:flex lg:flex-col lg:w-80 overflow-y-auto border-r border-zinc-200 dark:border-zinc-600 px-4 py-2 bg-gray-50 dark:bg-gray-800/80 rounded-sm">
-        <div className="space-y-1">
-          <Text c="dimmed" className="px-2 font-mono" size="xs">
+    <section className="flex min-h-[calc(100vh-60px)]">
+      <aside className="sticky top-[60px] flex h-[calc(100vh-60px)] w-72 shrink-0 flex-col overflow-y-auto border-r border-zinc-200 dark:border-zinc-800">
+        <div className="border-b border-zinc-200 px-4 py-4 dark:border-zinc-800">
+          <Text c="dimmed" className="font-mono" size="xs">
             {projectId}
           </Text>
-          <div className="flex items-start gap-2 px-2">
-            <div className="pt-1 text-xl leading-none">{projectIcon}</div>
+          <div className="mt-2 flex items-start gap-2">
+            <div className="pt-0.5 text-xl leading-none">{projectIcon}</div>
             <ContentEditable
               as="h2"
               aria-label="Project name"
-              className="min-w-0 rounded-md py-1 text-lg font-semibold leading-tight text-zinc-950 outline-none transition-colors dark:text-zinc-50"
+              className="min-w-0 rounded-md py-0.5 text-base font-semibold leading-tight text-zinc-950 outline-none transition-colors dark:text-zinc-50"
               focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
               onBlur={async (value) => {
                 await saveProjectField({ name: value });
@@ -134,7 +133,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
           <ContentEditable
             as="p"
             aria-label="Project description"
-            className="min-w-0 rounded-md px-2 py-1 text-sm leading-6 text-zinc-500 outline-none transition-colors dark:text-zinc-400"
+            className="mt-1 min-w-0 rounded-md py-0.5 text-xs leading-5 text-zinc-500 outline-none transition-colors dark:text-zinc-400"
             focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
             multiline
             onBlur={async (value) => {
@@ -145,8 +144,8 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
           />
         </div>
 
-        <nav className="mt-8 flex flex-1 flex-col">
-          <div className="space-y-1">
+        <nav className="border-b border-zinc-200 px-3 py-3 dark:border-zinc-800">
+          <div className="space-y-0.5">
             <ProjectNavItem
               current={pathname === `/projects/${projectId}/label`}
               icon={IconDataLabel}
@@ -172,48 +171,48 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
               to="/projects/$projectId/play"
             />
           </div>
-
-          <div className="mt-8">
-            <Text c="dimmed" fw={600} size="xs" tt="uppercase">
-              Dataset
-            </Text>
-            <div className="mt-3 space-y-3">
-              <SidebarDatasetItem
-                label="All Images"
-                progress={trainProgress}
-                trailing={`${totalSamples}`}
-              />
-              {classes.map((projectClass) => {
-                const readiness = classReadiness.find(
-                  (item) => item.classId === projectClass.id,
-                );
-
-                return (
-                  <SidebarDatasetItem
-                    key={projectClass.id}
-                    editableLabel={
-                      <ContentEditable
-                        as="span"
-                        aria-label={`Class name ${projectClass.name}`}
-                        className="font-semibold hover:ring-1 ring-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/75 inline-block w-fit max-w-full truncate rounded px-1 py-0.5"
-                        focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
-                        onBlur={(value) => {
-                          updateClassName(projectClass.id, value);
-                        }}
-                        value={projectClass.name}
-                      />
-                    }
-                    progress={readiness?.progress ?? 0}
-                    trailing={`${projectClass.samples.length}`}
-                  />
-                );
-              })}
-            </div>
-          </div>
         </nav>
+
+        <div className="px-4 py-4">
+          <Text c="dimmed" fw={600} size="xs" tt="uppercase" className="tracking-widest">
+            Dataset
+          </Text>
+          <div className="mt-3 space-y-3">
+            <SidebarDatasetItem
+              label="All Images"
+              progress={trainProgress}
+              trailing={`${totalSamples}`}
+            />
+            {classes.map((projectClass) => {
+              const readiness = classReadiness.find(
+                (item) => item.classId === projectClass.id,
+              );
+
+              return (
+                <SidebarDatasetItem
+                  key={projectClass.id}
+                  editableLabel={
+                    <ContentEditable
+                      as="span"
+                      aria-label={`Class name ${projectClass.name}`}
+                      className="font-semibold hover:ring-1 ring-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/75 inline-block w-fit max-w-full truncate rounded px-1 py-0.5"
+                      focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
+                      onBlur={(value) => {
+                        updateClassName(projectClass.id, value);
+                      }}
+                      value={projectClass.name}
+                    />
+                  }
+                  progress={readiness?.progress ?? 0}
+                  trailing={`${projectClass.samples.length}`}
+                />
+              );
+            })}
+          </div>
+        </div>
       </aside>
 
-      <div className="mx-auto w-full">
+      <div className="min-w-0 flex-1">
         <Outlet />
       </div>
     </section>
@@ -232,7 +231,7 @@ function ProjectNavItem({
 }: {
   current: boolean;
   disabled?: boolean;
-  icon: typeof IconPencil;
+  icon: FunctionComponent<{ className?: string; stroke?: number }>;
   label: string;
   progress?: number;
   projectId: string;
@@ -245,31 +244,40 @@ function ProjectNavItem({
 }) {
   const rightSection =
     trainStatus === 'training' ? (
-      <div className="flex items-center gap-1.5">
-        <IconLoader2 className="size-4 animate-spin text-blue-500" stroke={1.8} />
-        <Text c="dimmed" size="xs">
-          {Math.round((progress ?? 0) * 100)}%
-        </Text>
+      <div className="flex items-center gap-1">
+        <IconLoader2 className="size-3.5 animate-spin text-blue-500" stroke={1.8} />
+        <span className="text-xs text-zinc-400">{Math.round((progress ?? 0) * 100)}%</span>
       </div>
     ) : trainStatus === 'trained' ? (
-      <IconCircleCheck className="size-4 text-teal-500" stroke={1.8} />
+      <IconCircleCheck className="size-3.5 text-teal-500" stroke={1.8} />
     ) : trainStatus === 'failed' ? (
-      <IconX className="size-4 text-red-500" stroke={1.8} />
-    ) : undefined;
+      <IconX className="size-3.5 text-red-500" stroke={1.8} />
+    ) : null;
+
+  const base = 'flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors';
+  const active = 'bg-zinc-100 font-medium text-zinc-950 dark:bg-zinc-800 dark:text-zinc-50';
+  const inactive = 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-200';
+  const disabledCls = 'pointer-events-none opacity-40';
+
+  if (disabled) {
+    return (
+      <div className={`${base} ${inactive} ${disabledCls}`}>
+        <Icon className="size-4 shrink-0" stroke={1.8} />
+        <span className="flex-1">{label}</span>
+      </div>
+    );
+  }
 
   return (
-    <NavLink
-      disabled={disabled}
-      variant="light"
-      active={current}
-      className="rounded-md"
-      component={Link}
-      label={label}
-      leftSection={<Icon className="size-5" stroke={1.8} />}
+    <Link
+      className={`${base} ${current ? active : inactive}`}
       params={{ projectId } as never}
-      rightSection={rightSection}
       to={to}
-    />
+    >
+      <Icon className="size-4 shrink-0" stroke={1.8} />
+      <span className="flex-1">{label}</span>
+      {rightSection}
+    </Link>
   );
 }
 
