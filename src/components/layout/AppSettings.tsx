@@ -14,7 +14,7 @@ const AppSettings: FunctionComponent<AppSettingsProps> = () => {
   return (
     <>
       <Button onClick={toggleAppSettings} size="compact-sm" variant="subtle">
-        Settings
+        {t("common.settings")}
       </Button>
       <Modal
         onClose={closeAppSettings}
@@ -30,8 +30,8 @@ const AppSettings: FunctionComponent<AppSettingsProps> = () => {
             <Radio.Group onChange={setLocale} value={locale}>
               <div className="flex gap-4">
                 {[
-                  { flag: '/flags/us.svg', label: "English", value: "en" },
-                  { flag: '/flags/vn.svg', label: "Tiếng Việt", value: "vi" },
+                  { flag: "/flags/us.svg", label: "English", value: "en" },
+                  { flag: "/flags/vn.svg", label: "Tiếng Việt", value: "vi" },
                 ].map((item) => (
                   <Radio.Card
                     checked={locale === item.value}
