@@ -1,11 +1,9 @@
 import {
   ActionIcon,
-  Box,
   Button,
   Group,
   Menu,
   Modal,
-  Paper,
   Popover,
   Text,
 } from '@mantine/core';
@@ -378,7 +376,7 @@ function ProjectLabelPage() {
   }
 
   return (
-    <Paper className="p-4">
+    <div className="p-4">
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-2xl font-semibold tracking-tight">{t('project.label.title')}</h2>
@@ -462,7 +460,7 @@ function ProjectLabelPage() {
       </div>
 
       {isTopCameraOpen && currentCameraClass ? (
-        <div className="mt-6 space-y-3">
+        <div className="mt-4 space-y-3">
           <CameraCapturePanel
             currentCameraClass={currentCameraClass}
             onCaptureSession={handleCameraCaptureSession}
@@ -472,111 +470,105 @@ function ProjectLabelPage() {
       ) : null}
 
       {hasClasses ? (
-        <div className="mt-6 space-y-4">
+        <div className="mt-4 divide-y divide-zinc-200 overflow-hidden rounded-md border border-zinc-200 dark:divide-zinc-700 dark:border-zinc-700">
           {visibleClasses.map((item) => (
-            <div
-              className="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
-              key={item.id}
-            >
-              <div className="px-4 py-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="min-w-0 flex items-center gap-2">
-                    <ActionIcon
-                      aria-label={openClassMap[item.id] ? 'Collapse class' : 'Expand class'}
-                      onClick={() => {
-                        setOpenClassMap((current) => ({
-                          ...current,
-                          [item.id]: !current[item.id],
-                        }));
-                      }}
-                      size="sm"
-                      variant="subtle"
-                    >
-                      <IconChevronRight
-                        className={openClassMap[item.id] ? 'rotate-90 transition-transform' : 'transition-transform'}
-                        size={16}
-                        stroke={1.8}
-                      />
-                    </ActionIcon>
+            <div key={item.id}>
+              <div className="flex items-center justify-between gap-3 px-3 py-2.5">
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <ActionIcon
+                    aria-label={openClassMap[item.id] ? 'Collapse class' : 'Expand class'}
+                    onClick={() => {
+                      setOpenClassMap((current) => ({
+                        ...current,
+                        [item.id]: !current[item.id],
+                      }));
+                    }}
+                    size="xs"
+                    variant="subtle"
+                  >
+                    <IconChevronRight
+                      className={openClassMap[item.id] ? 'rotate-90 transition-transform' : 'transition-transform'}
+                      size={14}
+                      stroke={1.8}
+                    />
+                  </ActionIcon>
                   <ContentEditable
                     as="span"
                     aria-label={`Class name ${item.name}`}
-                    className="font-serif font-semibold inline-block w-fit max-w-full truncate rounded px-1 py-0.5"
+                    className="inline-block w-fit max-w-full truncate rounded px-1 py-0.5 text-sm font-semibold"
                     focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
                     onBlur={(value) => {
                       updateClassName(item.id, value);
                     }}
                     value={item.name}
                   />
-                  <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                  <span className="text-xs text-zinc-400 dark:text-zinc-500">
                     {item.samples.length}
                   </span>
-                  </div>
-                  <Group gap="xs">
-                    <ProjectActionButton
-                      action="camera"
-                      onClick={() => {
-                        if (
-                          cameraTargetState?.slot === 'class' &&
-                          cameraTargetState.classId === item.id
-                        ) {
-                          void closeInlineCamera();
-                          return;
-                        }
-
-                        void openInlineCamera({ classId: item.id, slot: 'class' });
-                      }}
-                      size="xs"
-                      variant={
+                </div>
+                <Group gap="xs">
+                  <ProjectActionButton
+                    action="camera"
+                    onClick={() => {
+                      if (
                         cameraTargetState?.slot === 'class' &&
                         cameraTargetState.classId === item.id
-                          ? 'filled'
-                          : undefined
+                      ) {
+                        void closeInlineCamera();
+                        return;
                       }
-                    >
-                      {cameraTargetState?.slot === 'class' &&
+                      void openInlineCamera({ classId: item.id, slot: 'class' });
+                    }}
+                    size="xs"
+                    variant={
+                      cameraTargetState?.slot === 'class' &&
                       cameraTargetState.classId === item.id
-                        ? t('common.close')
-                        : t('project.label.camera')}
-                    </ProjectActionButton>
+                        ? 'filled'
+                        : undefined
+                    }
+                  >
+                    {cameraTargetState?.slot === 'class' &&
+                    cameraTargetState.classId === item.id
+                      ? t('common.close')
+                      : t('project.label.camera')}
+                  </ProjectActionButton>
                   <UploadSamplesButton
-                      buttonLabel={t('common.upload')}
-                      classId={item.id}
-                      onUploadStateChange={handleUploadStateChange}
-                      size="xs"
-                    />
-                    <Menu position="bottom-end" shadow="md" withinPortal>
-                      <Menu.Target>
-                        <ActionIcon aria-label="Class actions" size="sm" variant="subtle">
-                          <IconDots size={16} stroke={1.8} />
-                        </ActionIcon>
-                      </Menu.Target>
-                      <Menu.Dropdown>
-                        <Menu.Item
-                          color="red"
-                          leftSection={<IconTrash size={14} />}
-                          onClick={() => {
-                            setDeleteClassId(item.id);
-                          }}
-                        >
-                          {t('common.delete')}
-                        </Menu.Item>
-                        <Menu.Item
-                          leftSection={<IconDownload size={14} />}
-                          onClick={() => {
-                            toast.message(t('project.label.exportSoon'));
-                          }}
-                        >
-                          {t('common.export')}
-                        </Menu.Item>
-                      </Menu.Dropdown>
-                    </Menu>
-                  </Group>
-                </div>
+                    buttonLabel={t('common.upload')}
+                    classId={item.id}
+                    onUploadStateChange={handleUploadStateChange}
+                    size="xs"
+                  />
+                  <Menu position="bottom-end" shadow="md" withinPortal>
+                    <Menu.Target>
+                      <ActionIcon aria-label="Class actions" size="xs" variant="subtle">
+                        <IconDots size={14} stroke={1.8} />
+                      </ActionIcon>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Item
+                        color="red"
+                        leftSection={<IconTrash size={14} />}
+                        onClick={() => {
+                          setDeleteClassId(item.id);
+                        }}
+                      >
+                        {t('common.delete')}
+                      </Menu.Item>
+                      <Menu.Item
+                        leftSection={<IconDownload size={14} />}
+                        onClick={() => {
+                          toast.message(t('project.label.exportSoon'));
+                        }}
+                      >
+                        {t('common.export')}
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
+                </Group>
               </div>
 
               {openClassMap[item.id] ? (
-                <Box className="border-t border-zinc-200 px-4 py-4 dark:border-zinc-800">
+                <div className="border-t border-zinc-200 px-3 py-3 dark:border-zinc-700">
                   {cameraTargetState?.slot === 'class' &&
                   currentCameraClass?.id === item.id ? (
                     <div className="mb-4">
@@ -597,7 +589,7 @@ function ProjectLabelPage() {
                       {t('project.label.noImages')}
                     </Text>
                   ) : null}
-                </Box>
+                </div>
               ) : null}
             </div>
           ))}
@@ -633,7 +625,7 @@ function ProjectLabelPage() {
           </Group>
         </div>
       </Modal>
-    </Paper>
+    </div>
   );
 }
 

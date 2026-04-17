@@ -114,8 +114,8 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
 
   return (
     <section className="flex min-h-[calc(100vh-60px)]">
-      <aside className="sticky top-[60px] flex h-[calc(100vh-60px)] w-72 shrink-0 flex-col overflow-y-auto border-r border-zinc-200 dark:border-zinc-800">
-        <div className="border-b border-zinc-200 px-4 py-4 dark:border-zinc-800">
+      <aside className="sticky top-[60px] flex h-[calc(100vh-60px)] w-72 shrink-0 flex-col overflow-y-auto border-r border-zinc-200 dark:border-zinc-700">
+        <div className="border-b border-zinc-200 px-4 py-4 dark:border-zinc-700">
           <Text c="dimmed" className="font-mono" size="xs">
             {projectId}
           </Text>
@@ -146,7 +146,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
           />
         </div>
 
-        <nav className="border-b border-zinc-200 px-3 py-3 dark:border-zinc-800">
+        <nav className="border-b border-zinc-200 px-3 py-3 dark:border-zinc-700">
           <div className="space-y-0.5">
             <ProjectNavItem
               current={pathname === `/projects/${projectId}/label`}
