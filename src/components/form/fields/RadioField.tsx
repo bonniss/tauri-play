@@ -1,23 +1,37 @@
-import { Radio, type RadioGroupProps } from "@mantine/core"
-import { type FunctionComponent } from "react"
-import { useField } from "react-headless-form"
+import { Group, Radio, type RadioGroupProps, Stack } from '@mantine/core';
+import { type FunctionComponent } from 'react';
+import { useField } from 'react-headless-form';
 
 interface RadioFieldOption {
-  description?: string
-  disabled?: boolean
-  label: string
-  value: string
+  description?: string;
+  disabled?: boolean;
+  label: string;
+  value: string;
 }
 
-interface RadioFieldProps
-  extends Omit<
-    RadioGroupProps,
-    "children" | "defaultValue" | "description" | "error" | "label" | "onChange" | "value"
-  > {
-  options: RadioFieldOption[]
+interface RadioFieldProps extends Omit<
+  RadioGroupProps,
+  | 'children'
+  | 'defaultValue'
+  | 'description'
+  | 'error'
+  | 'label'
+  | 'onChange'
+  | 'value'
+> {
+  options: RadioFieldOption[];
+  orientation?: 'vertical' | 'horizontal';
+  gap?: number | string;
+  wrap?: boolean;
 }
 
-const RadioField: FunctionComponent<RadioFieldProps> = ({ options, ...props }) => {
+const RadioField: FunctionComponent<RadioFieldProps> = ({
+  options,
+  orientation = 'vertical',
+  gap = 'sm',
+  wrap = true,
+  ...props
+}) => {
   const {
     id,
     value,
@@ -28,32 +42,40 @@ const RadioField: FunctionComponent<RadioFieldProps> = ({ options, ...props }) =
     required,
     disabled,
     readOnly,
-  } = useField()
+  } = useField();
+
+  const items = options.map((option) => (
+    <Radio
+      key={option.value}
+      value={option.value}
+      label={option.label}
+      description={option.description}
+      disabled={disabled || readOnly || option.disabled}
+    />
+  ));
 
   return (
     <Radio.Group
       {...props}
-      description={description}
-      error={errorMessage}
       id={id}
       label={label}
+      description={description}
+      error={errorMessage}
+      value={typeof value === 'string' ? value : ''}
       onChange={(nextValue) => onChange?.(nextValue)}
-      value={typeof value === "string" ? value : ""}
       withAsterisk={required}
       aria-invalid={Boolean(errorMessage)}
       aria-required={required}
     >
-      {options.map((option) => (
-        <Radio
-          description={option.description}
-          disabled={disabled || readOnly || option.disabled}
-          key={option.value}
-          label={option.label}
-          value={option.value}
-        />
-      ))}
+      {orientation === 'horizontal' ? (
+        <Group gap={gap} wrap={wrap ? 'wrap' : undefined}>
+          {items}
+        </Group>
+      ) : (
+        <Stack gap={gap}>{items}</Stack>
+      )}
     </Radio.Group>
-  )
-}
+  );
+};
 
-export default RadioField
+export default RadioField;

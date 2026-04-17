@@ -1,7 +1,11 @@
-import { useEffect, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createProvider } from 'react-easy-provider';
 import { ProjectClass, renameClass } from '~/lib/db/domain/classes';
+import {
+  getLatestProjectTrainLog,
+  getProjectModel,
+} from '~/lib/db/domain/models';
 import {
   getProjectWorkspace,
   ProjectRecord,
@@ -11,9 +15,15 @@ import { ProjectSample } from '~/lib/db/domain/samples';
 import { genClassId, genSampleId } from '~/lib/project/id-generator';
 import {
   parseProjectLabelSettingsFormValues,
+  parseProjectPlaySettingsFormValues,
   parseProjectSettings,
+  parseProjectTrainSettingsFormValues,
   ProjectLabelSettingsFormValues,
+  ProjectPlaySettingsFormValues,
+  ProjectTrainSettingsFormValues,
   projectLabelSettingsToFormValues,
+  projectPlaySettingsToFormValues,
+  projectTrainSettingsToFormValues,
   stringifyProjectSettings,
 } from '~/lib/project/settings';
 
@@ -67,6 +77,8 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
 
     const [isInitialized, setIsInitialized] = useState(false);
     const [isApplyingLabelSettings, setIsApplyingLabelSettings] = useState(false);
+    const [isApplyingPlaySettings, setIsApplyingPlaySettings] = useState(false);
+    const [isApplyingTrainSettings, setIsApplyingTrainSettings] = useState(false);
     const [project, setProject] = useState<ProjectRecord | undefined>();
     const [classes, setClasses] = useState<ProjectOneClass[]>([]);
 
@@ -96,14 +108,27 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       throw new Error('Missing projectId.');
     }
 
+    const projectModelQuery = useQuery({
+      queryKey: ['project-model', projectId],
+      queryFn: () => getProjectModel(projectId),
+    });
+    const latestTrainLogQuery = useQuery({
+      queryKey: ['project-train-log', projectId],
+      queryFn: () => getLatestProjectTrainLog(projectId),
+    });
+
     if (isInitialized && !project) {
       throw new Error('Project not found.');
     }
 
     const projectName = project?.name ?? '';
+    const projectDescription = project?.description ?? '';
     const projectStatus = project?.status;
     const projectSettings = parseProjectSettings(project?.settings);
+    const projectIcon = projectSettings.icon;
     const labelSettings = projectSettings.label;
+    const playSettings = projectSettings.play;
+    const trainSettings = projectSettings.train;
 
     const totalClasses = classes.length;
     const totalSamples = classes.reduce(
@@ -143,6 +168,101 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       totalClasses >= labelSettings.minClasses &&
       !isOverClassLimit &&
       classReadiness.every((item) => item.isReady && !item.isOverLimit);
+    const projectModel = projectModelQuery.data ?? null;
+    const latestTrainLog = latestTrainLogQuery.data ?? null;
+    const latestTrainRunSettings = useMemo(() => {
+      if (!latestTrainLog?.settingsSnapshot) {
+        return null;
+      }
+
+      try {
+        return JSON.parse(latestTrainLog.settingsSnapshot) as {
+          epochs?: number;
+        };
+      } catch {
+        return null;
+      }
+    }, [latestTrainLog?.settingsSnapshot]);
+    const latestEpochEvents = latestTrainLog?.events.filter(
+      (event) => event.type === 'epoch',
+    );
+    const latestEpoch =
+      latestEpochEvents && latestEpochEvents.length > 0
+        ? latestEpochEvents[latestEpochEvents.length - 1]
+        : null;
+    const plannedTrainEpochs =
+      latestTrainRunSettings?.epochs &&
+      Number.isFinite(latestTrainRunSettings.epochs)
+        ? Math.max(1, latestTrainRunSettings.epochs)
+        : trainSettings.epochs;
+    const trainRunProgress = latestTrainLog
+      ? latestTrainLog.status === 'completed'
+        ? 1
+        : Math.min((latestEpoch?.epoch ?? 0) / plannedTrainEpochs, 1)
+      : 0;
+    const trainStatus = !isReadyForTrain
+      ? 'not_ready'
+      : latestTrainLog?.status === 'started'
+        ? 'training'
+        : projectModel
+          ? 'trained'
+          : latestTrainLog?.status === 'failed'
+            ? 'failed'
+            : 'not_trained';
+    const trainStatusLabel =
+      trainStatus === 'not_ready'
+        ? 'Need more label data'
+        : trainStatus === 'training'
+          ? 'Training in progress'
+          : trainStatus === 'trained'
+            ? 'Training succeeded'
+            : trainStatus === 'failed'
+              ? 'Training failed'
+              : 'Not trained yet';
+    const trainStatusColor =
+      trainStatus === 'trained'
+        ? 'teal'
+        : trainStatus === 'training'
+          ? 'blue'
+          : trainStatus === 'failed'
+            ? 'red'
+            : 'yellow';
+    const trainedAtLabel = projectModel
+      ? new Date(projectModel.trainedAt).toLocaleString()
+      : null;
+    const trainStatusDescription =
+      trainStatus === 'not_ready'
+        ? `Need at least ${labelSettings.minClasses} classes and ${labelSettings.minSamplesPerClass} samples per class before training.`
+        : trainStatus === 'training'
+          ? `Current run: ${Math.round(trainRunProgress * 100)}% complete.`
+          : trainStatus === 'trained'
+            ? `Last trained at ${trainedAtLabel}.`
+            : trainStatus === 'failed'
+              ? 'The latest training run failed. Review the train page and try again.'
+              : 'Dataset is ready, but no successful training run exists yet.';
+    const trainNavProgress =
+      trainStatus === 'training' || trainStatus === 'trained' || trainStatus === 'failed'
+        ? trainRunProgress
+        : trainProgress;
+    const canPlay = projectModel != null;
+    const playGuardTitle = !isReadyForTrain
+      ? 'Train data is not ready yet.'
+      : !canPlay
+        ? trainStatus === 'failed'
+          ? 'The latest training run failed.'
+          : trainStatus === 'training'
+            ? 'Training is still in progress.'
+            : 'No trained model is available yet.'
+        : null;
+    const playGuardDescription = !isReadyForTrain
+      ? `Finish labeling at least ${labelSettings.minClasses} classes with ${labelSettings.minSamplesPerClass} samples each before opening Play.`
+      : !canPlay
+        ? trainStatus === 'failed'
+          ? 'Run training again successfully before opening the demo page.'
+          : trainStatus === 'training'
+            ? 'Wait for the current training run to finish successfully before opening the demo page.'
+            : 'Start a successful training run from the Train page before opening the demo page.'
+        : null;
 
     const addClass = (payload: {
       name: string;
@@ -280,6 +400,12 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
     const getLabelSettingsFormValues = (): ProjectLabelSettingsFormValues =>
       projectLabelSettingsToFormValues(labelSettings);
 
+    const getTrainSettingsFormValues = (): ProjectTrainSettingsFormValues =>
+      projectTrainSettingsToFormValues(trainSettings);
+
+    const getPlaySettingsFormValues = (): ProjectPlaySettingsFormValues =>
+      projectPlaySettingsToFormValues(playSettings);
+
     const applyLabelSettings = async (
       values: ProjectLabelSettingsFormValues,
     ) => {
@@ -333,11 +459,121 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       }
     };
 
+    const applyTrainSettings = async (
+      values: ProjectTrainSettingsFormValues,
+    ) => {
+      const nextTrainSettings = parseProjectTrainSettingsFormValues(values);
+      const nextProjectSettings = {
+        ...projectSettings,
+        train: nextTrainSettings,
+      };
+      const nextSettings = stringifyProjectSettings(nextProjectSettings);
+
+      if (nextSettings === (project?.settings ?? '')) {
+        return;
+      }
+
+      setIsApplyingTrainSettings(true);
+
+      try {
+        setProject((current) =>
+          current
+            ? {
+                ...current,
+                settings: nextSettings,
+                updatedAt: new Date().toISOString(),
+              }
+            : current,
+        );
+
+        await updateProject({
+          projectId,
+          settings: nextSettings,
+        });
+        await queryClient.invalidateQueries({ queryKey: ['projects'] });
+      } catch (error) {
+        const workspace = await getProjectWorkspace(projectId);
+        setProject(workspace.project);
+        setClasses(
+          workspace.classes.map((cls) => ({
+            id: cls.id,
+            projectId: cls.projectId,
+            name: cls.name,
+            description: cls.description,
+            order: cls.order,
+            samples: workspace.samples.filter(
+              (sample) => sample.classId === cls.id,
+            ),
+          })),
+        );
+        throw error;
+      } finally {
+        setIsApplyingTrainSettings(false);
+      }
+    };
+
+    const applyPlaySettings = async (
+      values: ProjectPlaySettingsFormValues,
+    ) => {
+      const nextPlaySettings = parseProjectPlaySettingsFormValues(values);
+      const nextProjectSettings = {
+        ...projectSettings,
+        play: nextPlaySettings,
+      };
+      const nextSettings = stringifyProjectSettings(nextProjectSettings);
+
+      if (nextSettings === (project?.settings ?? '')) {
+        return;
+      }
+
+      setIsApplyingPlaySettings(true);
+
+      try {
+        setProject((current) =>
+          current
+            ? {
+                ...current,
+                settings: nextSettings,
+                updatedAt: new Date().toISOString(),
+              }
+            : current,
+        );
+
+        await updateProject({
+          projectId,
+          settings: nextSettings,
+        });
+        await queryClient.invalidateQueries({ queryKey: ['projects'] });
+      } catch (error) {
+        const workspace = await getProjectWorkspace(projectId);
+        setProject(workspace.project);
+        setClasses(
+          workspace.classes.map((cls) => ({
+            id: cls.id,
+            projectId: cls.projectId,
+            name: cls.name,
+            description: cls.description,
+            order: cls.order,
+            samples: workspace.samples.filter(
+              (sample) => sample.classId === cls.id,
+            ),
+          })),
+        );
+        throw error;
+      } finally {
+        setIsApplyingPlaySettings(false);
+      }
+    };
+
     return {
       isLoading: !isInitialized,
       isApplyingLabelSettings,
+      isApplyingPlaySettings,
+      isApplyingTrainSettings,
       projectId,
       projectName,
+      projectIcon,
+      projectDescription,
       projectStatus,
       seedClass,
       addClass,
@@ -347,11 +583,21 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       setProjectStatus,
       updateClassName,
       getLabelSettingsFormValues,
+      getPlaySettingsFormValues,
+      getTrainSettingsFormValues,
       applyLabelSettings,
+      applyPlaySettings,
+      applyTrainSettings,
 
       project,
       projectSettings,
       labelSettings,
+      playSettings,
+      trainSettings,
+      projectModel,
+      latestTrainLog,
+      isLoadingTrainState:
+        projectModelQuery.isLoading || latestTrainLogQuery.isLoading,
       classes,
       totalClasses,
       totalSamples,
@@ -361,8 +607,17 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       requiredSamplesForTrain,
       readySampleContribution,
       trainProgress,
+      trainRunProgress,
+      trainNavProgress,
       isEmptyClass,
       isReadyForTrain,
+      trainStatus,
+      trainStatusLabel,
+      trainStatusColor,
+      trainStatusDescription,
+      canPlay,
+      playGuardTitle,
+      playGuardDescription,
     };
   },
 );

@@ -12,10 +12,9 @@ export async function fileToImageTensor(
     await img.decode()
 
     return tf.tidy(() => {
-      const pixels = tf.browser.fromPixels(img) // [H, W, 3]
+      const pixels = tf.browser.fromPixels(img) // [H, W, 3] int32 [0,255]
       const resized = tf.image.resizeBilinear(pixels, [size, size])
-      const normalized = resized.toFloat().div(255)
-      return normalized as tf.Tensor3D
+      return resized.toFloat() as tf.Tensor3D // keep [0,255] — mobilenet.infer() normalizes internally
     })
   } finally {
     URL.revokeObjectURL(url)

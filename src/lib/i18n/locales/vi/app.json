@@ -1,0 +1,182 @@
+{
+  "welcome": "Xin chào {{name}}",
+  "header": {
+    "home": "Trang chủ",
+    "projects": "Dự án"
+  },
+  "settings": {
+    "language": "Ngôn ngữ"
+  },
+  "home": {
+    "hero": {
+      "title": "Dạy máy tính nhận diện hình ảnh.",
+      "description": "Thu thập ảnh, gán nhãn, train model và thử nghiệm trực tiếp — tất cả chạy ngay trên máy của bạn.",
+      "cta": "Dự án mới"
+    }
+  },
+  "common": {
+    "cancel": "Hủy",
+    "apply": "Áp dụng",
+    "settings": "Cài đặt",
+    "delete": "Xóa",
+    "export": "Xuất",
+    "close": "Đóng",
+    "upload": "Tải lên",
+    "unlimited": "Không giới hạn",
+    "name": "Tên",
+    "description": "Mô tả",
+    "save": "Lưu"
+  },
+  "project": {
+    "sidebar": {
+      "descriptionPlaceholder": "Thêm mô tả dự án",
+      "dataset": "Dataset",
+      "allImages": "Tất cả ảnh"
+    },
+    "nav": {
+      "label": "Label",
+      "train": "Train",
+      "play": "Play"
+    },
+    "label": {
+      "title": "Label",
+      "settingsTitle": "Cài đặt Label",
+      "camera": "Camera",
+      "closeCamera": "Đóng Camera",
+      "noImages": "Class này chưa có ảnh nào.",
+      "exportSoon": "Tính năng xuất sẽ sớm có.",
+      "settings": {
+        "minClasses": "Số class tối thiểu",
+        "maxClasses": "Số class tối đa",
+        "minSamplesPerClass": "Số Sample tối thiểu mỗi class",
+        "maxSamplesPerClass": "Số Sample tối đa mỗi class"
+      },
+      "deleteClass": {
+        "title": "Xóa class?",
+        "description": "Xóa \"{{name}}\" và toàn bộ ảnh trong class? Thao tác này không thể hoàn tác.",
+        "confirm": "Xóa"
+      },
+      "addImages": {
+        "title": "Thêm ảnh cho từng class cần nhận diện",
+        "subtitle": "Ảnh càng đa dạng trong mỗi class, model càng tổng quát hóa tốt hơn.",
+        "guide1": "Đa dạng góc chụp, nền ảnh và ánh sáng — tránh ảnh lặp",
+        "guide2": "Giữ ảnh rõ nét, chủ thể ở trung tâm — model nhận đầu vào 224×224px",
+        "guide3": "Cân bằng số lượng ảnh giữa các class",
+        "tip": "Chụp trong điều kiện tương tự thực tế khi model được dùng."
+      }
+    },
+    "play": {
+      "title": "Play",
+      "settingsTitle": "Cài đặt Play",
+      "settingsDescription": "Các cài đặt này áp dụng cho trang demo của dự án.",
+      "description": "Cấu hình cách người dùng trải nghiệm {{name}}, sau đó khởi chạy trang demo.",
+      "currentMode": "Chế độ hiện tại: {{mode}}",
+      "start": "Bắt đầu",
+      "back": "Quay lại",
+      "form": {
+        "mode": "Chế độ demo",
+        "modeUploadLabel": "Upload",
+        "modeUploadDescription": "Tải ảnh lên để nhận dự đoán",
+        "modeLiveLabel": "Live",
+        "modeLiveDescription": "Dùng camera để nhận dự đoán theo thời gian thực",
+        "autoPredictOnUpload": "Tự động dự đoán khi tải lên",
+        "autoPredictOnUploadDescription": "Tự động chạy dự đoán sau khi tải ảnh hoặc video",
+        "showConfidenceScores": "Hiển thị độ tin cậy",
+        "showConfidenceScoresDescription": "Hiển thị mức độ tin cậy của model cho từng dự đoán",
+        "showAllClasses": "Hiển thị tất cả class",
+        "showAllClassesDescription": "Hiển thị dự đoán cho tất cả class thay vì chỉ kết quả hàng đầu",
+        "topK": "Số kết quả hàng đầu",
+        "topKDescription": "Số dự đoán có độ tin cậy cao nhất cần hiển thị",
+        "confidenceThreshold": "Ngưỡng độ tin cậy",
+        "confidenceThresholdDescription": "Chỉ hiển thị dự đoán có độ tin cậy vượt ngưỡng này"
+      },
+      "demo": {
+        "noModel": "Dự án này chưa có model được train.",
+        "dropzone": "Kéo ảnh vào đây, hoặc click để chọn từ thiết bị.",
+        "currentFile": "File hiện tại: {{name}}",
+        "predict": "Dự đoán",
+        "liveCamera": "Live Camera",
+        "analyzingFeed": "Đang phân tích",
+        "waitingCamera": "Đang chờ camera",
+        "modelSection": "Model",
+        "classesSection": "Classes",
+        "descriptionSection": "Mô tả",
+        "noDescription": "Dự án chưa có mô tả.",
+        "noSamples": "Chưa có ảnh",
+        "updatedAt": "Cập nhật {{time}}",
+        "analyzing": "Đang phân tích...",
+        "notConfident": "Không đủ độ tin cậy",
+        "confidence": "Độ tin cậy {{percent}}% · {{ms}} ms",
+        "confidenceDisabled": "Tắt hiển thị độ tin cậy ở chế độ này."
+      }
+    },
+    "train": {
+      "title": "Train",
+      "startTraining": "Bắt đầu Train",
+      "stopTraining": "Dừng Train",
+      "notReadyAlert": "Dữ liệu chưa sẵn sàng. Hãy hoàn thành số lượng class và Sample tối thiểu trước.",
+      "latestRun": "Lần chạy gần nhất",
+      "viewLog": "Xem Log",
+      "epochsProgress": "{{current}}/{{total}} epochs",
+      "noRunYet": "Chưa có lần train nào.",
+      "settingsTitle": "Cài đặt Train",
+      "status": {
+        "inProgress": "Đang train...",
+        "cancelled": "Trạng thái: đã hủy",
+        "lastStatus": "Trạng thái: {{status}}",
+        "notStarted": "Chưa bắt đầu train."
+      },
+      "metrics": {
+        "modelAccuracy": "Model Accuracy",
+        "loss": "Loss",
+        "valLoss": "Val Loss",
+        "valAcc": "Val Acc"
+      },
+      "dataset": {
+        "validationSplit": "Validation split",
+        "trainImages": "Ảnh Train",
+        "validation": "Validation",
+        "validationImages": "Ảnh Validation"
+      },
+      "log": {
+        "title": "Training Log",
+        "empty": "Chưa có log nào."
+      },
+      "form": {
+        "validationSplit": "Validation split",
+        "epochs": "Epochs",
+        "batchSize": "Batch size",
+        "learningRate": "Learning rate",
+        "imageSize": "Image size",
+        "earlyStopping": "Early stopping",
+        "earlyStoppingPatience": "Early stopping patience"
+      },
+      "timeline": {
+        "tfjs": "TensorFlow.js",
+        "mobilenet": "MobileNet",
+        "split": "Chia tập Train / Validation",
+        "samples": "Tải Sample",
+        "embeddings": "Embeddings",
+        "head": "Classifier Head",
+        "training": "Training",
+        "saving": "Lưu Model",
+        "detail": {
+          "tfjs": "Khởi tạo runtime và chọn backend thực thi.",
+          "mobilenet": "Tải backbone v{{version}} alpha {{alpha}} đã pretrain.",
+          "split": "Tự động chia mỗi class thành tập train và validation.",
+          "samplesLoaded": "Đã tải {{count}} ảnh",
+          "samplesDefault": "Đã tải ảnh",
+          "embeddings": "Chuyển ảnh thành vector đặc trưng 1280 chiều của MobileNet.",
+          "head": "Tạo classifier nhỏ trên các đặc trưng đã trích xuất.",
+          "trainingProgress": "Tối ưu classifier head qua {{current}}/{{total}} epochs.",
+          "trainingDefault": "Tối ưu classifier head trên đặc trưng MobileNet đã đóng băng.",
+          "saving": "Ghi artifact Model vào thư mục dự án."
+        }
+      },
+      "toast": {
+        "completed": "Train hoàn tất.",
+        "cancelled": "Đã hủy train."
+      }
+    }
+  }
+}

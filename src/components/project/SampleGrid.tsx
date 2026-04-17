@@ -41,6 +41,7 @@ interface SampleGridProps {
 }
 
 const GRID_GAP_PX = 12
+const SAMPLE_PAGE_SIZE = 60
 
 const SampleGrid: FunctionComponent<SampleGridProps> = ({
   activeSampleId,
@@ -64,13 +65,20 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
   const [showMetadata, setShowMetadata] = useState(false)
   const [previewMap, setPreviewMap] = useState<Record<string, string>>({})
   const [columnCount, setColumnCount] = useState(1)
+  const [visibleCount, setVisibleCount] = useState(SAMPLE_PAGE_SIZE)
   const gridRef = useRef<HTMLDivElement | null>(null)
+  const viewportRef = useRef<HTMLDivElement | null>(null)
   const thumbnailRefMap = useRef<Record<string, HTMLButtonElement | null>>({})
   const shouldFocusActiveRef = useRef(false)
   const previousSamplesRef = useRef<ProjectSample[]>(samples)
   const resolvedActiveSampleId = isActiveControlled
     ? activeSampleId ?? null
     : internalActiveSampleId
+  const visibleSamples = useMemo(
+    () => samples.slice(0, visibleCount),
+    [samples, visibleCount],
+  )
+  const hasMoreSamples = visibleSamples.length < samples.length
   const lightboxSampleIndex = useMemo(
     () => samples.findIndex((sample) => sample.id === displayedSampleId),
     [displayedSampleId, samples],
@@ -86,11 +94,34 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
     onActiveSampleChange?.(sampleId)
   }
 
+  function loadMoreSamples() {
+    setVisibleCount((current) =>
+      Math.min(current + SAMPLE_PAGE_SIZE, samples.length),
+    )
+  }
+
+  useEffect(() => {
+    setVisibleCount(() =>
+      Math.min(
+        samples.length,
+        Math.max(
+          SAMPLE_PAGE_SIZE,
+          resolvedActiveSampleId
+            ? Math.ceil(
+                (samples.findIndex((sample) => sample.id === resolvedActiveSampleId) + 1) /
+                  SAMPLE_PAGE_SIZE,
+              ) * SAMPLE_PAGE_SIZE
+            : SAMPLE_PAGE_SIZE,
+        ),
+      ),
+    )
+  }, [resolvedActiveSampleId, samples])
+
   useEffect(() => {
     let cancelled = false
     let nextPreviewMap: Record<string, string> = {}
 
-    if (!samples.length) {
+    if (!visibleSamples.length) {
       setPreviewMap({})
       setIsLoadingPreviews(false)
       return
@@ -99,7 +130,7 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
     setIsLoadingPreviews(true)
 
     void Promise.all(
-      samples.map(async (sample) => [
+      visibleSamples.map(async (sample) => [
         sample.id,
         await createSamplePreviewUrl(sample.filePath),
       ] as const),
@@ -123,7 +154,7 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
       cancelled = true
       Object.values(nextPreviewMap).forEach((url) => revokeSamplePreviewUrl(url))
     }
-  }, [samples])
+  }, [visibleSamples])
 
   useEffect(() => {
     const previousSamples = previousSamplesRef.current
@@ -336,9 +367,26 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
   return (
     <>
       <ScrollArea.Autosize
-        mah={samples.length > 120 ? 520 : undefined}
+        mah={samples.length > 120 ? 450 : undefined}
         offsetScrollbars={samples.length > 120}
+        onScrollPositionChange={() => {
+          const viewportElement = viewportRef.current
+
+          if (!viewportElement || !hasMoreSamples) {
+            return
+          }
+
+          const remainingDistance =
+            viewportElement.scrollHeight -
+            viewportElement.scrollTop -
+            viewportElement.clientHeight
+
+          if (remainingDistance <= 240) {
+            loadMoreSamples()
+          }
+        }}
         scrollbarSize={4}
+        viewportRef={viewportRef}
       >
         <div
           className="grid gap-3"
@@ -347,7 +395,7 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
             gridTemplateColumns: `repeat(auto-fill, minmax(${minItemSize}px, 1fr))`,
           }}
         >
-          {samples.map((sample, index) => {
+          {visibleSamples.map((sample, index) => {
             const isActive = sample.id === resolvedActiveSampleId
 
             return (
@@ -400,6 +448,20 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
             />
           ) : null}
         </div>
+        {hasMoreSamples ? (
+          <div className="flex items-center justify-between gap-3 px-1 py-4">
+            <Text c="dimmed" size="sm">
+              Showing {visibleSamples.length} / {samples.length} samples
+            </Text>
+            <Button
+              onClick={loadMoreSamples}
+              size="xs"
+              variant="light"
+            >
+              Load {Math.min(SAMPLE_PAGE_SIZE, samples.length - visibleSamples.length)} more
+            </Button>
+          </div>
+        ) : null}
       </ScrollArea.Autosize>
 
       <Modal

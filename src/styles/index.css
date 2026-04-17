@@ -1,0 +1,90 @@
+@import '@fontsource-variable/lora/wght.css';
+
+@layer tailwind {
+  @tailwind base;
+}
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-serif;
+  }
+
+  h1,
+  h2 {
+    @apply font-semibold;
+  }
+
+  /* scrollbar — webkit (Chrome, Edge, WebView2) */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, currentColor 25%, transparent);
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, currentColor 40%, transparent);
+  }
+}
+
+@layer components {
+  @keyframes homeHeroFloat {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) rotate(var(--float-rotate, 0deg));
+    }
+    50% {
+      transform: translate3d(0, var(--float-y, -14px), 0)
+        rotate(calc(var(--float-rotate, 0deg) + var(--float-tilt, 2deg)));
+    }
+  }
+
+  @keyframes homeHeroDrift {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0);
+    }
+    50% {
+      transform: translate3d(var(--drift-x, 8px), var(--drift-y, -10px), 0);
+    }
+  }
+
+  .home-hero-float {
+    animation: homeHeroFloat var(--float-duration, 7.2s) ease-in-out infinite;
+  }
+
+  .home-hero-drift {
+    animation: homeHeroDrift var(--drift-duration, 9.5s) ease-in-out infinite;
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: white;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.flashing {
+    animation: cameraFlash 180ms ease-out forwards;
+  }
+  @keyframes cameraFlash {
+    0% {
+      opacity: 0.55;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+}

@@ -1,0 +1,121 @@
+import { Button, Group, Popover, Text } from "@mantine/core"
+import { IconSettings } from "@tabler/icons-react"
+import { useMemo } from "react"
+import { defineConfig, Form } from "~/components/form"
+import { useDataTrain } from "~/components/project/train/DataTrainProvider"
+import { t, useLocale } from "~/lib/i18n"
+import { ProjectTrainSettingsFormValues } from "~/lib/project/settings"
+
+function TrainSettingsPopover() {
+  const locale = useLocale()
+  const {
+    applyTrainSettings,
+    getTrainSettingsFormValues,
+    isApplyingTrainSettings,
+    isTraining,
+    setTrainSettingsOpened,
+    trainSettingsOpened,
+  } = useDataTrain()
+
+  const trainSettingsForm = useMemo(
+    () =>
+      defineConfig<ProjectTrainSettingsFormValues>({
+        validationSplit: {
+          type: "numeric",
+          label: t("project.train.form.validationSplit"),
+          props: { allowDecimal: true, decimalScale: 2, min: 0.05, max: 0.5, step: 0.05 },
+        },
+        epochs: {
+          type: "numeric",
+          label: t("project.train.form.epochs"),
+          props: { allowDecimal: false, min: 1 },
+        },
+        batchSize: {
+          type: "numeric",
+          label: t("project.train.form.batchSize"),
+          props: { allowDecimal: false, min: 1 },
+        },
+        learningRate: {
+          type: "numeric",
+          label: t("project.train.form.learningRate"),
+          props: { allowDecimal: true, decimalScale: 4, min: 0.0001, max: 1, step: 0.0005 },
+        },
+        imageSize: {
+          type: "numeric",
+          label: t("project.train.form.imageSize"),
+          props: { allowDecimal: false, min: 32, step: 32 },
+        },
+        earlyStopping: {
+          type: "switch",
+          label: t("project.train.form.earlyStopping"),
+        },
+        earlyStoppingPatience: {
+          type: "numeric",
+          label: t("project.train.form.earlyStoppingPatience"),
+          props: { allowDecimal: false, min: 1 },
+        },
+      }),
+    [locale],
+  )
+
+  return (
+    <Popover
+      onDismiss={() => {
+        setTrainSettingsOpened(false)
+      }}
+      opened={trainSettingsOpened}
+      position="bottom-end"
+      shadow="md"
+      width={360}
+      withArrow
+    >
+      <Popover.Target>
+        <Button
+          disabled={isTraining}
+          leftSection={<IconSettings className="size-4" />}
+          onClick={() => {
+            setTrainSettingsOpened(!trainSettingsOpened)
+          }}
+          variant="default"
+        >
+          {t("common.settings")}
+        </Button>
+      </Popover.Target>
+      <Popover.Dropdown>
+        <Form
+          key={JSON.stringify(getTrainSettingsFormValues())}
+          config={trainSettingsForm}
+          defaultValues={getTrainSettingsFormValues()}
+          onSubmit={async (values) => {
+            await applyTrainSettings(values)
+            setTrainSettingsOpened(false)
+          }}
+          renderRoot={({ children, onSubmit }) => (
+            <form className="space-y-3" onSubmit={onSubmit}>
+              <Text fw={600} size="sm">
+                {t("project.train.settingsTitle")}
+              </Text>
+              {children}
+              <Group justify="flex-end">
+                <Button
+                  onClick={() => {
+                    setTrainSettingsOpened(false)
+                  }}
+                  type="button"
+                  variant="default"
+                >
+                  {t("common.cancel")}
+                </Button>
+                <Button loading={isApplyingTrainSettings} type="submit">
+                  {t("common.apply")}
+                </Button>
+              </Group>
+            </form>
+          )}
+        />
+      </Popover.Dropdown>
+    </Popover>
+  )
+}
+
+export default TrainSettingsPopover

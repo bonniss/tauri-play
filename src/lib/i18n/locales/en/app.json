@@ -1,0 +1,182 @@
+{
+  "welcome": "Hello {{name}}",
+  "header": {
+    "home": "Home",
+    "projects": "Projects"
+  },
+  "settings": {
+    "language": "Language"
+  },
+  "home": {
+    "hero": {
+      "title": "Teach your computer to see.",
+      "description": "Collect photos, label classes, train a model, and test it live — everything runs locally on your device.",
+      "cta": "New Project"
+    }
+  },
+  "common": {
+    "cancel": "Cancel",
+    "apply": "Apply",
+    "settings": "Settings",
+    "delete": "Delete",
+    "export": "Export",
+    "close": "Close",
+    "upload": "Upload",
+    "unlimited": "Unlimited",
+    "name": "Name",
+    "description": "Description",
+    "save": "Save"
+  },
+  "project": {
+    "sidebar": {
+      "descriptionPlaceholder": "Add project description",
+      "dataset": "Dataset",
+      "allImages": "All Images"
+    },
+    "nav": {
+      "label": "Label",
+      "train": "Train",
+      "play": "Play"
+    },
+    "label": {
+      "title": "Label",
+      "settingsTitle": "Label Settings",
+      "camera": "Camera",
+      "closeCamera": "Close Camera",
+      "noImages": "No images in this class yet.",
+      "exportSoon": "Export will come next.",
+      "settings": {
+        "minClasses": "Min classes",
+        "maxClasses": "Max classes",
+        "minSamplesPerClass": "Min samples per class",
+        "maxSamplesPerClass": "Max samples per class"
+      },
+      "deleteClass": {
+        "title": "Delete class?",
+        "description": "Delete \"{{name}}\" and all of its samples? This cannot be undone.",
+        "confirm": "Delete"
+      },
+      "addImages": {
+        "title": "Add images for each class you want to recognize",
+        "subtitle": "Variety within each class helps the model generalize to images it has never seen.",
+        "guide1": "Mix angles, backgrounds, and lighting — avoid repetitive shots",
+        "guide2": "Keep subjects sharp and centered — model input is 224×224px",
+        "guide3": "Keep image counts balanced across all classes",
+        "tip": "Capture in conditions similar to where the model will actually run."
+      }
+    },
+    "play": {
+      "title": "Play",
+      "settingsTitle": "Play Settings",
+      "settingsDescription": "These settings apply to this project demo page.",
+      "description": "Configure how people will experience {{name}}, then launch the project demo page.",
+      "currentMode": "Current mode: {{mode}}",
+      "start": "Start",
+      "back": "Back",
+      "form": {
+        "mode": "Demo mode",
+        "modeUploadLabel": "Upload",
+        "modeUploadDescription": "Upload an image to get a prediction",
+        "modeLiveLabel": "Live",
+        "modeLiveDescription": "Use your camera for real-time predictions",
+        "autoPredictOnUpload": "Auto predict on upload",
+        "autoPredictOnUploadDescription": "Automatically run predictions after uploading an image or video",
+        "showConfidenceScores": "Show confidence scores",
+        "showConfidenceScoresDescription": "Display how confident the model is for each prediction",
+        "showAllClasses": "Show all classes",
+        "showAllClassesDescription": "Show predictions for all classes instead of only the top results",
+        "topK": "Top results",
+        "topKDescription": "Number of highest-confidence predictions to display",
+        "confidenceThreshold": "Confidence threshold",
+        "confidenceThresholdDescription": "Only show predictions with confidence above this value"
+      },
+      "demo": {
+        "noModel": "This project does not have a trained model yet.",
+        "dropzone": "Drop an image here, or click to browse from your device.",
+        "currentFile": "Current file: {{name}}",
+        "predict": "Predict",
+        "liveCamera": "Live Camera",
+        "analyzingFeed": "Analyzing live feed",
+        "waitingCamera": "Waiting for camera",
+        "modelSection": "Model",
+        "classesSection": "Classes",
+        "descriptionSection": "Description",
+        "noDescription": "No project description yet.",
+        "noSamples": "No samples yet",
+        "updatedAt": "Updated {{time}}",
+        "analyzing": "Analyzing...",
+        "notConfident": "Not confident enough",
+        "confidence": "Confidence {{percent}}% · {{ms}} ms",
+        "confidenceDisabled": "Confidence display is disabled for this play mode."
+      }
+    },
+    "train": {
+      "title": "Train",
+      "startTraining": "Start Training",
+      "stopTraining": "Stop Training",
+      "notReadyAlert": "Label data is not ready yet. Complete the minimum class and sample requirements first.",
+      "latestRun": "Latest run",
+      "viewLog": "View Log",
+      "epochsProgress": "{{current}}/{{total}} epochs",
+      "noRunYet": "No training run yet.",
+      "settingsTitle": "Train Settings",
+      "status": {
+        "inProgress": "Training is in progress.",
+        "cancelled": "Last status: cancelled",
+        "lastStatus": "Last status: {{status}}",
+        "notStarted": "Training has not started yet."
+      },
+      "metrics": {
+        "modelAccuracy": "Model Accuracy",
+        "loss": "Loss",
+        "valLoss": "Val Loss",
+        "valAcc": "Val Acc"
+      },
+      "dataset": {
+        "validationSplit": "Validation split",
+        "trainImages": "Train Images",
+        "validation": "Validation",
+        "validationImages": "Validation Images"
+      },
+      "log": {
+        "title": "Training Log",
+        "empty": "No train log yet."
+      },
+      "form": {
+        "validationSplit": "Validation split",
+        "epochs": "Epochs",
+        "batchSize": "Batch size",
+        "learningRate": "Learning rate",
+        "imageSize": "Image size",
+        "earlyStopping": "Early stopping",
+        "earlyStoppingPatience": "Early stopping patience"
+      },
+      "timeline": {
+        "tfjs": "TensorFlow.js",
+        "mobilenet": "MobileNet",
+        "split": "Train / Validation Split",
+        "samples": "Local Samples",
+        "embeddings": "Embeddings",
+        "head": "Classifier Head",
+        "training": "Training",
+        "saving": "Saving Model",
+        "detail": {
+          "tfjs": "Initialize runtime and select the execution backend.",
+          "mobilenet": "Load pretrained backbone v{{version}} alpha {{alpha}}.",
+          "split": "Split each class into train and validation sets automatically.",
+          "samplesLoaded": "{{count}} images loaded",
+          "samplesDefault": "Images loaded",
+          "embeddings": "Convert images into 1280-d MobileNet feature vectors.",
+          "head": "Create a small dense classifier on top of the extracted features.",
+          "trainingProgress": "Optimize the classifier head for {{current}}/{{total}} epochs.",
+          "trainingDefault": "Optimize the classifier head on top of frozen MobileNet features.",
+          "saving": "Write the trained model artifacts to the project workspace."
+        }
+      },
+      "toast": {
+        "completed": "Training completed.",
+        "cancelled": "Training cancelled."
+      }
+    }
+  }
+}

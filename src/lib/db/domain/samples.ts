@@ -2,6 +2,12 @@ import { getKysely } from "../kysely"
 
 export type SampleSource = "camera" | "upload"
 
+export type ProjectSamplePreview = {
+  id: string
+  projectId: string
+  filePath: string
+}
+
 export type ProjectSample = {
   id: string
   projectId: string
@@ -95,6 +101,44 @@ export async function listProjectSamples(projectId: string) {
     .execute()
 
   return rows.map((row) => mapProjectSample(row as ProjectSampleRow))
+}
+
+export async function listProjectSamplePreviews(projectIds: string[]) {
+  if (!projectIds.length) {
+    return []
+  }
+
+  const db = getKysely()
+  const rows = await db
+    .selectFrom("samples")
+    .select(["id", "project_id", "file_path"])
+    .where("project_id", "in", projectIds)
+    .orderBy("order", "asc")
+    .orderBy("created_at", "asc")
+    .execute()
+
+  const previewMap = new Map<string, ProjectSamplePreview[]>()
+
+  rows.forEach((row) => {
+    const list = previewMap.get(row.project_id) ?? []
+
+    if (list.length >= 5) {
+      if (!previewMap.has(row.project_id)) {
+        previewMap.set(row.project_id, list)
+      }
+
+      return
+    }
+
+    list.push({
+      id: row.id,
+      projectId: row.project_id,
+      filePath: row.file_path,
+    })
+    previewMap.set(row.project_id, list)
+  })
+
+  return Array.from(previewMap.values()).flat()
 }
 
 export async function listClassSamples(classId: string) {

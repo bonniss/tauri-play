@@ -6,7 +6,6 @@ import { appTheme } from "./theme"
 
 import { useDisclosure } from "@mantine/hooks"
 import { createProvider } from "react-easy-provider"
-import "~/assets/styles/index.css"
 import { Toaster } from "sonner";
 
 const COLOR_SCHEME_STORAGE_KEY = "$colorScheme"
@@ -37,7 +36,7 @@ export const AppProvider: FunctionComponent<AppProviderProps> = ({
       >
         <InternalProvider>{children}</InternalProvider>
       </MantineProvider>
-      <Toaster />
+      <Toaster richColors />
     </QueryClientProvider>
   )
 }

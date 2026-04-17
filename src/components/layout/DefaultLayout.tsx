@@ -5,9 +5,9 @@ interface DefaultLayoutProps extends PropsWithChildren {}
 
 const DefaultLayout: FunctionComponent<DefaultLayoutProps> = ({ children }) => {
   return (
-    <div className="container space-y-4">
+    <div className="mx-auto w-full max-w-6xl px-4">
       <AppHeader />
-      <main>{children}</main>
+      <main className="pt-[60px]">{children}</main>
     </div>
   )
 }

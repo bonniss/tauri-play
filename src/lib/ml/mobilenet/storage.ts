@@ -2,11 +2,9 @@ import { BaseDirectory, mkdir, readFile, readTextFile, writeFile } from "@tauri-
 import * as tf from "@tensorflow/tfjs"
 
 const MODEL_DIRECTORY_PATH = "ml-lab/mobilenet/latest"
-const MODEL_JSON_PATH = `${MODEL_DIRECTORY_PATH}/model.json`
-const MODEL_WEIGHTS_PATH = `${MODEL_DIRECTORY_PATH}/weights.bin`
-const MODEL_METADATA_PATH = `${MODEL_DIRECTORY_PATH}/metadata.json`
 
 export type MobilenetClassifierMetadata = {
+  classNames?: string[]
   imageSize: number
   inputShape: number[]
   mobilenetAlpha: number
@@ -29,11 +27,21 @@ type StoredModelJson = {
   weightsManifest: tf.io.WeightsManifestConfig
 }
 
+function getModelPaths(directoryPath: string) {
+  return {
+    modelJsonPath: `${directoryPath}/model.json`,
+    modelWeightsPath: `${directoryPath}/weights.bin`,
+    modelMetadataPath: `${directoryPath}/metadata.json`,
+  }
+}
+
 export async function saveMobilenetClassifierModel({
+  directoryPath = MODEL_DIRECTORY_PATH,
   imageSize,
   metadata,
   model,
 }: {
+  directoryPath?: string
   imageSize: number
   metadata: Omit<MobilenetClassifierMetadata, "imageSize" | "savedAt">
   model: tf.LayersModel
@@ -60,10 +68,12 @@ export async function saveMobilenetClassifierModel({
     throw new Error("Classifier artifacts were incomplete during save.")
   }
 
-  await mkdir(MODEL_DIRECTORY_PATH, {
+  await mkdir(directoryPath, {
     baseDir: BaseDirectory.AppData,
     recursive: true,
   })
+  const { modelJsonPath, modelMetadataPath, modelWeightsPath } =
+    getModelPaths(directoryPath)
 
   const modelJson: StoredModelJson = {
     convertedBy: artifacts.convertedBy ?? undefined,
@@ -85,7 +95,7 @@ export async function saveMobilenetClassifierModel({
   }
 
   await writeFile(
-    MODEL_JSON_PATH,
+    modelJsonPath,
     new TextEncoder().encode(JSON.stringify(modelJson, null, 2)),
     {
       baseDir: BaseDirectory.AppData,
@@ -93,7 +103,7 @@ export async function saveMobilenetClassifierModel({
   )
 
   await writeFile(
-    MODEL_WEIGHTS_PATH,
+    modelWeightsPath,
     new Uint8Array(artifacts.weightData),
     {
       baseDir: BaseDirectory.AppData,
@@ -101,7 +111,7 @@ export async function saveMobilenetClassifierModel({
   )
 
   await writeFile(
-    MODEL_METADATA_PATH,
+    modelMetadataPath,
     new TextEncoder().encode(JSON.stringify(fullMetadata, null, 2)),
     {
       baseDir: BaseDirectory.AppData,
@@ -109,20 +119,22 @@ export async function saveMobilenetClassifierModel({
   )
 
   return {
-    directoryPath: MODEL_DIRECTORY_PATH,
+    directoryPath,
     metadata: fullMetadata,
   }
 }
 
-export async function loadMobilenetClassifierModel() {
+export async function loadMobilenetClassifierModel(directoryPath = MODEL_DIRECTORY_PATH) {
+  const { modelJsonPath, modelMetadataPath, modelWeightsPath } =
+    getModelPaths(directoryPath)
   const [modelJsonText, metadataText, weightBytes] = await Promise.all([
-    readTextFile(MODEL_JSON_PATH, {
+    readTextFile(modelJsonPath, {
       baseDir: BaseDirectory.AppData,
     }),
-    readTextFile(MODEL_METADATA_PATH, {
+    readTextFile(modelMetadataPath, {
       baseDir: BaseDirectory.AppData,
     }),
-    readFile(MODEL_WEIGHTS_PATH, {
+    readFile(modelWeightsPath, {
       baseDir: BaseDirectory.AppData,
     }),
   ])

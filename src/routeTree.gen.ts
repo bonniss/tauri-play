@@ -13,7 +13,10 @@ import { Route as TodosRouteImport } from './routes/todos'
 import { Route as MlLabRouteImport } from './routes/ml-lab'
 import { Route as CameraRouteImport } from './routes/camera'
 import { Route as ProjectsRouteRouteImport } from './routes/projects/route'
+import { Route as PRouteRouteImport } from './routes/p/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProjectsIndexRouteImport } from './routes/projects/index'
+import { Route as PProjectIdRouteImport } from './routes/p/$projectId'
 import { Route as ProjectsProjectIdRouteRouteImport } from './routes/projects/$projectId/route'
 import { Route as ProjectsProjectIdIndexRouteImport } from './routes/projects/$projectId/index'
 import { Route as ProjectsProjectIdTrainRouteImport } from './routes/projects/$projectId/train'
@@ -41,10 +44,25 @@ const ProjectsRouteRoute = ProjectsRouteRouteImport.update({
   path: '/projects',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PRouteRoute = PRouteRouteImport.update({
+  id: '/p',
+  path: '/p',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ProjectsRouteRoute,
+} as any)
+const PProjectIdRoute = PProjectIdRouteImport.update({
+  id: '/$projectId',
+  path: '/$projectId',
+  getParentRoute: () => PRouteRoute,
 } as any)
 const ProjectsProjectIdRouteRoute = ProjectsProjectIdRouteRouteImport.update({
   id: '/$projectId',
@@ -81,11 +99,14 @@ const ProjectsProjectIdLabelClassIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/p': typeof PRouteRouteWithChildren
   '/projects': typeof ProjectsRouteRouteWithChildren
   '/camera': typeof CameraRoute
   '/ml-lab': typeof MlLabRoute
   '/todos': typeof TodosRoute
   '/projects/$projectId': typeof ProjectsProjectIdRouteRouteWithChildren
+  '/p/$projectId': typeof PProjectIdRoute
+  '/projects/': typeof ProjectsIndexRoute
   '/projects/$projectId/play': typeof ProjectsProjectIdPlayRoute
   '/projects/$projectId/train': typeof ProjectsProjectIdTrainRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
@@ -94,10 +115,12 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/projects': typeof ProjectsRouteRouteWithChildren
+  '/p': typeof PRouteRouteWithChildren
   '/camera': typeof CameraRoute
   '/ml-lab': typeof MlLabRoute
   '/todos': typeof TodosRoute
+  '/p/$projectId': typeof PProjectIdRoute
+  '/projects': typeof ProjectsIndexRoute
   '/projects/$projectId/play': typeof ProjectsProjectIdPlayRoute
   '/projects/$projectId/train': typeof ProjectsProjectIdTrainRoute
   '/projects/$projectId': typeof ProjectsProjectIdIndexRoute
@@ -107,11 +130,14 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/p': typeof PRouteRouteWithChildren
   '/projects': typeof ProjectsRouteRouteWithChildren
   '/camera': typeof CameraRoute
   '/ml-lab': typeof MlLabRoute
   '/todos': typeof TodosRoute
   '/projects/$projectId': typeof ProjectsProjectIdRouteRouteWithChildren
+  '/p/$projectId': typeof PProjectIdRoute
+  '/projects/': typeof ProjectsIndexRoute
   '/projects/$projectId/play': typeof ProjectsProjectIdPlayRoute
   '/projects/$projectId/train': typeof ProjectsProjectIdTrainRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
@@ -122,11 +148,14 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/p'
     | '/projects'
     | '/camera'
     | '/ml-lab'
     | '/todos'
     | '/projects/$projectId'
+    | '/p/$projectId'
+    | '/projects/'
     | '/projects/$projectId/play'
     | '/projects/$projectId/train'
     | '/projects/$projectId/'
@@ -135,10 +164,12 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/projects'
+    | '/p'
     | '/camera'
     | '/ml-lab'
     | '/todos'
+    | '/p/$projectId'
+    | '/projects'
     | '/projects/$projectId/play'
     | '/projects/$projectId/train'
     | '/projects/$projectId'
@@ -147,11 +178,14 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/p'
     | '/projects'
     | '/camera'
     | '/ml-lab'
     | '/todos'
     | '/projects/$projectId'
+    | '/p/$projectId'
+    | '/projects/'
     | '/projects/$projectId/play'
     | '/projects/$projectId/train'
     | '/projects/$projectId/'
@@ -161,6 +195,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PRouteRoute: typeof PRouteRouteWithChildren
   ProjectsRouteRoute: typeof ProjectsRouteRouteWithChildren
   CameraRoute: typeof CameraRoute
   MlLabRoute: typeof MlLabRoute
@@ -197,12 +232,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/p': {
+      id: '/p'
+      path: '/p'
+      fullPath: '/p'
+      preLoaderRoute: typeof PRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/projects/': {
+      id: '/projects/'
+      path: '/'
+      fullPath: '/projects/'
+      preLoaderRoute: typeof ProjectsIndexRouteImport
+      parentRoute: typeof ProjectsRouteRoute
+    }
+    '/p/$projectId': {
+      id: '/p/$projectId'
+      path: '/$projectId'
+      fullPath: '/p/$projectId'
+      preLoaderRoute: typeof PProjectIdRouteImport
+      parentRoute: typeof PRouteRoute
     }
     '/projects/$projectId': {
       id: '/projects/$projectId'
@@ -249,6 +305,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface PRouteRouteChildren {
+  PProjectIdRoute: typeof PProjectIdRoute
+}
+
+const PRouteRouteChildren: PRouteRouteChildren = {
+  PProjectIdRoute: PProjectIdRoute,
+}
+
+const PRouteRouteWithChildren =
+  PRouteRoute._addFileChildren(PRouteRouteChildren)
+
 interface ProjectsProjectIdRouteRouteChildren {
   ProjectsProjectIdPlayRoute: typeof ProjectsProjectIdPlayRoute
   ProjectsProjectIdTrainRoute: typeof ProjectsProjectIdTrainRoute
@@ -273,10 +340,12 @@ const ProjectsProjectIdRouteRouteWithChildren =
 
 interface ProjectsRouteRouteChildren {
   ProjectsProjectIdRouteRoute: typeof ProjectsProjectIdRouteRouteWithChildren
+  ProjectsIndexRoute: typeof ProjectsIndexRoute
 }
 
 const ProjectsRouteRouteChildren: ProjectsRouteRouteChildren = {
   ProjectsProjectIdRouteRoute: ProjectsProjectIdRouteRouteWithChildren,
+  ProjectsIndexRoute: ProjectsIndexRoute,
 }
 
 const ProjectsRouteRouteWithChildren = ProjectsRouteRoute._addFileChildren(
@@ -285,6 +354,7 @@ const ProjectsRouteRouteWithChildren = ProjectsRouteRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PRouteRoute: PRouteRouteWithChildren,
   ProjectsRouteRoute: ProjectsRouteRouteWithChildren,
   CameraRoute: CameraRoute,
   MlLabRoute: MlLabRoute,
