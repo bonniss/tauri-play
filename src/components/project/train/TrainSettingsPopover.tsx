@@ -1,72 +1,13 @@
 import { Button, Group, Popover, Text } from "@mantine/core"
 import { IconSettings } from "@tabler/icons-react"
+import { useMemo } from "react"
 import { defineConfig, Form } from "~/components/form"
 import { useDataTrain } from "~/components/project/train/DataTrainProvider"
+import { t, useLocale } from "~/lib/i18n"
 import { ProjectTrainSettingsFormValues } from "~/lib/project/settings"
 
-const trainSettingsForm = defineConfig<ProjectTrainSettingsFormValues>({
-  validationSplit: {
-    type: "numeric",
-    label: "Validation split",
-    props: {
-      allowDecimal: true,
-      decimalScale: 2,
-      min: 0.05,
-      max: 0.5,
-      step: 0.05,
-    },
-  },
-  epochs: {
-    type: "numeric",
-    label: "Epochs",
-    props: {
-      allowDecimal: false,
-      min: 1,
-    },
-  },
-  batchSize: {
-    type: "numeric",
-    label: "Batch size",
-    props: {
-      allowDecimal: false,
-      min: 1,
-    },
-  },
-  learningRate: {
-    type: "numeric",
-    label: "Learning rate",
-    props: {
-      allowDecimal: true,
-      decimalScale: 4,
-      min: 0.0001,
-      max: 1,
-      step: 0.0005,
-    },
-  },
-  imageSize: {
-    type: "numeric",
-    label: "Image size",
-    props: {
-      allowDecimal: false,
-      min: 32,
-      step: 32,
-    },
-  },
-  earlyStopping: {
-    type: "switch",
-    label: "Early stopping",
-  },
-  earlyStoppingPatience: {
-    type: "numeric",
-    label: "Early stopping patience",
-    props: {
-      allowDecimal: false,
-      min: 1,
-    },
-  },
-})
-
 function TrainSettingsPopover() {
+  const locale = useLocale()
   const {
     applyTrainSettings,
     getTrainSettingsFormValues,
@@ -75,6 +16,47 @@ function TrainSettingsPopover() {
     setTrainSettingsOpened,
     trainSettingsOpened,
   } = useDataTrain()
+
+  const trainSettingsForm = useMemo(
+    () =>
+      defineConfig<ProjectTrainSettingsFormValues>({
+        validationSplit: {
+          type: "numeric",
+          label: t("project.train.form.validationSplit"),
+          props: { allowDecimal: true, decimalScale: 2, min: 0.05, max: 0.5, step: 0.05 },
+        },
+        epochs: {
+          type: "numeric",
+          label: t("project.train.form.epochs"),
+          props: { allowDecimal: false, min: 1 },
+        },
+        batchSize: {
+          type: "numeric",
+          label: t("project.train.form.batchSize"),
+          props: { allowDecimal: false, min: 1 },
+        },
+        learningRate: {
+          type: "numeric",
+          label: t("project.train.form.learningRate"),
+          props: { allowDecimal: true, decimalScale: 4, min: 0.0001, max: 1, step: 0.0005 },
+        },
+        imageSize: {
+          type: "numeric",
+          label: t("project.train.form.imageSize"),
+          props: { allowDecimal: false, min: 32, step: 32 },
+        },
+        earlyStopping: {
+          type: "switch",
+          label: t("project.train.form.earlyStopping"),
+        },
+        earlyStoppingPatience: {
+          type: "numeric",
+          label: t("project.train.form.earlyStoppingPatience"),
+          props: { allowDecimal: false, min: 1 },
+        },
+      }),
+    [locale],
+  )
 
   return (
     <Popover
@@ -96,7 +78,7 @@ function TrainSettingsPopover() {
           }}
           variant="default"
         >
-          Settings
+          {t("common.settings")}
         </Button>
       </Popover.Target>
       <Popover.Dropdown>
@@ -111,7 +93,7 @@ function TrainSettingsPopover() {
           renderRoot={({ children, onSubmit }) => (
             <form className="space-y-3" onSubmit={onSubmit}>
               <Text fw={600} size="sm">
-                Train Settings
+                {t("project.train.settingsTitle")}
               </Text>
               {children}
               <Group justify="flex-end">
@@ -122,10 +104,10 @@ function TrainSettingsPopover() {
                   type="button"
                   variant="default"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
                 <Button loading={isApplyingTrainSettings} type="submit">
-                  Apply
+                  {t("common.apply")}
                 </Button>
               </Group>
             </form>

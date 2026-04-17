@@ -61,6 +61,74 @@
         "guide3": "Cân bằng số lượng ảnh giữa các class",
         "tip": "Chụp trong điều kiện tương tự thực tế khi model được dùng."
       }
+    },
+    "train": {
+      "title": "Train",
+      "startTraining": "Bắt đầu Train",
+      "stopTraining": "Dừng Train",
+      "notReadyAlert": "Dữ liệu chưa sẵn sàng. Hãy hoàn thành số lượng class và Sample tối thiểu trước.",
+      "latestRun": "Lần chạy gần nhất",
+      "viewLog": "Xem Log",
+      "epochsProgress": "{{current}}/{{total}} epochs",
+      "noRunYet": "Chưa có lần train nào.",
+      "settingsTitle": "Cài đặt Train",
+      "status": {
+        "inProgress": "Đang train...",
+        "cancelled": "Trạng thái: đã hủy",
+        "lastStatus": "Trạng thái: {{status}}",
+        "notStarted": "Chưa bắt đầu train."
+      },
+      "metrics": {
+        "modelAccuracy": "Model Accuracy",
+        "loss": "Loss",
+        "valLoss": "Val Loss",
+        "valAcc": "Val Acc"
+      },
+      "dataset": {
+        "validationSplit": "Validation split",
+        "trainImages": "Ảnh Train",
+        "validation": "Validation",
+        "validationImages": "Ảnh Validation"
+      },
+      "log": {
+        "title": "Training Log",
+        "empty": "Chưa có log nào."
+      },
+      "form": {
+        "validationSplit": "Validation split",
+        "epochs": "Epochs",
+        "batchSize": "Batch size",
+        "learningRate": "Learning rate",
+        "imageSize": "Image size",
+        "earlyStopping": "Early stopping",
+        "earlyStoppingPatience": "Early stopping patience"
+      },
+      "timeline": {
+        "tfjs": "TensorFlow.js",
+        "mobilenet": "MobileNet",
+        "split": "Chia tập Train / Validation",
+        "samples": "Tải Sample",
+        "embeddings": "Embeddings",
+        "head": "Classifier Head",
+        "training": "Training",
+        "saving": "Lưu Model",
+        "detail": {
+          "tfjs": "Khởi tạo runtime và chọn backend thực thi.",
+          "mobilenet": "Tải backbone v{{version}} alpha {{alpha}} đã pretrain.",
+          "split": "Tự động chia mỗi class thành tập train và validation.",
+          "samplesLoaded": "Đã tải {{count}} ảnh",
+          "samplesDefault": "Đã tải ảnh",
+          "embeddings": "Chuyển ảnh thành vector đặc trưng 1280 chiều của MobileNet.",
+          "head": "Tạo classifier nhỏ trên các đặc trưng đã trích xuất.",
+          "trainingProgress": "Tối ưu classifier head qua {{current}}/{{total}} epochs.",
+          "trainingDefault": "Tối ưu classifier head trên đặc trưng MobileNet đã đóng băng.",
+          "saving": "Ghi artifact Model vào thư mục dự án."
+        }
+      },
+      "toast": {
+        "completed": "Train hoàn tất.",
+        "cancelled": "Đã hủy train."
+      }
     }
   }
 }

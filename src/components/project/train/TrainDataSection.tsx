@@ -1,8 +1,10 @@
 import { Drawer, SegmentedControl } from "@mantine/core"
 import SampleGrid from "~/components/project/SampleGrid"
 import { useDataTrain } from "~/components/project/train/DataTrainProvider"
+import { t, useLocale } from "~/lib/i18n"
 
 function TrainDataSection() {
+  useLocale()
   const {
     displayedSplitSamples,
     inspectDataOpened,
@@ -21,7 +23,11 @@ function TrainDataSection() {
       padding="md"
       position="bottom"
       size="75%"
-      title={trainDataView === "train" ? "Train Images" : "Validation Images"}
+      title={
+        trainDataView === "train"
+          ? t("project.train.dataset.trainImages")
+          : t("project.train.dataset.validationImages")
+      }
     >
       <div className="container space-y-4">
         <SegmentedControl

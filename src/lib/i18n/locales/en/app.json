@@ -61,6 +61,74 @@
         "guide3": "Keep image counts balanced across all classes",
         "tip": "Capture in conditions similar to where the model will actually run."
       }
+    },
+    "train": {
+      "title": "Train",
+      "startTraining": "Start Training",
+      "stopTraining": "Stop Training",
+      "notReadyAlert": "Label data is not ready yet. Complete the minimum class and sample requirements first.",
+      "latestRun": "Latest run",
+      "viewLog": "View Log",
+      "epochsProgress": "{{current}}/{{total}} epochs",
+      "noRunYet": "No training run yet.",
+      "settingsTitle": "Train Settings",
+      "status": {
+        "inProgress": "Training is in progress.",
+        "cancelled": "Last status: cancelled",
+        "lastStatus": "Last status: {{status}}",
+        "notStarted": "Training has not started yet."
+      },
+      "metrics": {
+        "modelAccuracy": "Model Accuracy",
+        "loss": "Loss",
+        "valLoss": "Val Loss",
+        "valAcc": "Val Acc"
+      },
+      "dataset": {
+        "validationSplit": "Validation split",
+        "trainImages": "Train Images",
+        "validation": "Validation",
+        "validationImages": "Validation Images"
+      },
+      "log": {
+        "title": "Training Log",
+        "empty": "No train log yet."
+      },
+      "form": {
+        "validationSplit": "Validation split",
+        "epochs": "Epochs",
+        "batchSize": "Batch size",
+        "learningRate": "Learning rate",
+        "imageSize": "Image size",
+        "earlyStopping": "Early stopping",
+        "earlyStoppingPatience": "Early stopping patience"
+      },
+      "timeline": {
+        "tfjs": "TensorFlow.js",
+        "mobilenet": "MobileNet",
+        "split": "Train / Validation Split",
+        "samples": "Local Samples",
+        "embeddings": "Embeddings",
+        "head": "Classifier Head",
+        "training": "Training",
+        "saving": "Saving Model",
+        "detail": {
+          "tfjs": "Initialize runtime and select the execution backend.",
+          "mobilenet": "Load pretrained backbone v{{version}} alpha {{alpha}}.",
+          "split": "Split each class into train and validation sets automatically.",
+          "samplesLoaded": "{{count}} images loaded",
+          "samplesDefault": "Images loaded",
+          "embeddings": "Convert images into 1280-d MobileNet feature vectors.",
+          "head": "Create a small dense classifier on top of the extracted features.",
+          "trainingProgress": "Optimize the classifier head for {{current}}/{{total}} epochs.",
+          "trainingDefault": "Optimize the classifier head on top of frozen MobileNet features.",
+          "saving": "Write the trained model artifacts to the project workspace."
+        }
+      },
+      "toast": {
+        "completed": "Training completed.",
+        "cancelled": "Training cancelled."
+      }
     }
   }
 }

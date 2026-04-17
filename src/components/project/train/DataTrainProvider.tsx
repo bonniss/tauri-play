@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { createProvider } from "react-easy-provider"
 import { toast } from "sonner"
+import { t, useLocale } from "~/lib/i18n"
 import { useProjectOne } from "~/components/project/ProjectOneProvider"
 import {
   appendModelTrainLogEvent,
@@ -68,15 +69,17 @@ const FIXED_TIMELINE_STEP_ORDER: FixedTimelineStepId[] = [
   "saving",
 ]
 
-const FIXED_TIMELINE_STEP_LABELS: Record<FixedTimelineStepId, string> = {
-  tfjs: "TensorFlow.js",
-  mobilenet: "MobileNet",
-  split: "Train / Validation Split",
-  samples: "Local Samples",
-  embeddings: "Embeddings",
-  head: "Classifier Head",
-  training: "Training",
-  saving: "Saving Model",
+function getTimelineStepLabels(): Record<FixedTimelineStepId, string> {
+  return {
+    tfjs: t("project.train.timeline.tfjs"),
+    mobilenet: t("project.train.timeline.mobilenet"),
+    split: t("project.train.timeline.split"),
+    samples: t("project.train.timeline.samples"),
+    embeddings: t("project.train.timeline.embeddings"),
+    head: t("project.train.timeline.head"),
+    training: t("project.train.timeline.training"),
+    saving: t("project.train.timeline.saving"),
+  }
 }
 
 function getDefaultStepDetail(
@@ -89,15 +92,17 @@ function getDefaultStepDetail(
   },
 ) {
   if (id === "tfjs") {
-    return "Initialize runtime and select the execution backend."
+    return t("project.train.timeline.detail.tfjs")
   }
 
   if (id === "mobilenet") {
-    return `Load pretrained backbone v${MOBILENET_VERSION} alpha ${MOBILENET_ALPHA}.`
+    return t("project.train.timeline.detail.mobilenet", {
+      params: { version: MOBILENET_VERSION, alpha: MOBILENET_ALPHA },
+    })
   }
 
   if (id === "split") {
-    return "Split each class into train and validation sets automatically."
+    return t("project.train.timeline.detail.split")
   }
 
   if (id === "samples") {
@@ -106,18 +111,20 @@ function getDefaultStepDetail(
     const totalSamples = trainSamples + validationSamples
 
     if (totalSamples > 0) {
-      return `${totalSamples} images loaded`
+      return t("project.train.timeline.detail.samplesLoaded", {
+        params: { count: totalSamples },
+      })
     }
 
-    return "Images loaded"
+    return t("project.train.timeline.detail.samplesDefault")
   }
 
   if (id === "embeddings") {
-    return "Convert images into 1280-d MobileNet feature vectors."
+    return t("project.train.timeline.detail.embeddings")
   }
 
   if (id === "head") {
-    return "Create a small dense classifier on top of the extracted features."
+    return t("project.train.timeline.detail.head")
   }
 
   if (id === "training") {
@@ -125,13 +132,15 @@ function getDefaultStepDetail(
     const plannedEpochs = context?.plannedEpochs ?? 0
 
     if (latestEpochNumber > 0 && plannedEpochs > 0) {
-      return `Optimize the classifier head for ${latestEpochNumber}/${plannedEpochs} epochs.`
+      return t("project.train.timeline.detail.trainingProgress", {
+        params: { current: latestEpochNumber, total: plannedEpochs },
+      })
     }
 
-    return "Optimize the classifier head on top of frozen MobileNet features."
+    return t("project.train.timeline.detail.trainingDefault")
   }
 
-  return "Write the trained model artifacts to the project workspace."
+  return t("project.train.timeline.detail.saving")
 }
 
 function formatDuration(durationMs: number) {
@@ -418,6 +427,7 @@ function buildFixedTimelineSteps({
   latestEpochNumber,
   now,
   plannedEpochs,
+  stepLabels,
 }: {
   displayedTrainLog:
     | ActiveTrainSession
@@ -426,6 +436,7 @@ function buildFixedTimelineSteps({
   latestEpochNumber: number
   now: number
   plannedEpochs: number
+  stepLabels: Record<FixedTimelineStepId, string>
 }): FixedTimelineStep[] {
   const fallbackSteps = FIXED_TIMELINE_STEP_ORDER.map((id) => ({
     detail:
@@ -434,7 +445,7 @@ function buildFixedTimelineSteps({
         : null,
     elapsedLabel: null,
     id,
-    label: FIXED_TIMELINE_STEP_LABELS[id],
+    label: stepLabels[id],
     status: "pending" as const,
   }))
 
@@ -533,7 +544,7 @@ function buildFixedTimelineSteps({
         }),
       elapsedLabel: elapsedMs != null ? formatDuration(elapsedMs) : null,
       id,
-      label: FIXED_TIMELINE_STEP_LABELS[id],
+      label: stepLabels[id],
       status,
     }
   })
@@ -553,6 +564,7 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
     trainSettings,
   } = useProjectOne()
   const queryClient = useQueryClient()
+  const locale = useLocale()
   const [activeSession, setActiveSession] = useState<ActiveTrainSession | null>(
     null,
   )
@@ -784,7 +796,7 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
         }),
       ])
       if (isCancelled) {
-        toast.message("Training cancelled.")
+        toast.message(t("project.train.toast.cancelled"))
       } else {
         toast.error(errorMessage, {
           description: errorDescription ?? undefined,
@@ -803,7 +815,7 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
         }),
         queryClient.invalidateQueries({ queryKey: ["projects"] }),
       ])
-      toast.success("Training completed.", {
+      toast.success(t("project.train.toast.completed"), {
         position: "top-center",
       })
     },
@@ -898,8 +910,10 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
         latestEpochNumber,
         now,
         plannedEpochs,
+        stepLabels: getTimelineStepLabels(),
       }),
-    [displayedTrainLog, latestEpoch, latestEpochNumber, now, plannedEpochs],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [displayedTrainLog, latestEpoch, latestEpochNumber, now, plannedEpochs, locale],
   )
   const hasTrainData =
     inspectedDataSnapshot.trainSamples > 0 ||
@@ -958,7 +972,7 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
     },
     summaryStats: [
       {
-        label: "Model Accuracy",
+        label: t("project.train.metrics.modelAccuracy"),
         value: formatMetric(
           latestEpoch?.acc ??
             displayedTrainLog?.summary?.accuracy ??
@@ -966,19 +980,19 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
         ),
       },
       {
-        label: "Loss",
+        label: t("project.train.metrics.loss"),
         value: formatMetric(
           latestEpoch?.loss ?? displayedTrainLog?.summary?.loss,
         ),
       },
       {
-        label: "Val Loss",
+        label: t("project.train.metrics.valLoss"),
         value: formatMetric(
           latestEpoch?.valLoss ?? displayedTrainLog?.summary?.validationLoss,
         ),
       },
       {
-        label: "Val Acc",
+        label: t("project.train.metrics.valAcc"),
         value: formatMetric(
           latestEpoch?.valAcc ?? displayedTrainLog?.summary?.validationAccuracy,
         ),
@@ -988,11 +1002,11 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
     trainDataView,
     trainDataViewOptions: [
       {
-        label: `Train (${inspectedDataSnapshot.trainSamples})`,
+        label: `${t("project.train.dataset.trainImages")} (${inspectedDataSnapshot.trainSamples})`,
         value: "train",
       },
       {
-        label: `Validation (${inspectedDataSnapshot.validationSamples})`,
+        label: `${t("project.train.dataset.validation")} (${inspectedDataSnapshot.validationSamples})`,
         value: "validation",
       },
     ],
@@ -1001,10 +1015,10 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
     validationSplitLabel: `${Math.round(trainSettings.validationSplit * 100)}%`,
     trainStatusText: displayedTrainLog
       ? displayedTrainLog.status === "started"
-        ? "Training is in progress."
+        ? t("project.train.status.inProgress")
         : displayedTrainLog.status === "cancelled"
-          ? "Last status: cancelled"
-          : `Last status: ${displayedTrainLog.status}`
-      : "Training has not started yet.",
+          ? t("project.train.status.cancelled")
+          : t("project.train.status.lastStatus", { params: { status: displayedTrainLog.status } })
+      : t("project.train.status.notStarted"),
   }
 })

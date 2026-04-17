@@ -1,7 +1,9 @@
 import { Drawer, Text } from "@mantine/core"
 import { useDataTrain } from "~/components/project/train/DataTrainProvider"
+import { t, useLocale } from "~/lib/i18n"
 
 function TrainLogDrawer() {
+  useLocale()
   const {
     closeLogDetails,
     displayedTrainLog,
@@ -17,7 +19,7 @@ function TrainLogDrawer() {
       padding="md"
       position="right"
       size="lg"
-      title="Training Log"
+      title={t("project.train.log.title")}
     >
       {displayedTrainLog ? (
         <>
@@ -35,7 +37,7 @@ function TrainLogDrawer() {
         </>
       ) : (
         <Text c="dimmed" size="sm">
-          No train log yet.
+          {t("project.train.log.empty")}
         </Text>
       )}
     </Drawer>

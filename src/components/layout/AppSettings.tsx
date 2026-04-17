@@ -31,7 +31,7 @@ const AppSettings: FunctionComponent<AppSettingsProps> = () => {
               <div className="flex gap-4">
                 {[
                   { flag: '/flags/us.svg', label: "English", value: "en" },
-                  { flag: '/flags/vn.svg', label: "Tieng Viet", value: "vi" },
+                  { flag: '/flags/vn.svg', label: "Tiếng Việt", value: "vi" },
                 ].map((item) => (
                   <Radio.Card
                     checked={locale === item.value}

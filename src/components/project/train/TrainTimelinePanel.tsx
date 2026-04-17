@@ -10,8 +10,10 @@ import { IconCheck, IconClockHour4, IconX } from "@tabler/icons-react";
 import clsx from "clsx";
 import { match } from "ts-pattern";
 import { useDataTrain } from "~/components/project/train/DataTrainProvider";
+import { t, useLocale } from "~/lib/i18n";
 
 function TrainTimelinePanel() {
+  useLocale()
   const { elapsedLabel, timelineSteps } = useDataTrain()
 
   return (
@@ -49,7 +51,6 @@ function TrainTimelinePanel() {
                 color={match(status)
                   .with("completed", () => "teal")
                   .with("failed", () => "red")
-                  // .with("in_progress", () => "blue")
                   .otherwise(() => "gray")}
                 key={id}
                 title={label}
@@ -71,7 +72,7 @@ function TrainTimelinePanel() {
       ) : (
         <Center className="py-10">
           <Text c="dimmed" size="sm">
-            No training run yet.
+            {t("project.train.noRunYet")}
           </Text>
         </Center>
       )}

@@ -6,15 +6,17 @@ import TrainLogDrawer from "~/components/project/train/TrainLogDrawer"
 import TrainRunSummaryCard from "~/components/project/train/TrainRunSummaryCard"
 import TrainSettingsPopover from "~/components/project/train/TrainSettingsPopover"
 import TrainTimelinePanel from "~/components/project/train/TrainTimelinePanel"
+import { t, useLocale } from "~/lib/i18n"
 
 function TrainPageContent() {
+  useLocale()
   const { displayedTrainLog, isReadyForTrain, isTraining, requestStopTraining, startTraining } =
     useDataTrain()
 
   return (
     <div className="space-y-4 p-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold tracking-tight">Train</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">{t("project.train.title")}</h2>
         <div className="flex gap-2">
           <Button
             color={isTraining ? "red" : undefined}
@@ -34,7 +36,7 @@ function TrainPageContent() {
               void startTraining()
             }}
           >
-            {isTraining ? "Stop Training" : "Start Training"}
+            {isTraining ? t("project.train.stopTraining") : t("project.train.startTraining")}
           </Button>
           <TrainSettingsPopover />
         </div>
@@ -42,8 +44,7 @@ function TrainPageContent() {
 
       {!isReadyForTrain ? (
         <Alert color="yellow" variant="light">
-          Label data is not ready yet. Complete the minimum class and sample
-          requirements first.
+          {t("project.train.notReadyAlert")}
         </Alert>
       ) : null}
 

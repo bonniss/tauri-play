@@ -1,8 +1,10 @@
 import { Button, Divider, Progress, Text } from "@mantine/core"
 import { useDataTrain } from "~/components/project/train/DataTrainProvider"
+import { t, useLocale } from "~/lib/i18n"
 import TrainStatsGrid from "./TrainStatsGrid"
 
 function TrainRunSummaryCard() {
+  useLocale()
   const {
     displayedTrainLog,
     isTraining,
@@ -20,13 +22,13 @@ function TrainRunSummaryCard() {
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-0.5">
-          <Text fw={600}>Latest run</Text>
+          <Text fw={600}>{t("project.train.latestRun")}</Text>
           <Text c="dimmed" size="sm">
             {trainStatusText}
           </Text>
         </div>
         <Button onClick={openLogDetails} size="xs" variant="default">
-          View Log
+          {t("project.train.viewLog")}
         </Button>
       </div>
 
@@ -36,7 +38,7 @@ function TrainRunSummaryCard() {
             {trainProgressPercent}%
           </div>
           <Text c="dimmed" mb={8} size="sm">
-            {latestEpochNumber}/{plannedEpochs} epochs
+            {t("project.train.epochsProgress", { params: { current: latestEpochNumber, total: plannedEpochs } })}
           </Text>
         </div>
         <Progress
