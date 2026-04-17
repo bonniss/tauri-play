@@ -8,38 +8,35 @@ import TrainSettingsPopover from "~/components/project/train/TrainSettingsPopove
 import TrainTimelinePanel from "~/components/project/train/TrainTimelinePanel"
 
 function TrainPageContent() {
-  const { isReadyForTrain, isTraining, requestStopTraining, startTraining } =
+  const { displayedTrainLog, isReadyForTrain, isTraining, requestStopTraining, startTraining } =
     useDataTrain()
 
   return (
     <div className="space-y-4 p-4">
-      <div className="space-y-1">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-2xl font-semibold tracking-tight">Train</h2>
-          <div className="flex gap-2">
-            <Button
-              color={isTraining ? "red" : undefined}
-              disabled={!isReadyForTrain && !isTraining}
-              leftSection={
-                isTraining ? (
-                  <IconPlayerStop className="size-4" />
-                ) : (
-                  <IconPlayerPlay className="size-4" />
-                )
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-2xl font-semibold tracking-tight">Train</h2>
+        <div className="flex gap-2">
+          <Button
+            color={isTraining ? "red" : undefined}
+            disabled={!isReadyForTrain && !isTraining}
+            leftSection={
+              isTraining ? (
+                <IconPlayerStop className="size-4" />
+              ) : (
+                <IconPlayerPlay className="size-4" />
+              )
+            }
+            onClick={() => {
+              if (isTraining) {
+                requestStopTraining()
+                return
               }
-              onClick={() => {
-                if (isTraining) {
-                  requestStopTraining()
-                  return
-                }
-
-                void startTraining()
-              }}
-            >
-              {isTraining ? "Stop Training" : "Start Training"}
-            </Button>
-            <TrainSettingsPopover />
-          </div>
+              void startTraining()
+            }}
+          >
+            {isTraining ? "Stop Training" : "Start Training"}
+          </Button>
+          <TrainSettingsPopover />
         </div>
       </div>
 
@@ -50,13 +47,15 @@ function TrainPageContent() {
         </Alert>
       ) : null}
 
-      <div className="grid items-start gap-4 xl:grid-cols-2">
+      <div className="grid items-start gap-4 xl:grid-cols-[3fr_2fr]">
         <Paper className="p-4" withBorder radius="md">
           <TrainTimelinePanel />
         </Paper>
-        <Paper className="p-4" withBorder radius="md">
-          <TrainRunSummaryCard />
-        </Paper>
+        {displayedTrainLog ? (
+          <Paper className="p-4" withBorder radius="md">
+            <TrainRunSummaryCard />
+          </Paper>
+        ) : null}
       </div>
 
       <TrainDataSection />

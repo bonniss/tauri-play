@@ -1,4 +1,4 @@
-import { Button, Text } from "@mantine/core"
+import { Text } from "@mantine/core"
 import { useDataTrain } from "~/components/project/train/DataTrainProvider"
 
 function TrainStatsGrid() {
@@ -11,90 +11,72 @@ function TrainStatsGrid() {
   } = useDataTrain()
 
   return (
-    <div className="grid grid-cols-3 gap-4">
-      <DataBlock label="Validation Split" value={validationSplitLabel} />
-
-      <Button
-        className="h-auto min-h-24 flex-1 rounded-xl border border-zinc-200 bg-transparent px-4 py-3 text-left text-inherit hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900/60"
-        disabled={!hasTrainData}
-        onClick={() => {
-          openTrainDataDrawer()
-        }}
-        styles={{
-          inner: {
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            width: "100%",
-          },
-          label: {
-            width: "100%",
-          },
-          root: {
-            borderWidth: 1,
-          },
-        }}
-        variant="default"
-      >
-        <div className="flex w-full items-start justify-between gap-3">
-          <div className="space-y-1">
-            <Text c="dimmed" size="xs" tt="uppercase">
-              Train Images
-            </Text>
-            <Text className="text-3xl font-semibold tracking-tight" fw={600}>
-              {inspectedDataSnapshot.trainSamples}
-            </Text>
-          </div>
-        </div>
-      </Button>
-
-      <Button
-        className="h-auto min-h-24 flex-1 rounded-xl border border-zinc-200 bg-transparent px-4 py-3 text-left text-inherit hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900/60"
-        disabled={!hasTrainData}
-        onClick={() => {
-          openValidationDataDrawer()
-        }}
-        styles={{
-          inner: {
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            width: "100%",
-          },
-          label: {
-            width: "100%",
-          },
-          root: {
-            borderWidth: 1,
-          },
-        }}
-        variant="default"
-      >
-        <div className="flex w-full items-start justify-between gap-3">
-          <div className="space-y-1">
-            <Text c="dimmed" size="xs" tt="uppercase">
-              Validation Images
-            </Text>
-            <Text className="text-3xl font-semibold tracking-tight" fw={600}>
-              {inspectedDataSnapshot.validationSamples}
-            </Text>
-          </div>
-        </div>
-      </Button>
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 text-xs">
+        <span className="font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+          Validation split
+        </span>
+        <span className="font-semibold text-zinc-700 dark:text-zinc-200">
+          {validationSplitLabel}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <DatasetButton
+          color="blue"
+          count={inspectedDataSnapshot.trainSamples}
+          disabled={!hasTrainData}
+          label="Train Images"
+          onClick={openTrainDataDrawer}
+        />
+        <DatasetButton
+          color="violet"
+          count={inspectedDataSnapshot.validationSamples}
+          disabled={!hasTrainData}
+          label="Validation"
+          onClick={openValidationDataDrawer}
+        />
+      </div>
     </div>
   )
 }
 
-function DataBlock({ label, value }: { label: string; value: string }) {
+function DatasetButton({
+  color,
+  count,
+  disabled,
+  label,
+  onClick,
+}: {
+  color: "blue" | "violet"
+  count: number
+  disabled: boolean
+  label: string
+  onClick: () => void
+}) {
+  const styles = {
+    blue: {
+      card: "border-blue-200 bg-blue-50 hover:border-blue-300 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/30 dark:hover:bg-blue-950/50",
+      number: "text-blue-600 dark:text-blue-400",
+    },
+    violet: {
+      card: "border-violet-200 bg-violet-50 hover:border-violet-300 hover:bg-violet-100 dark:border-violet-900/50 dark:bg-violet-950/30 dark:hover:bg-violet-950/50",
+      number: "text-violet-600 dark:text-violet-400",
+    },
+  }[color]
+
   return (
-    <div className="min-h-24 flex-1 rounded-xl border border-zinc-200 px-4 py-3 dark:border-zinc-800">
-      <div className="space-y-1">
-        <Text c="dimmed" size="xs" tt="uppercase">
-          {label}
-        </Text>
-        <Text className="text-3xl font-semibold tracking-tight" fw={600}>
-          {value}
-        </Text>
+    <button
+      disabled={disabled}
+      onClick={onClick}
+      className={`rounded-xl border px-4 py-4 text-left transition-colors disabled:pointer-events-none disabled:opacity-40 ${styles.card}`}
+    >
+      <Text c="dimmed" size="xs" tt="uppercase">
+        {label}
+      </Text>
+      <div className={`mt-1 text-4xl font-semibold tracking-tight ${styles.number}`}>
+        {count}
       </div>
-    </div>
+    </button>
   )
 }
 
