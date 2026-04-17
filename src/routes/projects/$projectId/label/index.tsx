@@ -501,7 +501,7 @@ function ProjectLabelPage() {
                   <ContentEditable
                     as="span"
                     aria-label={`Class name ${item.name}`}
-                    className="inline-block w-fit max-w-full truncate rounded px-1 py-0.5"
+                    className="font-serif font-semibold inline-block w-fit max-w-full truncate rounded px-1 py-0.5"
                     focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
                     onBlur={(value) => {
                       updateClassName(item.id, value);

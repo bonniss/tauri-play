@@ -41,7 +41,7 @@ interface SampleGridProps {
 }
 
 const GRID_GAP_PX = 12
-const SAMPLE_PAGE_SIZE = 100
+const SAMPLE_PAGE_SIZE = 60
 
 const SampleGrid: FunctionComponent<SampleGridProps> = ({
   activeSampleId,
@@ -367,7 +367,7 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
   return (
     <>
       <ScrollArea.Autosize
-        mah={samples.length > 120 ? 520 : undefined}
+        mah={samples.length > 120 ? 450 : undefined}
         offsetScrollbars={samples.length > 120}
         onScrollPositionChange={() => {
           const viewportElement = viewportRef.current
