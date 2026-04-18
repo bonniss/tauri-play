@@ -45,8 +45,11 @@
       "description": "Mô tả chi tiết về dự án. Hỗ trợ Markdown.",
       "icon": "Một biểu tượng đại diện cho dự án."
     },
+    "edit": {
+      "title": "Chỉnh sửa dự án"
+    },
     "sidebar": {
-      "descriptionPlaceholder": "Thêm mô tả dự án",
+      "descriptionPlaceholder": "Chưa có mô tả",
       "dataset": "Dataset",
       "allImages": "Tất cả ảnh"
     },

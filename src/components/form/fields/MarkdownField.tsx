@@ -1,10 +1,10 @@
-import { Input, useMantineColorScheme } from "@mantine/core"
-import MDEditor, { type MDEditorProps } from "@uiw/react-md-editor"
-import { FunctionComponent } from "react"
-import { useField } from "react-headless-form"
+import { Input, useMantineColorScheme } from '@mantine/core';
+import MDEditor, { type MDEditorProps } from '@uiw/react-md-editor';
+import { FunctionComponent } from 'react';
+import { useField } from 'react-headless-form';
 
 interface MarkdownFieldProps extends MDEditorProps {
-  placeholder?: string
+  placeholder?: string;
 }
 
 const MarkdownField: FunctionComponent<MarkdownFieldProps> = (props) => {
@@ -16,12 +16,12 @@ const MarkdownField: FunctionComponent<MarkdownFieldProps> = (props) => {
     label,
     description,
     required,
-    // disabled,
-    // readOnly,
+    disabled,
+    readOnly,
     ref,
-  } = useField()
+  } = useField();
 
-  const { colorScheme } = useMantineColorScheme()
+  const { colorScheme } = useMantineColorScheme();
 
   return (
     <Input.Wrapper
@@ -35,17 +35,19 @@ const MarkdownField: FunctionComponent<MarkdownFieldProps> = (props) => {
           {...props}
           ref={ref}
           id={id}
-          value={value ?? ""}
+          value={value ?? ''}
           onChange={(val) => onChange?.(val)}
-          // disabled={disabled}
-          // readOnly={readOnly}
-          // placeholder={props.placeholder ?? label}
+          textareaProps={{
+            placeholder: props.placeholder ?? label,
+            readOnly: readOnly,
+            disabled: disabled,
+          }}
           aria-required={required}
           aria-invalid={Boolean(errorMessage)}
         />
       </div>
     </Input.Wrapper>
-  )
-}
+  );
+};
 
-export default MarkdownField
+export default MarkdownField;

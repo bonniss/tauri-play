@@ -62,6 +62,8 @@ const createProjectForm = defineConfig<{
     description: 'project.create.name',
     rules: {
       required: true,
+      minLength: 1,
+      maxLength: 200,
     },
     props: {
       size: 'lg',
@@ -98,6 +100,9 @@ const createProjectForm = defineConfig<{
     type: 'longText',
     label: 'common.description',
     description: 'project.create.description',
+    rules: {
+      maxLength: 5000,
+    },
     props: {
       preview: 'edit',
     },

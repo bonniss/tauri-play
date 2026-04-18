@@ -1,18 +1,25 @@
-import { Progress, Text } from '@mantine/core';
-import { IconCircleCheck, IconLoader2, IconX } from '@tabler/icons-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { ActionIcon, Progress, Text } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
+import {
+  IconCircleCheck,
+  IconLoader2,
+  IconPencil,
+  IconX,
+} from '@tabler/icons-react';
 import { Link, Outlet, useRouterState } from '@tanstack/react-router';
 import { FunctionComponent, ReactNode } from 'react';
 import ContentEditable from '~/components/headless/ContentEditable';
-import { type ProjectWorkspace, updateProject } from '~/lib/db/domain/projects';
+import MarkdownViewer from '../shared/MarkdownViewer';
 import { IconDataLabel, IconDataPlay, IconDataTrain } from '../icon/semantic';
 import { useAppProvider } from '../layout/AppProvider';
+import ProjectEditModal from './ProjectEditModal';
 import { useProjectOne } from './ProjectOneProvider';
 
 interface ProjectOneLayoutProps {}
 
 const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
   const { t } = useAppProvider();
+  const [editOpened, editHandlers] = useDisclosure(false);
   const {
     projectId,
     classes,
@@ -20,93 +27,19 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
     project,
     projectIcon,
     projectName,
+    projectDescription,
+    projectSettings,
     classReadiness,
     trainProgress,
     trainNavProgress,
     trainStatus,
     updateClassName,
     canPlay,
+    refreshProject,
   } = useProjectOne();
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
-  const queryClient = useQueryClient();
-
-  const updateProjectMutation = useMutation({
-    mutationFn: async ({
-      description,
-      name,
-    }: {
-      description?: string | null;
-      name?: string;
-    }) => {
-      await updateProject({
-        projectId,
-        description,
-        name,
-      });
-    },
-    onError: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ['project-workspace', projectId],
-      });
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['projects'] });
-    },
-  });
-
-  async function saveProjectField(next: {
-    description?: string | null;
-    name?: string;
-  }) {
-    const nextName = next.name?.trim();
-    const nextDescription =
-      next.description !== undefined
-        ? next.description?.trim() || null
-        : undefined;
-
-    if (next.name !== undefined && !nextName) {
-      await queryClient.invalidateQueries({
-        queryKey: ['project-workspace', projectId],
-      });
-      return;
-    }
-
-    if (
-      nextName === projectName &&
-      nextDescription === (project?.description ?? null)
-    ) {
-      return;
-    }
-
-    queryClient.setQueryData<ProjectWorkspace>(
-      ['project-workspace', projectId],
-      (current) => {
-        if (!current) {
-          return current;
-        }
-
-        return {
-          ...current,
-          project: {
-            ...current.project,
-            name: nextName ?? current.project?.name,
-            description:
-              nextDescription !== undefined
-                ? nextDescription
-                : current.project?.description,
-            updatedAt: new Date().toISOString(),
-          },
-        };
-      },
-    );
-
-    await updateProjectMutation.mutateAsync({
-      description: nextDescription,
-      name: nextName,
-    });
-  }
 
   return (
     <section className="flex min-h-[calc(100vh-60px)]">
@@ -117,29 +50,26 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
           </Text>
           <div className="mt-2 flex items-start gap-2">
             <div className="pt-0.5 text-xl leading-none">{projectIcon}</div>
-            <ContentEditable
-              as="h2"
-              aria-label="Project name"
-              className="min-w-0 rounded-md py-0.5 text-base font-semibold leading-tight text-zinc-950 outline-none transition-colors dark:text-zinc-50"
-              focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
-              onBlur={async (value) => {
-                await saveProjectField({ name: value });
-              }}
-              value={projectName}
-            />
+            <h2 className="min-w-0 flex-1 py-0.5 text-base font-semibold leading-tight text-zinc-950 dark:text-zinc-50">
+              {projectName}
+            </h2>
+            <ActionIcon
+              color="gray"
+              mt={2}
+              onClick={editHandlers.open}
+              size="sm"
+              variant="subtle"
+            >
+              <IconPencil stroke={1.8} />
+            </ActionIcon>
           </div>
-          <ContentEditable
-            as="p"
-            aria-label="Project description"
-            className="mt-1 min-w-0 rounded-md py-0.5 text-xs leading-5 text-zinc-500 outline-none transition-colors dark:text-zinc-400"
-            focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
-            multiline
-            onBlur={async (value) => {
-              await saveProjectField({ description: value });
-            }}
-            placeholder={t('project.sidebar.descriptionPlaceholder')}
-            value={project?.description ?? ''}
-          />
+          {projectDescription ? (
+            <MarkdownViewer className="mt-1 text-xs">{projectDescription}</MarkdownViewer>
+          ) : (
+            <p className="mt-1 text-xs italic text-zinc-400 dark:text-zinc-500">
+              {t('project.sidebar.descriptionPlaceholder')}
+            </p>
+          )}
         </div>
 
         <nav className="border-b border-zinc-200 px-3 py-3 dark:border-zinc-700">
@@ -219,6 +149,19 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
       <div className="min-w-0 flex-1">
         <Outlet />
       </div>
+
+      <ProjectEditModal
+        currentSettings={project?.settings ?? ''}
+        defaultValues={{
+          name: projectName,
+          description: projectDescription,
+          icon: projectSettings.icon,
+        }}
+        onClose={editHandlers.close}
+        onSuccess={refreshProject}
+        opened={editOpened}
+        projectId={projectId}
+      />
     </section>
   );
 };

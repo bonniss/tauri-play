@@ -397,6 +397,11 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       });
     };
 
+    const refreshProject = async () => {
+      const workspace = await getProjectWorkspace(projectId)
+      setProject(workspace.project)
+    }
+
     const getLabelSettingsFormValues = (): ProjectLabelSettingsFormValues =>
       projectLabelSettingsToFormValues(labelSettings);
 
@@ -618,6 +623,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       canPlay,
       playGuardTitle,
       playGuardDescription,
+      refreshProject,
     };
   },
 );

@@ -45,8 +45,11 @@
       "description": "In depth description of your project. Markdown supported.",
       "icon": "An icon that represents your project."
     },
+    "edit": {
+      "title": "Edit Project"
+    },
     "sidebar": {
-      "descriptionPlaceholder": "Add project description",
+      "descriptionPlaceholder": "No description yet",
       "dataset": "Dataset",
       "allImages": "All Images"
     },
