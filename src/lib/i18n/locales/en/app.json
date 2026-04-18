@@ -26,9 +26,13 @@
     "unlimited": "Unlimited",
     "name": "Name",
     "description": "Description",
-    "save": "Save"
+    "save": "Save",
+    "empty": "No data"
   },
   "project": {
+    "asset": "{{classes}} classes · {{samples}} samples",
+    "lastTrained": "Last trained {{ts}}",
+    "notTrained": "Not trained yet",
     "create": {
       "name": "What your project does. E.g. \"Dog vs Cat\", \"Fruit Identifier\".",
       "description": "In depth description of your project. Markdown supported.",

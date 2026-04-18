@@ -1,31 +1,32 @@
-import { ActionIcon, Menu, Paper, Text } from "@mantine/core"
+import { ActionIcon, Menu, Paper, Text } from '@mantine/core';
 import {
   IconDots,
   IconHeart,
   IconHeartFilled,
   IconPhoto,
   IconTrash,
-} from "@tabler/icons-react"
-import { Link } from "@tanstack/react-router"
-import { FunctionComponent, useEffect, useMemo, useState } from "react"
-import type { ProjectListItem } from "~/lib/db/domain/projects"
+} from '@tabler/icons-react';
+import { Link } from '@tanstack/react-router';
+import { FunctionComponent, useEffect, useMemo, useState } from 'react';
+import type { ProjectListItem } from '~/lib/db/domain/projects';
+import { t } from '~/lib/i18n';
 import {
   createSamplePreviewUrl,
   revokeSamplePreviewUrl,
-} from "~/lib/project/sample-preview"
-import { IconDataPlay, IconDataTrain, IconView } from "../icon/semantic"
+} from '~/lib/project/sample-preview';
+import { IconDataPlay, IconDataTrain, IconView } from '../icon/semantic';
 
 interface ProjectCardProps {
-  canPlay: boolean
-  canTrain: boolean
-  icon: string
-  isFavorite: boolean
-  isUpdatingFavorite: boolean
-  onDelete: () => void
-  onOpen: () => void
-  onToggleFavorite: () => void | Promise<void>
-  project: ProjectListItem
-  sampleFilePaths: string[]
+  canPlay: boolean;
+  canTrain: boolean;
+  icon: string;
+  isFavorite: boolean;
+  isUpdatingFavorite: boolean;
+  onDelete: () => void;
+  onOpen: () => void;
+  onToggleFavorite: () => void | Promise<void>;
+  project: ProjectListItem;
+  sampleFilePaths: string[];
 }
 
 const ProjectCard: FunctionComponent<ProjectCardProps> = ({
@@ -68,7 +69,7 @@ const ProjectCard: FunctionComponent<ProjectCardProps> = ({
         <div
           className="flex shrink-0 items-center gap-1"
           onClick={(event) => {
-            event.stopPropagation()
+            event.stopPropagation();
           }}
         >
           <Menu position="bottom-end" shadow="md" withinPortal>
@@ -123,17 +124,29 @@ const ProjectCard: FunctionComponent<ProjectCardProps> = ({
       <div className="space-y-1 text-sm">
         <Text c="dimmed" size="sm">
           {project.sampleCount > 0
-            ? `${project.classCount} classes, ${project.sampleCount} samples`
-            : "No data"}
+            ? t('project.asset', {
+                params: {
+                  classes: project.classCount,
+                  samples: project.sampleCount,
+                },
+              })
+            : t('common.empty')}
         </Text>
-        <Text c="dimmed" size="sm">
-          Last trained{" "}
-          {project.trainedAt ? formatRelativeTime(project.trainedAt) : "-"}
-        </Text>
+        {project.trainedAt ? (
+          <Text c="dimmed" size="sm">
+            {t('project.lastTrained', {
+              params: { ts: formatRelativeTime(project.trainedAt) },
+            })}
+          </Text>
+        ) : (
+          <Text c="dimmed" size="sm">
+            {t('project.notTrained')}
+          </Text>
+        )}
       </div>
     </Paper>
-  )
-}
+  );
+};
 
 function ProjectCardPreview({
   icon,
@@ -143,14 +156,14 @@ function ProjectCardPreview({
   projectId,
   sampleFilePaths,
 }: {
-  icon: string
-  isFavorite: boolean
-  isUpdatingFavorite: boolean
-  onToggleFavorite: () => void | Promise<void>
-  projectId: string
-  sampleFilePaths: string[]
+  icon: string;
+  isFavorite: boolean;
+  isUpdatingFavorite: boolean;
+  onToggleFavorite: () => void | Promise<void>;
+  projectId: string;
+  sampleFilePaths: string[];
 }) {
-  const [previewUrls, setPreviewUrls] = useState<string[]>([])
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const seededSamplePaths = useMemo(
     () =>
       [...sampleFilePaths].sort(
@@ -159,15 +172,15 @@ function ProjectCardPreview({
           seededSampleScore(projectId, right),
       ),
     [projectId, sampleFilePaths],
-  )
+  );
 
   useEffect(() => {
-    let cancelled = false
-    let nextUrls: string[] = []
+    let cancelled = false;
+    let nextUrls: string[] = [];
 
     if (!seededSamplePaths.length) {
-      setPreviewUrls([])
-      return
+      setPreviewUrls([]);
+      return;
     }
 
     void Promise.all(
@@ -176,27 +189,27 @@ function ProjectCardPreview({
         .map((filePath) => createSamplePreviewUrl(filePath)),
     ).then((urls) => {
       if (cancelled) {
-        urls.forEach((url) => revokeSamplePreviewUrl(url))
-        return
+        urls.forEach((url) => revokeSamplePreviewUrl(url));
+        return;
       }
 
-      nextUrls = urls
-      setPreviewUrls(urls)
-    })
+      nextUrls = urls;
+      setPreviewUrls(urls);
+    });
 
     return () => {
-      cancelled = true
-      nextUrls.forEach((url) => revokeSamplePreviewUrl(url))
-    }
-  }, [seededSamplePaths])
+      cancelled = true;
+      nextUrls.forEach((url) => revokeSamplePreviewUrl(url));
+    };
+  }, [seededSamplePaths]);
 
   const btnFavorite = (
     <ActionIcon
-      aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+      aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
       loading={isUpdatingFavorite}
       onClick={(event) => {
-        event.stopPropagation()
-        void onToggleFavorite()
+        event.stopPropagation();
+        void onToggleFavorite();
       }}
       size="lg"
       variant="transparent"
@@ -207,7 +220,7 @@ function ProjectCardPreview({
         <IconHeart className="size-7 hover:text-red-500" />
       )}
     </ActionIcon>
-  )
+  );
 
   if (!previewUrls.length) {
     return (
@@ -221,7 +234,7 @@ function ProjectCardPreview({
           stroke={1.5}
         />
       </div>
-    )
+    );
   }
 
   return (
@@ -232,19 +245,19 @@ function ProjectCardPreview({
       <div className="absolute right-4 top-4 z-10">{btnFavorite}</div>
       <div className="absolute inset-0 flex items-center justify-center">
         {previewUrls.map((url, index) => {
-          const spreadIndex = index - (previewUrls.length - 1) / 2
-          const offset = spreadIndex * 24
-          const hoverOffset = spreadIndex * 38
-          const rotate = spreadIndex * 7
+          const spreadIndex = index - (previewUrls.length - 1) / 2;
+          const offset = spreadIndex * 24;
+          const hoverOffset = spreadIndex * 38;
+          const rotate = spreadIndex * 7;
 
           return (
             <div
               className="absolute h-28 w-24 overflow-hidden rounded-xl border border-white/70 bg-white shadow-lg transition-transform duration-300 ease-out [transform:translateX(var(--offset))_rotate(var(--rotate))] group-hover/preview:[transform:translateX(var(--hover-offset))_rotate(var(--rotate))]"
               key={url}
               style={{
-                ["--hover-offset" as string]: `${hoverOffset}px`,
-                ["--offset" as string]: `${offset}px`,
-                ["--rotate" as string]: `${rotate}deg`,
+                ['--hover-offset' as string]: `${hoverOffset}px`,
+                ['--offset' as string]: `${offset}px`,
+                ['--rotate' as string]: `${rotate}deg`,
                 zIndex: index + 1,
               }}
             >
@@ -254,53 +267,53 @@ function ProjectCardPreview({
                 src={url}
               />
             </div>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }
 
 function seededSampleScore(projectId: string, samplePath: string) {
-  const source = `${projectId}:${samplePath}`
-  let hash = 2166136261
+  const source = `${projectId}:${samplePath}`;
+  let hash = 2166136261;
 
   for (let index = 0; index < source.length; index += 1) {
-    hash ^= source.charCodeAt(index)
-    hash = Math.imul(hash, 16777619)
+    hash ^= source.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
   }
 
-  return hash >>> 0
+  return hash >>> 0;
 }
 
 function formatRelativeTime(input: string) {
-  const now = Date.now()
-  const target = new Date(input).getTime()
-  const diffMs = target - now
-  const absMs = Math.abs(diffMs)
-  const formatter = new Intl.RelativeTimeFormat("en", { numeric: "auto" })
+  const now = Date.now();
+  const target = new Date(input).getTime();
+  const diffMs = target - now;
+  const absMs = Math.abs(diffMs);
+  const formatter = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
 
   if (absMs < 60_000) {
-    return formatter.format(Math.round(diffMs / 1000), "second")
+    return formatter.format(Math.round(diffMs / 1000), 'second');
   }
 
   if (absMs < 3_600_000) {
-    return formatter.format(Math.round(diffMs / 60_000), "minute")
+    return formatter.format(Math.round(diffMs / 60_000), 'minute');
   }
 
   if (absMs < 86_400_000) {
-    return formatter.format(Math.round(diffMs / 3_600_000), "hour")
+    return formatter.format(Math.round(diffMs / 3_600_000), 'hour');
   }
 
   if (absMs < 2_592_000_000) {
-    return formatter.format(Math.round(diffMs / 86_400_000), "day")
+    return formatter.format(Math.round(diffMs / 86_400_000), 'day');
   }
 
   if (absMs < 31_536_000_000) {
-    return formatter.format(Math.round(diffMs / 2_592_000_000), "month")
+    return formatter.format(Math.round(diffMs / 2_592_000_000), 'month');
   }
 
-  return formatter.format(Math.round(diffMs / 31_536_000_000), "year")
+  return formatter.format(Math.round(diffMs / 31_536_000_000), 'year');
 }
 
-export default ProjectCard
+export default ProjectCard;
