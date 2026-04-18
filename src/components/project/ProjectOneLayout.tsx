@@ -1,4 +1,5 @@
 import { ActionIcon, Progress, Text } from '@mantine/core';
+import { getClassColor } from '~/lib/project/class-color';
 import { useDisclosure } from '@mantine/hooks';
 import {
   IconCircleCheck,
@@ -117,14 +118,16 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
               progress={trainProgress}
               trailing={`${totalSamples}`}
             />
-            {classes.map((projectClass) => {
+            {classes.map((projectClass, classIndex) => {
               const readiness = classReadiness.find(
                 (item) => item.classId === projectClass.id,
               );
+              const classColor = getClassColor(projectClass.id);
 
               return (
                 <SidebarDatasetItem
                   key={projectClass.id}
+                  color={classColor}
                   editableLabel={
                     <ContentEditable
                       as="span"
@@ -136,6 +139,14 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
                       }}
                       value={projectClass.name}
                     />
+                  }
+                  leading={
+                    <span
+                      className="flex size-5 items-center justify-center rounded text-[10px] font-bold text-white"
+                      style={{ backgroundColor: classColor }}
+                    >
+                      {classIndex}
+                    </span>
                   }
                   progress={readiness?.progress ?? 0}
                   trailing={`${projectClass.samples.length}`}
@@ -237,12 +248,14 @@ function ProjectNavItem({
 }
 
 function SidebarDatasetItem({
+  color,
   label,
   editableLabel,
   leading,
   progress,
   trailing,
 }: {
+  color?: string;
   label?: string;
   editableLabel?: ReactNode;
   leading?: ReactNode;
@@ -265,7 +278,7 @@ function SidebarDatasetItem({
         </Text>
       </div>
       <Progress
-        color={progress >= 1 ? 'teal' : 'blue'}
+        color={color ?? (progress >= 1 ? 'teal' : 'blue')}
         radius="xl"
         size="sm"
         value={progress * 100}
