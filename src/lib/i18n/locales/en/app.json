@@ -123,7 +123,7 @@
         "dropzone": "Drop an image here, or click to browse from your device.",
         "currentFile": "Current file: {{name}}",
         "predict": "Predict",
-        "liveCamera": "Live Camera",
+        "liveCamera": "Live",
         "analyzingFeed": "Analyzing live feed",
         "waitingCamera": "Waiting for camera",
         "modelSection": "Model",

@@ -123,7 +123,7 @@
         "dropzone": "Kéo ảnh vào đây, hoặc click để chọn từ thiết bị.",
         "currentFile": "File hiện tại: {{name}}",
         "predict": "Dự đoán",
-        "liveCamera": "Live Camera",
+        "liveCamera": "Live",
         "analyzingFeed": "Đang phân tích",
         "waitingCamera": "Đang chờ camera",
         "modelSection": "Model",

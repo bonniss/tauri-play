@@ -1,6 +1,7 @@
 import {
   Alert,
   Button,
+  Indicator,
   Loader,
   Paper,
   Progress,
@@ -336,11 +337,32 @@ const CameraPlayExperience: FunctionComponent = () => {
     topResult,
   } = useProjectPlayRuntime();
   const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  // Windows: native Fullscreen API via useFullscreenElement
+  // macOS/Linux: CSS overlay workaround (WebView doesn't support requestFullscreen)
+  const isWindows = useMemo(() => /windows/i.test(navigator.userAgent), []);
   const {
-    ref: containerRef,
-    toggle: toggleFullscreen,
-    fullscreen: isFullscreen,
+    ref: nativeFsRef,
+    toggle: nativeFsToggle,
+    fullscreen: nativeFsActive,
   } = useFullscreenElement<HTMLDivElement>();
+  const cssRef = useRef<HTMLDivElement>(null);
+  const [cssFullscreen, setCssFullscreen] = useState(false);
+
+  const containerRef = isWindows ? nativeFsRef : cssRef;
+  const isFullscreen = isWindows ? nativeFsActive : cssFullscreen;
+  const toggleFullscreen = isWindows
+    ? nativeFsToggle
+    : () => setCssFullscreen((v) => !v);
+
+  useEffect(() => {
+    if (!cssFullscreen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setCssFullscreen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [cssFullscreen]);
 
   useEffect(() => {
     if (!projectModel) {
@@ -373,11 +395,17 @@ const CameraPlayExperience: FunctionComponent = () => {
       <div className="flex min-w-0 flex-col gap-6">
         <div
           ref={containerRef}
-          className="overflow-hidden rounded-2xl bg-zinc-950"
+          className={clsx(
+            'bg-zinc-950',
+            isFullscreen
+              ? 'fixed inset-0 z-[9999] flex items-center justify-center rounded-none'
+              : 'overflow-hidden rounded-2xl',
+          )}
         >
           <CameraUI
             autoConnect
             aspectRatio={playSettings.liveAspectRatio}
+            className={isFullscreen ? 'w-full max-h-screen' : ''}
             showModeControls={false}
             showSettings={false}
             showShutter={false}
@@ -387,15 +415,17 @@ const CameraPlayExperience: FunctionComponent = () => {
               return (
                 <div className="pointer-events-none flex h-full flex-col justify-between p-4">
                   <div className="flex items-center justify-between gap-2">
-                    <div className="rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-xs font-medium uppercase tracking-[0.18em] text-white/80 backdrop-blur-sm">
-                      {t('project.play.demo.liveCamera')}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-xs text-white/70 backdrop-blur-sm">
-                        {context.cameraState === 'ready'
-                          ? t('project.play.demo.analyzingFeed')
-                          : t('project.play.demo.waitingCamera')}
+                    <Indicator inline processing color="red" size={12}>
+                      <div className="rounded-md bg-black/40 px-2 uppercase text-white/80 backdrop-blur-sm">
+                        {t('project.play.demo.liveCamera')}
                       </div>
+                    </Indicator>
+                    <div className="flex items-center gap-2">
+                      {context.cameraState === 'ready' ? null : (
+                        <div className="rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-xs text-white/70 backdrop-blur-sm">
+                          {t('project.play.demo.waitingCamera')}
+                        </div>
+                      )}
                       <button
                         type="button"
                         onClick={toggleFullscreen}
