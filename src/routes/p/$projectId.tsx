@@ -1,5 +1,6 @@
 import {
   Alert,
+  Badge,
   Button,
   Indicator,
   Loader,
@@ -327,7 +328,7 @@ const UploadPlayExperience: FunctionComponent = () => {
 
 const CameraPlayExperience: FunctionComponent = () => {
   const { t } = useAppProvider();
-  const { playSettings } = useProjectOne();
+  const { classes, playSettings } = useProjectOne();
   const {
     meetsThreshold,
     prediction,
@@ -449,25 +450,50 @@ const CameraPlayExperience: FunctionComponent = () => {
                     </div>
                   ) : null}
 
-                  {isFullscreen && prediction ? (
-                    <div className="flex justify-center pb-8">
-                      <div className="rounded-2xl border border-white/20 bg-black/50 px-8 py-5 text-center backdrop-blur-md">
-                        <span
-                          key={topResult?.index ?? 'none'}
-                          className={clsx(
-                            'block text-4xl font-bold text-white',
-                            meetsThreshold && topResult
-                              ? 'motion-preset-confetti'
-                              : '',
-                          )}
-                        >
-                          {meetsThreshold && topResult
-                            ? topResult.className
-                            : t('project.play.demo.notConfident')}
-                        </span>
-                      </div>
-                    </div>
-                  ) : null}
+                  {isFullscreen && prediction
+                    ? (() => {
+                        const topClassId =
+                          topResult != null
+                            ? (classes[topResult.index]?.id ??
+                              String(topResult.index))
+                            : null;
+                        const topColor =
+                          topClassId && meetsThreshold
+                            ? colorFromString(topClassId)
+                            : undefined;
+
+                        return (
+                          <div className="flex justify-center py-4">
+                            <div
+                              key={topResult?.index ?? 'none'}
+                              className={clsx(
+                                meetsThreshold &&
+                                  topResult &&
+                                  'motion-preset-confetti',
+                              )}
+                            >
+                              <Badge
+                                variant="light"
+                                size="xl"
+                                radius="md"
+                                color={topColor}
+                                className="py-10 opacity-90 font-serif leading-loose normal-case"
+                              >
+                                <Text
+                                  c={topColor ?? 'white'}
+                                  fw={700}
+                                  className='text-5xl leading-relaxed'
+                                >
+                                  {meetsThreshold && topResult
+                                    ? topResult.className
+                                    : t('project.play.demo.notConfident')}
+                                </Text>
+                              </Badge>
+                            </div>
+                          </div>
+                        );
+                      })()
+                    : null}
                 </div>
               );
             }}

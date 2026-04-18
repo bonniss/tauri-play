@@ -592,7 +592,7 @@ function ProjectLabelPage() {
       {hasClasses ? (
         <div className="mt-4 divide-y divide-zinc-200 overflow-hidden rounded-md border border-zinc-200 dark:divide-zinc-700 dark:border-zinc-700">
           {visibleClasses.map((item, classIdx) => {
-            const classColor = colorFromString(classIdx);
+            const classColor = colorFromString(item.id);
 
             return (
               <div key={item.id}>

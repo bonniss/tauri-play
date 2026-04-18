@@ -613,7 +613,7 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
 
                 {classIdx !== undefined && (
                   <Badge
-                    color={colorFromString(classIdx)}
+                    color={colorFromString(sample.classId)}
                     radius="xs"
                     size="xs"
                     className="absolute bottom-1 left-1 flex"

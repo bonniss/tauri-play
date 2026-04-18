@@ -124,7 +124,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
               const readiness = classReadiness.find(
                 (item) => item.classId === projectClass.id,
               );
-              const classColor = colorFromString(classIndex);
+              const classColor = colorFromString(projectClass.id);
 
               return (
                 <SidebarDatasetItem
