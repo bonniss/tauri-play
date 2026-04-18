@@ -1,4 +1,4 @@
-import { ActionIcon, Progress, Text } from '@mantine/core';
+import { ActionIcon, Badge, Progress, Text } from '@mantine/core';
 import { getClassColor } from '~/lib/project/class-color';
 import { useDisclosure } from '@mantine/hooks';
 import {
@@ -65,7 +65,9 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
             </ActionIcon>
           </div>
           {projectDescription ? (
-            <MarkdownViewer className="mt-1 text-xs">{projectDescription}</MarkdownViewer>
+            <MarkdownViewer className="mt-1 text-xs">
+              {projectDescription}
+            </MarkdownViewer>
           ) : (
             <p className="mt-1 text-xs italic text-zinc-400 dark:text-zinc-500">
               {t('project.sidebar.descriptionPlaceholder')}
@@ -132,7 +134,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
                     <ContentEditable
                       as="span"
                       aria-label={`Class name ${projectClass.name}`}
-                      className="font-semibold font-serif hover:ring-1 ring-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/75 inline-block w-fit max-w-full truncate rounded px-1 py-0.5"
+                      className="font-semibold font-serif hover:ring-1 ring-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/75 inline-block w-fit max-w-full truncate rounded px-1"
                       focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
                       onBlur={(value) => {
                         updateClassName(projectClass.id, value);
@@ -140,14 +142,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
                       value={projectClass.name}
                     />
                   }
-                  leading={
-                    <span
-                      className="flex size-5 items-center justify-center rounded text-[10px] font-bold text-white"
-                      style={{ backgroundColor: classColor }}
-                    >
-                      {classIndex}
-                    </span>
-                  }
+                  leading={<Badge size="xs" radius="xs" color={classColor}>{classIndex}</Badge>}
                   progress={readiness?.progress ?? 0}
                   trailing={`${projectClass.samples.length}`}
                 />
