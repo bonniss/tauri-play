@@ -6,6 +6,7 @@ import {
   Progress,
   Skeleton,
 } from '@mantine/core';
+import { useFullscreenElement } from '@mantine/hooks';
 import { Dropzone, IMAGE_MIME_TYPE } from '@mantine/dropzone';
 import {
   IconArrowLeft,
@@ -20,7 +21,6 @@ import clsx from 'clsx';
 import {
   FunctionComponent,
   ReactNode,
-  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -39,6 +39,7 @@ import {
   useProjectOne,
 } from '~/components/project/ProjectOneProvider';
 import MarkdownViewer from '~/components/shared/MarkdownViewer';
+import { colorFromString } from '~/lib/project/class-color';
 import {
   createSamplePreviewUrl,
   revokeSamplePreviewUrl,
@@ -325,35 +326,26 @@ const UploadPlayExperience: FunctionComponent = () => {
 const CameraPlayExperience: FunctionComponent = () => {
   const { t } = useAppProvider();
   const { playSettings } = useProjectOne();
-  const { meetsThreshold, prediction, projectModel, runPredictionFromVideo, runtimeError, topResult } =
-    useProjectPlayRuntime();
+  const {
+    meetsThreshold,
+    prediction,
+    projectModel,
+    runPredictionFromVideo,
+    runtimeError,
+    topResult,
+  } = useProjectPlayRuntime();
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  useEffect(() => {
-    const onFullscreenChange = () => {
-      setIsFullscreen(Boolean(document.fullscreenElement));
-    };
-    document.addEventListener('fullscreenchange', onFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
-  }, []);
-
-  const toggleFullscreen = useCallback(() => {
-    if (!containerRef.current) return;
-    if (document.fullscreenElement) {
-      void document.exitFullscreen();
-    } else {
-      void containerRef.current.requestFullscreen();
-    }
-  }, []);
+  const {
+    ref: containerRef,
+    toggle: toggleFullscreen,
+    fullscreen: isFullscreen,
+  } = useFullscreenElement<HTMLDivElement>();
 
   useEffect(() => {
     if (!projectModel) {
       return;
     }
 
-    const interval = playSettings.livePredictInterval;
     const timer = window.setInterval(() => {
       const video = videoRef.current;
 
@@ -361,14 +353,10 @@ const CameraPlayExperience: FunctionComponent = () => {
         return;
       }
 
-      void runPredictionFromVideo(video, {
-        stableCommitCount: 2,
-      });
-    }, interval);
+      void runPredictionFromVideo(video, { stableCommitCount: 2 });
+    }, playSettings.livePredictInterval);
 
-    return () => {
-      window.clearInterval(timer);
-    };
+    return () => window.clearInterval(timer);
   }, [projectModel, playSettings.livePredictInterval, runPredictionFromVideo]);
 
   if (!projectModel) {
@@ -382,7 +370,10 @@ const CameraPlayExperience: FunctionComponent = () => {
   return (
     <PlayExperienceShell trainedAt={projectModel.trainedAt}>
       <div className="flex min-w-0 flex-col gap-6">
-        <div ref={containerRef} className="overflow-hidden rounded-2xl bg-zinc-950">
+        <div
+          ref={containerRef}
+          className="overflow-hidden rounded-2xl bg-zinc-950"
+        >
           <CameraUI
             autoConnect
             aspectRatio={playSettings.liveAspectRatio}
@@ -408,11 +399,15 @@ const CameraPlayExperience: FunctionComponent = () => {
                         type="button"
                         onClick={toggleFullscreen}
                         className="pointer-events-auto rounded-full border border-white/10 bg-black/40 p-1.5 text-white/70 backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white"
-                        aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                        aria-label={
+                          isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'
+                        }
                       >
-                        {isFullscreen
-                          ? <IconMinimize className="size-3.5" />
-                          : <IconMaximize className="size-3.5" />}
+                        {isFullscreen ? (
+                          <IconMinimize className="size-3.5" />
+                        ) : (
+                          <IconMaximize className="size-3.5" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -501,7 +496,7 @@ const PlayExperienceShell: FunctionComponent<{
 
 const PredictionPanel: FunctionComponent = () => {
   const { t } = useAppProvider();
-  const { playSettings } = useProjectOne();
+  const { classes, playSettings } = useProjectOne();
   const {
     isAnalyzing,
     meetsThreshold,
@@ -511,51 +506,12 @@ const PredictionPanel: FunctionComponent = () => {
     visibleResults,
   } = useProjectPlayRuntime();
 
-  // Only show skeleton when there's no prior result to display
   const showSkeleton = isAnalyzing && !prediction;
-  // Subtle live indicator when continuously analyzing over an existing result
-  const showLivePulse = isAnalyzing && prediction != null;
 
   return (
     <div className="rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
-      <div className="space-y-6">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
-            {/* key tied to class index so confetti only fires on class change, not every cycle */}
-            <span
-              key={topResult?.index ?? 'none'}
-              className={
-                prediction && topResult && meetsThreshold
-                  ? 'inline-block motion-preset-confetti'
-                  : ''
-              }
-            >
-              {showSkeleton
-                ? t('project.play.demo.analyzing')
-                : meetsThreshold && topResult
-                  ? topResult.className
-                  : prediction
-                    ? t('project.play.demo.notConfident')
-                    : t('project.play.demo.analyzing')}
-            </span>
-          </h2>
-          <div className="flex items-center gap-3">
-            {showLivePulse && (
-              <span className="size-2 rounded-full bg-green-400 animate-pulse" />
-            )}
-            {playSettings.showConfidenceScores && prediction && topResult ? (
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                {t('project.play.demo.confidence', {
-                  params: {
-                    percent: (topResult.confidence * 100).toFixed(1),
-                    ms: prediction.predictTimeMs.toFixed(1),
-                  },
-                })}
-              </p>
-            ) : null}
-          </div>
-        </div>
-
+      <div className="space-y-5">
+        {/* Header: live indicator + inference time */}
         {showSkeleton ? (
           <AnalyzeSkeleton />
         ) : runtimeError ? (
@@ -563,27 +519,43 @@ const PredictionPanel: FunctionComponent = () => {
             {runtimeError}
           </Alert>
         ) : prediction && topResult ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
+            <span className="rounded-full bg-zinc-100 px-2 py-0.5 font-mono text-sm text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
+              {prediction.predictTimeMs.toFixed(1)} ms
+            </span>
             {playSettings.showConfidenceScores ? (
-              visibleResults.map((result) => (
-                <div key={result.index}>
-                  <div className="mb-2 flex items-center justify-between gap-3">
-                    <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-                      {result.className}
-                    </span>
-                    <span className="text-sm text-zinc-500 dark:text-zinc-400">
-                      {(result.confidence * 100).toFixed(1)}%
-                    </span>
+              visibleResults.map((result) => {
+                const classId =
+                  classes[result.index]?.id ?? String(result.index);
+                const color = colorFromString(classId);
+                const isTop =
+                  result.index === topResult.index && meetsThreshold;
+
+                return (
+                  <div key={result.index}>
+                    <div className="mb-1.5 flex items-baseline justify-between gap-3">
+                      <span
+                        className={clsx(
+                          'font-serif font-semibold leading-tight',
+                          isTop ? 'motion-preset-confetti text-xl' : 'text-base',
+                        )}
+                      >
+                        {result.className}
+                      </span>
+                      <span className="shrink-0 text-sm tabular-nums text-zinc-500 dark:text-zinc-400">
+                        {(result.confidence * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                    <Progress
+                      color={color}
+                      radius="xl"
+                      size={isTop ? 'md' : 'sm'}
+                      styles={{ section: { transition: 'width 350ms ease' } }}
+                      value={result.confidence * 100}
+                    />
                   </div>
-                  <Progress
-                    animated={false}
-                    radius="xl"
-                    size="sm"
-                    styles={{ section: { transition: 'width 350ms ease' } }}
-                    value={result.confidence * 100}
-                  />
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="rounded-2xl bg-zinc-100 px-4 py-4 text-sm text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
                 {t('project.play.demo.confidenceDisabled')}
