@@ -1,6 +1,7 @@
 import { ActionIcon, Menu, Paper, Text } from '@mantine/core';
 import {
   IconDots,
+  IconDownload,
   IconHeart,
   IconHeartFilled,
   IconPhoto,
@@ -20,9 +21,11 @@ interface ProjectCardProps {
   canPlay: boolean;
   canTrain: boolean;
   icon: string;
+  isExporting: boolean;
   isFavorite: boolean;
   isUpdatingFavorite: boolean;
   onDelete: () => void;
+  onExport: () => void;
   onOpen: () => void;
   onToggleFavorite: () => void | Promise<void>;
   project: ProjectListItem;
@@ -33,9 +36,11 @@ const ProjectCard: FunctionComponent<ProjectCardProps> = ({
   canPlay,
   canTrain,
   icon,
+  isExporting,
   isFavorite,
   isUpdatingFavorite,
   onDelete,
+  onExport,
   onOpen,
   onToggleFavorite,
   project,
@@ -111,6 +116,13 @@ const ProjectCard: FunctionComponent<ProjectCardProps> = ({
                 Play
               </Menu.Item>
               <Menu.Divider />
+              <Menu.Item
+                disabled={isExporting}
+                leftSection={<IconDownload className="size-4" />}
+                onClick={onExport}
+              >
+                {isExporting ? 'Exporting…' : 'Export'}
+              </Menu.Item>
               <Menu.Item
                 color="red"
                 leftSection={<IconTrash className="size-4" />}

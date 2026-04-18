@@ -11,6 +11,7 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
+import { IconUpload } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 import {
   IconChevronLeft,
@@ -25,6 +26,7 @@ import {
   useDeferredValue,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { Form, defineConfig } from '~/components/form';
@@ -36,8 +38,11 @@ import {
   listProjects,
   updateProject,
 } from '~/lib/db/domain/projects';
+import { exportProject } from '~/lib/project/project-export';
+import { importProject } from '~/lib/project/project-import';
 import { listProjectSamplePreviews } from '~/lib/db/domain/samples';
 import { genProjectId } from '~/lib/project/id-generator';
+import { toast } from 'sonner';
 import {
   ANIMAL_ICON_OPTIONS,
   generateRandomProjectIdentity,
@@ -248,6 +253,32 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
   const rangeStart =
     sortedProjects.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
   const rangeEnd = Math.min(safePage * PAGE_SIZE, sortedProjects.length);
+  const importFileRef = useRef<HTMLInputElement>(null);
+  const importProjectMutation = useMutation({
+    mutationFn: async (file: File) => importProject(file),
+    onSuccess: async (newProjectId) => {
+      toast.success('Project imported successfully.');
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
+      startTransition(() => {
+        void navigate({
+          to: '/projects/$projectId/label',
+          params: { projectId: newProjectId },
+        });
+      });
+    },
+    onError: (error) => {
+      toast.error(`Import failed: ${error instanceof Error ? error.message : String(error)}`);
+    },
+  });
+  const exportProjectMutation = useMutation({
+    mutationFn: async (projectId: string) => exportProject(projectId),
+    onSuccess: (zipPath) => {
+      toast.success(`Saved to: ${zipPath}`);
+    },
+    onError: (error) => {
+      toast.error(`Export failed: ${error instanceof Error ? error.message : String(error)}`);
+    },
+  });
   const updateProjectSettingsMutation = useMutation({
     mutationFn: async ({
       projectId,
@@ -415,6 +446,28 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
             value={search}
           />
           <Button
+            leftSection={<IconUpload className="size-4" />}
+            loading={importProjectMutation.isPending}
+            onClick={() => importFileRef.current?.click()}
+            variant="default"
+          >
+            Import
+          </Button>
+          <input
+            ref={importFileRef}
+            accept=".zip"
+            aria-label="Import project ZIP file"
+            className="hidden"
+            type="file"
+            onChange={(e) => {
+              const file = e.currentTarget.files?.[0];
+              if (file) {
+                importProjectMutation.mutate(file);
+              }
+              e.currentTarget.value = '';
+            }}
+          />
+          <Button
             onClick={() => {
               setCreateRequestDismissed(false);
               createProjectHandlers.open();
@@ -477,6 +530,13 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
                   key={project.id}
                   onDelete={() => {
                     setProjectPendingDelete(project);
+                  }}
+                  isExporting={
+                    exportProjectMutation.isPending &&
+                    exportProjectMutation.variables === project.id
+                  }
+                  onExport={() => {
+                    exportProjectMutation.mutate(project.id);
                   }}
                   onOpen={() => {
                     void navigate({

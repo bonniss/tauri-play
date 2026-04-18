@@ -27,3 +27,4 @@ tauri-plugin-os = "2"
 tauri-plugin-sql = { version = "2.4.0", features = ["sqlite"] }
 tauri-plugin-log = "2"
 log = "0.4"
+zip = "2"
