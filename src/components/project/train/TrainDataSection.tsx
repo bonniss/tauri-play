@@ -10,6 +10,7 @@ function TrainDataSection() {
     inspectDataOpened,
     setInspectDataOpened,
     setTrainDataView,
+    splitClassIndexMap,
     trainDataView,
     trainDataViewOptions,
   } = useDataTrain();
@@ -37,7 +38,7 @@ function TrainDataSection() {
           }}
           value={trainDataView}
         />
-        <SampleGrid samples={displayedSplitSamples} />
+        <SampleGrid classIndexMap={splitClassIndexMap} samples={displayedSplitSamples} />
       </div>
     </Drawer>
   );

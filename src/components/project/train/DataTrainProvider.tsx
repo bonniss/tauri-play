@@ -930,6 +930,13 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
   const hasTrainData =
     inspectedDataSnapshot.trainSamples > 0 ||
     inspectedDataSnapshot.validationSamples > 0;
+  const splitClassIndexMap = useMemo(
+    () =>
+      Object.fromEntries(
+        inspectedDataSnapshot.samplesPerClass.map((item, i) => [item.classId, i]),
+      ),
+    [inspectedDataSnapshot],
+  );
   const logEntries =
     displayedTrainLog?.events.map((event, index) => ({
       key: `${event.at}-${index}`,
@@ -945,6 +952,7 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
     formatMetric,
     getTrainSettingsFormValues,
     hasTrainData,
+    splitClassIndexMap,
     inspectDataOpened,
     inspectedDataSnapshot,
     isApplyingTrainSettings,

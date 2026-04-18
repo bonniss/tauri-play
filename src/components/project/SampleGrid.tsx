@@ -32,12 +32,14 @@ import {
 
 interface SampleGridProps {
   activeSampleId?: string;
+  classIndexMap?: Record<string, number>;
   defaultActiveSampleId?: string;
   emptyState?: ReactNode;
   loading?: boolean;
   minItemSize?: number;
   onActiveSampleChange?: (sampleId: string | null) => void;
   onDeleteSample?: (sample: ProjectSample) => Promise<void> | void;
+  onDeleteSamples?: (samples: ProjectSample[]) => Promise<void>;
   samples: ProjectSample[];
 }
 
@@ -46,12 +48,14 @@ const SAMPLE_PAGE_SIZE = 60;
 
 const SampleGrid: FunctionComponent<SampleGridProps> = ({
   activeSampleId,
+  classIndexMap,
   defaultActiveSampleId,
   emptyState = null,
   loading = false,
   minItemSize = 80,
   onActiveSampleChange,
   onDeleteSample,
+  onDeleteSamples,
   samples,
 }) => {
   const isActiveControlled = activeSampleId !== undefined;
@@ -69,6 +73,10 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
   const [previewMap, setPreviewMap] = useState<Record<string, string>>({});
   const [columnCount, setColumnCount] = useState(1);
   const [visibleCount, setVisibleCount] = useState(SAMPLE_PAGE_SIZE);
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
+  const [isDeletingBatch, setIsDeletingBatch] = useState(false);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const thumbnailRefMap = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -194,6 +202,14 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
     }
 
     previousSamplesRef.current = samples;
+
+    if (selectedIds.size > 0) {
+      const sampleIdSet = new Set(samples.map((s) => s.id));
+      setSelectedIds((prev) => {
+        const next = new Set([...prev].filter((id) => sampleIdSet.has(id)));
+        return next.size === prev.size ? prev : next;
+      });
+    }
   }, [displayedSampleId, resolvedActiveSampleId, samples]);
 
   useEffect(() => {
@@ -307,6 +323,49 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
     setIsLightboxOpen(false);
   }
 
+  function toggleSelectMode() {
+    setIsSelectMode((v) => !v);
+    setSelectedIds(new Set());
+    setLastSelectedIndex(null);
+  }
+
+  function handleThumbnailSelect(sampleId: string, index: number, shiftKey: boolean) {
+    if (shiftKey && lastSelectedIndex !== null) {
+      const start = Math.min(lastSelectedIndex, index);
+      const end = Math.max(lastSelectedIndex, index);
+      const rangeIds = visibleSamples.slice(start, end + 1).map((s) => s.id);
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        rangeIds.forEach((id) => next.add(id));
+        return next;
+      });
+    } else {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(sampleId)) {
+          next.delete(sampleId);
+        } else {
+          next.add(sampleId);
+        }
+        return next;
+      });
+      setLastSelectedIndex(index);
+    }
+  }
+
+  async function handleBatchDelete() {
+    if (!onDeleteSamples || selectedIds.size === 0 || isDeletingBatch) return;
+    const samplesToDelete = samples.filter((s) => selectedIds.has(s.id));
+    setIsDeletingBatch(true);
+    try {
+      await onDeleteSamples(samplesToDelete);
+      setSelectedIds(new Set());
+      setIsSelectMode(false);
+    } finally {
+      setIsDeletingBatch(false);
+    }
+  }
+
   async function handleDeleteSample() {
     if (!lightboxSample || !onDeleteSample || isDeletingSample) {
       return;
@@ -364,7 +423,11 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
 
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
-      openLightbox(sampleId);
+      if (isSelectMode) {
+        handleThumbnailSelect(sampleId, sampleIndex, event.shiftKey);
+      } else {
+        openLightbox(sampleId);
+      }
       return;
     }
 
@@ -380,6 +443,47 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
 
   return (
     <>
+      {onDeleteSamples && (
+        <div className="mb-2 flex min-h-7 items-center justify-between gap-2">
+          {isSelectMode ? (
+            <>
+              <div className="flex items-center gap-3">
+                <Button size="xs" variant="subtle" onClick={toggleSelectMode}>
+                  Cancel
+                </Button>
+                <Text c="dimmed" size="xs">
+                  {selectedIds.size} selected
+                </Text>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="xs"
+                  variant="subtle"
+                  onClick={() => setSelectedIds(new Set(visibleSamples.map((s) => s.id)))}
+                >
+                  Select all
+                </Button>
+                {selectedIds.size > 0 && (
+                  <Button
+                    color="red"
+                    leftSection={<IconTrash size={12} stroke={1.8} />}
+                    loading={isDeletingBatch}
+                    size="xs"
+                    variant="light"
+                    onClick={() => void handleBatchDelete()}
+                  >
+                    Delete {selectedIds.size}
+                  </Button>
+                )}
+              </div>
+            </>
+          ) : (
+            <Button size="xs" variant="subtle" onClick={toggleSelectMode}>
+              Select
+            </Button>
+          )}
+        </div>
+      )}
       <ScrollArea.Autosize
         mah={samples.length > 120 ? 450 : undefined}
         offsetScrollbars={samples.length > 120}
@@ -412,18 +516,30 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
           {visibleSamples.map((sample, index) => {
             const isActive = sample.id === resolvedActiveSampleId;
 
+            const isSelected = selectedIds.has(sample.id);
+            const classIdx =
+              classIndexMap && sample.classId !== undefined
+                ? classIndexMap[sample.classId]
+                : undefined;
+
             return (
               <button
                 aria-label={`Open sample ${index + 1}`}
-                aria-pressed={isActive}
-                className={[
-                  'aspect-square overflow-hidden rounded-md border bg-zinc-50 transition',
-                  isActive
+                aria-pressed={isSelectMode ? isSelected : isActive}
+                className={clsx(
+                  'relative aspect-square overflow-hidden rounded-md border bg-zinc-50 transition',
+                  isSelectMode && isSelected
                     ? 'border-blue-500 ring-2 ring-blue-200 dark:border-blue-400 dark:ring-blue-900'
-                    : 'border-zinc-200 dark:border-zinc-800 dark:bg-zinc-950',
-                ].join(' ')}
+                    : isActive && !isSelectMode
+                      ? 'border-blue-500 ring-2 ring-blue-200 dark:border-blue-400 dark:ring-blue-900'
+                      : 'border-zinc-200 dark:border-zinc-800 dark:bg-zinc-950',
+                )}
                 key={sample.id}
-                onClick={() => {
+                onClick={(e) => {
+                  if (isSelectMode) {
+                    handleThumbnailSelect(sample.id, index, e.shiftKey);
+                    return;
+                  }
                   openLightbox(sample.id);
                 }}
                 onFocus={() => {
@@ -455,6 +571,29 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
                 ) : (
                   <div className="flex size-full items-center justify-center">
                     <Loader size="sm" />
+                  </div>
+                )}
+
+                {isSelectMode && (
+                  <div
+                    className={clsx(
+                      'absolute top-1 left-1 flex size-4 items-center justify-center rounded border-2',
+                      isSelected
+                        ? 'border-blue-500 bg-blue-500'
+                        : 'border-zinc-300 bg-white/80 dark:border-zinc-500 dark:bg-zinc-900/80',
+                    )}
+                  >
+                    {isSelected && (
+                      <svg viewBox="0 0 10 10" className="size-2.5 text-white" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M1.5 5l2.5 2.5 4.5-4.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </div>
+                )}
+
+                {classIdx !== undefined && (
+                  <div className="absolute bottom-1 left-1 flex min-w-[18px] items-center justify-center rounded bg-black/60 px-1 py-px text-[10px] font-bold leading-none text-white">
+                    {classIdx}
                   </div>
                 )}
               </button>

@@ -190,6 +190,37 @@ function ProjectLabelPage() {
     }
   }
 
+  async function handleDeleteSamples(
+    samplesToDelete: (typeof classes)[number]['samples'],
+  ) {
+    const byClassId = new Map<string, typeof samplesToDelete>();
+    samplesToDelete.forEach((s) => {
+      byClassId.set(s.classId, [...(byClassId.get(s.classId) ?? []), s]);
+    });
+
+    byClassId.forEach((classSamples, classId) => {
+      removeSamplesFromClass(classId, classSamples.map((s) => s.id));
+    });
+
+    const deleted: typeof samplesToDelete = [];
+    try {
+      for (const sample of samplesToDelete) {
+        await deleteSampleMutation.mutateAsync({
+          filePath: sample.filePath,
+          sampleId: sample.id,
+        });
+        deleted.push(sample);
+      }
+    } catch (error) {
+      const deletedIds = new Set(deleted.map((s) => s.id));
+      byClassId.forEach((classSamples, classId) => {
+        const failed = classSamples.filter((s) => !deletedIds.has(s.id));
+        if (failed.length) addSamplesToClass(classId, failed);
+      });
+      toast.error('Some samples could not be deleted.');
+    }
+  }
+
   async function openInlineCamera(target: {
     classId?: string;
     slot: 'class' | 'top';
@@ -682,6 +713,7 @@ function ProjectLabelPage() {
                   <SampleGrid
                     loading={uploadingClassMap[item.id]?.isPending ?? false}
                     onDeleteSample={handleDeleteSample}
+                    onDeleteSamples={handleDeleteSamples}
                     samples={item.samples}
                   />
                   {!item.samples.length ? (
