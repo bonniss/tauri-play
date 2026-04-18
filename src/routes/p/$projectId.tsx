@@ -5,9 +5,10 @@ import {
   Paper,
   Progress,
   Skeleton,
+  Text,
 } from '@mantine/core';
-import { useFullscreenElement } from '@mantine/hooks';
 import { Dropzone, IMAGE_MIME_TYPE } from '@mantine/dropzone';
+import { useFullscreenElement } from '@mantine/hooks';
 import {
   IconArrowLeft,
   IconMaximize,
@@ -509,7 +510,7 @@ const PredictionPanel: FunctionComponent = () => {
   const showSkeleton = isAnalyzing && !prediction;
 
   return (
-    <div className="rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+    <Paper withBorder className="py-4 px-6">
       <div className="space-y-5">
         {/* Header: live indicator + inference time */}
         {showSkeleton ? (
@@ -520,42 +521,46 @@ const PredictionPanel: FunctionComponent = () => {
           </Alert>
         ) : prediction && topResult ? (
           <div className="space-y-3">
-            <span className="rounded-full bg-zinc-100 px-2 py-0.5 font-mono text-sm text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
-              {prediction.predictTimeMs.toFixed(1)} ms
-            </span>
             {playSettings.showConfidenceScores ? (
-              visibleResults.map((result) => {
-                const classId =
-                  classes[result.index]?.id ?? String(result.index);
-                const color = colorFromString(classId);
-                const isTop =
-                  result.index === topResult.index && meetsThreshold;
+              <>
+                {visibleResults.map((result) => {
+                  const classId =
+                    classes[result.index]?.id ?? String(result.index);
+                  const color = colorFromString(classId);
+                  const isTop =
+                    result.index === topResult.index && meetsThreshold;
 
-                return (
-                  <div key={result.index}>
-                    <div className="mb-1.5 flex items-baseline justify-between gap-3">
-                      <span
-                        className={clsx(
-                          'font-serif font-semibold leading-tight',
-                          isTop ? 'motion-preset-confetti text-xl' : 'text-base',
-                        )}
-                      >
-                        {result.className}
-                      </span>
-                      <span className="shrink-0 text-sm tabular-nums text-zinc-500 dark:text-zinc-400">
-                        {(result.confidence * 100).toFixed(1)}%
-                      </span>
+                  return (
+                    <div key={result.index}>
+                      <div className="mb-1.5 flex items-baseline justify-between gap-3">
+                        <span
+                          className={clsx(
+                            'font-serif font-semibold leading-tight',
+                            isTop
+                              ? 'motion-preset-confetti text-xl'
+                              : 'text-base',
+                          )}
+                        >
+                          {result.className}
+                        </span>
+                        <span className="shrink-0 text-base font-light tabular-nums text-zinc-500 dark:text-zinc-400">
+                          {(result.confidence * 100).toFixed(1)}%
+                        </span>
+                      </div>
+                      <Progress
+                        color={color}
+                        radius="xl"
+                        size={isTop ? 'md' : 'sm'}
+                        styles={{ section: { transition: 'width 350ms ease' } }}
+                        value={result.confidence * 100}
+                      />
                     </div>
-                    <Progress
-                      color={color}
-                      radius="xl"
-                      size={isTop ? 'md' : 'sm'}
-                      styles={{ section: { transition: 'width 350ms ease' } }}
-                      value={result.confidence * 100}
-                    />
-                  </div>
-                );
-              })
+                  );
+                })}
+                <Text c="dimmed" className="!mt-6 text-sm text-right font-mono">
+                  {prediction.predictTimeMs.toFixed(1)} ms
+                </Text>
+              </>
             ) : (
               <div className="rounded-2xl bg-zinc-100 px-4 py-4 text-sm text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
                 {t('project.play.demo.confidenceDisabled')}
@@ -564,7 +569,7 @@ const PredictionPanel: FunctionComponent = () => {
           </div>
         ) : null}
       </div>
-    </div>
+    </Paper>
   );
 };
 

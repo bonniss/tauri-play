@@ -6,10 +6,11 @@ module.exports = {
     container: {
       center: true,
     },
-    fontFamily: {
-      serif: ['Lora Variable', 'serif'],
+    extend: {
+      fontFamily: {
+        serif: ['Lora Variable', 'serif'],
+      },
     },
-    extend: {},
   },
   plugins: [require('tailwindcss-motion'), require('@tailwindcss/typography')],
 };
