@@ -1,22 +1,18 @@
 import { Progress, Text } from '@mantine/core';
-import {
-  IconCircleCheck,
-  IconLoader2,
-  IconX,
-} from '@tabler/icons-react';
+import { IconCircleCheck, IconLoader2, IconX } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, Outlet, useRouterState } from '@tanstack/react-router';
 import { FunctionComponent, ReactNode } from 'react';
 import ContentEditable from '~/components/headless/ContentEditable';
-import { t, useLocale } from '~/lib/i18n';
 import { type ProjectWorkspace, updateProject } from '~/lib/db/domain/projects';
 import { IconDataLabel, IconDataPlay, IconDataTrain } from '../icon/semantic';
+import { useAppProvider } from '../layout/AppProvider';
 import { useProjectOne } from './ProjectOneProvider';
 
 interface ProjectOneLayoutProps {}
 
 const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
-  useLocale()
+  const { t } = useAppProvider();
   const {
     projectId,
     classes,
@@ -176,7 +172,13 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
         </nav>
 
         <div className="px-4 py-4">
-          <Text c="dimmed" fw={600} size="xs" tt="uppercase" className="tracking-widest">
+          <Text
+            c="dimmed"
+            fw={600}
+            size="xs"
+            tt="uppercase"
+            className="tracking-widest"
+          >
             {t('project.sidebar.dataset')}
           </Text>
           <div className="mt-3 space-y-3">
@@ -247,8 +249,13 @@ function ProjectNavItem({
   const rightSection =
     trainStatus === 'training' ? (
       <div className="flex items-center gap-1">
-        <IconLoader2 className="size-3.5 animate-spin text-blue-500" stroke={1.8} />
-        <span className="text-xs text-zinc-400">{Math.round((progress ?? 0) * 100)}%</span>
+        <IconLoader2
+          className="size-3.5 animate-spin text-blue-500"
+          stroke={1.8}
+        />
+        <span className="text-xs text-zinc-400">
+          {Math.round((progress ?? 0) * 100)}%
+        </span>
       </div>
     ) : trainStatus === 'trained' ? (
       <IconCircleCheck className="size-3.5 text-teal-500" stroke={1.8} />
@@ -256,9 +263,12 @@ function ProjectNavItem({
       <IconX className="size-3.5 text-red-500" stroke={1.8} />
     ) : null;
 
-  const base = 'flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors';
-  const active = 'bg-zinc-100 font-medium text-zinc-950 dark:bg-zinc-800 dark:text-zinc-50';
-  const inactive = 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-200';
+  const base =
+    'flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors';
+  const active =
+    'bg-zinc-100 font-medium text-zinc-950 dark:bg-zinc-800 dark:text-zinc-50';
+  const inactive =
+    'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-200';
   const disabledCls = 'pointer-events-none opacity-40';
 
   if (disabled) {

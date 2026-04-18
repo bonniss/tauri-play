@@ -1,14 +1,15 @@
-import { MantineProvider, localStorageColorSchemeManager } from "@mantine/core"
-import { useHotkey } from "@tanstack/react-hotkeys"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { FunctionComponent, PropsWithChildren } from "react"
-import { appTheme } from "./theme"
+import { MantineProvider, localStorageColorSchemeManager } from '@mantine/core';
+import { useHotkey } from '@tanstack/react-hotkeys';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { FunctionComponent, PropsWithChildren } from 'react';
+import { appTheme } from './theme';
 
-import { useDisclosure } from "@mantine/hooks"
-import { createProvider } from "react-easy-provider"
-import { Toaster } from "sonner";
+import { useDisclosure } from '@mantine/hooks';
+import { createProvider } from 'react-easy-provider';
+import { Toaster } from 'sonner';
+import { useTranslate } from '~/lib/i18n';
 
-const COLOR_SCHEME_STORAGE_KEY = "$colorScheme"
+const COLOR_SCHEME_STORAGE_KEY = '$colorScheme';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -17,7 +18,7 @@ const queryClient = new QueryClient({
       staleTime: 10_000,
     },
   },
-})
+});
 
 interface AppProviderProps extends PropsWithChildren {}
 export const AppProvider: FunctionComponent<AppProviderProps> = ({
@@ -25,7 +26,7 @@ export const AppProvider: FunctionComponent<AppProviderProps> = ({
 }) => {
   const colorSchemeManager = localStorageColorSchemeManager({
     key: COLOR_SCHEME_STORAGE_KEY,
-  })
+  });
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -38,21 +39,24 @@ export const AppProvider: FunctionComponent<AppProviderProps> = ({
       </MantineProvider>
       <Toaster richColors />
     </QueryClientProvider>
-  )
-}
+  );
+};
 
 const [useAppProvider, InternalProvider] = createProvider(() => {
+  const translateHandlers = useTranslate();
+
   const [
     appSettingsOpened,
     { toggle: toggleAppSettings, close: closeAppSettings },
-  ] = useDisclosure()
-  useHotkey("Shift+S", toggleAppSettings)
+  ] = useDisclosure();
+  useHotkey('Shift+S', toggleAppSettings);
 
   return {
+    ...translateHandlers,
     appSettingsOpened,
     toggleAppSettings,
     closeAppSettings,
-  }
-})
+  };
+});
 
-export { useAppProvider }
+export { useAppProvider };

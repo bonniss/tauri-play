@@ -24,6 +24,7 @@ import {
   useState,
 } from 'react';
 import CameraUI from '~/components/camera/CameraUI';
+import { useAppProvider } from '~/components/layout/AppProvider';
 import PlayRuntimeSettings from '~/components/project/play/PlayRuntimeSettings';
 import { ProjectPlayProvider } from '~/components/project/play/ProjectPlayProvider';
 import {
@@ -34,7 +35,6 @@ import {
   ProjectOneProvider,
   useProjectOne,
 } from '~/components/project/ProjectOneProvider';
-import { t, useLocale } from '~/lib/i18n';
 import {
   createSamplePreviewUrl,
   revokeSamplePreviewUrl,
@@ -111,7 +111,7 @@ function pickSeededSamples<T extends { id: string }>(
 }
 
 function ProjectPlayerPage() {
-  useLocale();
+  const { t } = useAppProvider();
   const { isLoading, playSettings, projectIcon, projectId, projectName } =
     useProjectOne();
 
@@ -156,7 +156,7 @@ function ProjectPlayerPage() {
 }
 
 const UploadPlayExperience: FunctionComponent = () => {
-  useLocale();
+  const { t } = useAppProvider();
   const { playSettings } = useProjectOne();
   const {
     clearPrediction,
@@ -319,7 +319,7 @@ const UploadPlayExperience: FunctionComponent = () => {
 };
 
 const CameraPlayExperience: FunctionComponent = () => {
-  useLocale();
+  const { t } = useAppProvider();
   const { prediction, projectModel, runPredictionFromVideo, runtimeError } =
     useProjectPlayRuntime();
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -403,7 +403,7 @@ const PlayExperienceShell: FunctionComponent<{
   children: ReactNode;
   trainedAt: string;
 }> = ({ children, trainedAt }) => {
-  const locale = useLocale();
+  const { t, locale } = useAppProvider();
   const { classes, projectDescription } = useProjectOne();
 
   return (
@@ -454,7 +454,7 @@ const PlayExperienceShell: FunctionComponent<{
 };
 
 const PredictionPanel: FunctionComponent = () => {
-  useLocale();
+  const { t } = useAppProvider();
   const { playSettings } = useProjectOne();
   const {
     isAnalyzing,
@@ -544,7 +544,7 @@ const ClassPreviewItem: FunctionComponent<{
     id: string;
   }>;
 }> = ({ classId, name, samples }) => {
-  useLocale();
+  const { t } = useAppProvider();
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const previewSamples = useMemo(
     () => pickSeededSamples(samples, classId, 4),

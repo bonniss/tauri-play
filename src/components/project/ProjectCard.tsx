@@ -9,12 +9,12 @@ import {
 import { Link } from '@tanstack/react-router';
 import { FunctionComponent, useEffect, useMemo, useState } from 'react';
 import type { ProjectListItem } from '~/lib/db/domain/projects';
-import { t } from '~/lib/i18n';
 import {
   createSamplePreviewUrl,
   revokeSamplePreviewUrl,
 } from '~/lib/project/sample-preview';
 import { IconDataPlay, IconDataTrain, IconView } from '../icon/semantic';
+import { useAppProvider } from '../layout/AppProvider';
 
 interface ProjectCardProps {
   canPlay: boolean;
@@ -41,6 +41,8 @@ const ProjectCard: FunctionComponent<ProjectCardProps> = ({
   project,
   sampleFilePaths,
 }) => {
+  const { t } = useAppProvider();
+
   return (
     <Paper
       className="group cursor-pointer overflow-hidden p-5 transition duration-200 hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lg dark:hover:border-zinc-700"

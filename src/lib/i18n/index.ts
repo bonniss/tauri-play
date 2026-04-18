@@ -1,19 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useSyncExternalStore } from "react"
-import { get as getProperty } from "react-headless-form"
-import { default as vi } from "./locales/vi/app.json"
-import { default as en } from "./locales/en/app.json"
-export { vi, en }
+import { useSyncExternalStore } from 'react';
+import { get as getProperty } from 'react-headless-form';
+import { default as en } from './locales/en/app.json';
+import { default as vi } from './locales/vi/app.json';
+export { en, vi };
 
-const RX_PARAM = /\{\{(\w+)\}\}/g
-const localeListeners = new Set<() => void>()
+const RX_PARAM = /\{\{(\w+)\}\}/g;
+const localeListeners = new Set<() => void>();
 
 export interface I18nConfig {
-  resources: Record<string, any>
-  fallbackLocale?: string
-  getLocale: () => string
-  setLocale?: (locale: string) => void
-  onLocaleChange?: (locale: string) => void
+  resources: Record<string, any>;
+  fallbackLocale?: string;
+  getLocale: () => string;
+  setLocale?: (locale: string) => void;
+  onLocaleChange?: (locale: string) => void;
 }
 
 let config: I18nConfig = {
@@ -21,8 +21,8 @@ let config: I18nConfig = {
     en,
     vi,
   },
-  getLocale: () => "en",
-}
+  getLocale: () => 'en',
+};
 
 export function setupI18n(_config: Partial<I18nConfig>) {
   config = {
@@ -32,35 +32,35 @@ export function setupI18n(_config: Partial<I18nConfig>) {
       ...config.resources,
       ..._config.resources,
     },
-  } as I18nConfig
+  } as I18nConfig;
 }
 
 export function getLocale() {
-  return config.getLocale()
+  return config.getLocale();
 }
 
 export function setLocale(locale: string) {
-  config.setLocale?.(locale)
-  config.onLocaleChange?.(locale)
-  localeListeners.forEach((listener) => listener())
+  config.setLocale?.(locale);
+  config.onLocaleChange?.(locale);
+  localeListeners.forEach((listener) => listener());
 }
 
-export function subscribeLocale(listener: () => void) {
-  localeListeners.add(listener)
+function subscribeLocale(listener: () => void) {
+  localeListeners.add(listener);
 
   return () => {
-    localeListeners.delete(listener)
-  }
+    localeListeners.delete(listener);
+  };
 }
 
 export function useLocale() {
-  return useSyncExternalStore(subscribeLocale, getLocale, getLocale)
+  return useSyncExternalStore(subscribeLocale, getLocale, getLocale);
 }
 
 export interface TranslateOptions {
-  params?: Record<string, string | number>
-  fallback?: string
-  raw?: boolean
+  params?: Record<string, string | number>;
+  fallback?: string;
+  raw?: boolean;
 }
 
 /**
@@ -75,24 +75,29 @@ export interface TranslateOptions {
  * @returns {string | any} the translated value, or the original object/array if opts.raw is true
  */
 export function t(key: string, opts: TranslateOptions = {}): any {
-  const { params, fallback, raw } = opts
+  const { params, fallback, raw } = opts;
 
   const store =
     config.resources[config.getLocale()] ??
-    (config.fallbackLocale && config.resources[config.fallbackLocale])
+    (config.fallbackLocale && config.resources[config.fallbackLocale]);
 
-  if (!store) return fallback ?? key
+  if (!store) return fallback ?? key;
 
-  const message = getProperty(store, key)
-  if (message === undefined || message === null) return fallback ?? key
+  const message = getProperty(store, key);
+  if (message === undefined || message === null) return fallback ?? key;
 
   // Nếu cần lấy nguyên object/array → trả thẳng ra
-  if (raw || typeof message !== "string") return message
+  if (raw || typeof message !== 'string') return message;
 
   // Replace placeholders
   return message.replace(RX_PARAM, (_, name) =>
     params && Object.prototype.hasOwnProperty.call(params, name)
       ? String(params[name])
-      : "",
-  )
+      : '',
+  );
+}
+
+export function useTranslate() {
+  const locale = useLocale(); // re-render when locale changes
+  return { t, locale, getLocale, setLocale };
 }

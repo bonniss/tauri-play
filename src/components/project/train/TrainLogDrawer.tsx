@@ -1,9 +1,9 @@
 import { Drawer, Text } from "@mantine/core"
+import { useAppProvider } from "~/components/layout/AppProvider";
 import { useDataTrain } from "~/components/project/train/DataTrainProvider"
-import { t, useLocale } from "~/lib/i18n"
 
 function TrainLogDrawer() {
-  useLocale()
+  const { t } = useAppProvider();
   const {
     closeLogDetails,
     displayedTrainLog,

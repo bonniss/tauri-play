@@ -1,20 +1,24 @@
-import { Button, Group, Modal, Radio, Text } from "@mantine/core"
-import { FunctionComponent } from "react"
-import { setLocale, t, useLocale } from "~/lib/i18n"
-import { useAppProvider } from "./AppProvider"
-import AppInfo from "./settings/AppInfo"
+import { Button, Group, Modal, Radio, Text } from '@mantine/core';
+import { FunctionComponent } from 'react';
+import { useAppProvider } from './AppProvider';
+import AppInfo from './settings/AppInfo';
 
 interface AppSettingsProps {}
 
 const AppSettings: FunctionComponent<AppSettingsProps> = () => {
-  const locale = useLocale()
-  const { appSettingsOpened, toggleAppSettings, closeAppSettings } =
-    useAppProvider()
+  const {
+    t,
+    locale,
+    setLocale,
+    appSettingsOpened,
+    toggleAppSettings,
+    closeAppSettings,
+  } = useAppProvider();
 
   return (
     <>
       <Button onClick={toggleAppSettings} size="compact-sm" variant="subtle">
-        {t("common.settings")}
+        {t('common.settings')}
       </Button>
       <Modal
         onClose={closeAppSettings}
@@ -25,13 +29,13 @@ const AppSettings: FunctionComponent<AppSettingsProps> = () => {
         <div className="space-y-6">
           <div className="space-y-3">
             <Text fw={600} size="sm">
-              {t("settings.language")}
+              {t('settings.language')}
             </Text>
             <Radio.Group onChange={setLocale} value={locale}>
               <div className="flex gap-4">
                 {[
-                  { flag: "/flags/us.svg", label: "English", value: "en" },
-                  { flag: "/flags/vn.svg", label: "Tiếng Việt", value: "vi" },
+                  { flag: '/flags/us.svg', label: 'English', value: 'en' },
+                  { flag: '/flags/vn.svg', label: 'Tiếng Việt', value: 'vi' },
                 ].map((item) => (
                   <Radio.Card
                     checked={locale === item.value}
@@ -62,7 +66,7 @@ const AppSettings: FunctionComponent<AppSettingsProps> = () => {
         </div>
       </Modal>
     </>
-  )
-}
+  );
+};
 
-export default AppSettings
+export default AppSettings;
