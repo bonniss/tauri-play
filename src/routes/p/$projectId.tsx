@@ -35,6 +35,7 @@ import {
   ProjectOneProvider,
   useProjectOne,
 } from '~/components/project/ProjectOneProvider';
+import MarkdownViewer from '~/components/shared/MarkdownViewer';
 import {
   createSamplePreviewUrl,
   revokeSamplePreviewUrl,
@@ -441,9 +442,9 @@ const PlayExperienceShell: FunctionComponent<{
             {t('project.play.demo.descriptionSection')}
           </p>
           <div className="max-h-72 overflow-y-auto pr-2 text-sm leading-7 text-zinc-600 dark:text-zinc-300">
-            <div className="whitespace-pre-wrap">
+            <MarkdownViewer className="prose-sm">
               {projectDescription || t('project.play.demo.noDescription')}
-            </div>
+            </MarkdownViewer>
           </div>
         </section>
       </aside>
