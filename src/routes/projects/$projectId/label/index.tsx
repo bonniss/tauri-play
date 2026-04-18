@@ -1,5 +1,6 @@
 import {
   ActionIcon,
+  Badge,
   Button,
   Group,
   Menu,
@@ -35,6 +36,7 @@ import UploadSamplesButton from '~/components/project/UploadSamplesButton';
 import { createClass, deleteClass } from '~/lib/db/domain/classes';
 import { activateProject, updateProject } from '~/lib/db/domain/projects';
 import { createSample, deleteSample } from '~/lib/db/domain/samples';
+import { colorFromString } from '~/lib/project/class-color';
 import {
   deleteSampleFile,
   saveCapturedSampleFrames,
@@ -589,142 +591,136 @@ function ProjectLabelPage() {
 
       {hasClasses ? (
         <div className="mt-4 divide-y divide-zinc-200 overflow-hidden rounded-md border border-zinc-200 dark:divide-zinc-700 dark:border-zinc-700">
-          {visibleClasses.map((item) => (
-            <div key={item.id}>
-              <div className="flex items-center justify-between gap-3 px-3 py-2.5">
-                <div className="flex min-w-0 items-center gap-1.5">
-                  <ActionIcon
-                    aria-label={
-                      openClassMap[item.id] ? 'Collapse class' : 'Expand class'
-                    }
-                    onClick={() => {
-                      setOpenClassMap((current) => ({
-                        ...current,
-                        [item.id]: !current[item.id],
-                      }));
-                    }}
-                    size="sm"
-                    variant="subtle"
-                  >
-                    <IconChevronRight
-                      className={clsx(
-                        'size-6',
-                        openClassMap[item.id]
-                          ? 'rotate-90 transition-transform'
-                          : 'transition-transform',
-                      )}
-                      stroke={1.8}
-                    />
-                  </ActionIcon>
-                  <ContentEditable
-                    as="span"
-                    aria-label={`Class name ${item.name}`}
-                    className="font-serif font-semibold inline-block w-fit max-w-full truncate rounded px-1 py-0.5 text-base"
-                    focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
-                    onBlur={(value) => {
-                      updateClassName(item.id, value);
-                    }}
-                    value={item.name}
-                  />
-                  <span className="text-xs text-zinc-400 dark:text-zinc-500">
-                    {item.samples.length}
-                  </span>
-                </div>
-                <Group gap="xs">
-                  <ProjectActionButton
-                    action="camera"
-                    onClick={() => {
-                      if (
-                        cameraTargetState?.slot === 'class' &&
-                        cameraTargetState.classId === item.id
-                      ) {
-                        void closeInlineCamera();
-                        return;
-                      }
-                      void openInlineCamera({
-                        classId: item.id,
-                        slot: 'class',
-                      });
-                    }}
-                    size="xs"
-                    variant={
-                      cameraTargetState?.slot === 'class' &&
-                      cameraTargetState.classId === item.id
-                        ? 'filled'
-                        : undefined
-                    }
-                  >
-                    {cameraTargetState?.slot === 'class' &&
-                    cameraTargetState.classId === item.id
-                      ? t('common.close')
-                      : t('project.label.camera')}
-                  </ProjectActionButton>
-                  <UploadSamplesButton
-                    buttonLabel={t('common.upload')}
-                    classId={item.id}
-                    onUploadStateChange={handleUploadStateChange}
-                    size="xs"
-                  />
-                  <Menu position="bottom-end" shadow="md" withinPortal>
-                    <Menu.Target>
-                      <ActionIcon
-                        aria-label="Class actions"
-                        size="xs"
-                        variant="subtle"
-                      >
-                        <IconDots size={14} stroke={1.8} />
-                      </ActionIcon>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                      <Menu.Item
-                        color="red"
-                        leftSection={<IconTrash size={14} />}
-                        onClick={() => {
-                          setDeleteClassId(item.id);
-                        }}
-                      >
-                        {t('common.delete')}
-                      </Menu.Item>
-                      <Menu.Item
-                        leftSection={<IconDownload size={14} />}
-                        onClick={() => {
-                          toast.message(t('project.label.exportSoon'));
-                        }}
-                      >
-                        {t('common.export')}
-                      </Menu.Item>
-                    </Menu.Dropdown>
-                  </Menu>
-                </Group>
-              </div>
+          {visibleClasses.map((item, classIdx) => {
+            const classColor = colorFromString(classIdx);
 
-              {openClassMap[item.id] ? (
-                <div className="border-t border-zinc-200 px-3 py-3 dark:border-zinc-700">
-                  {cameraTargetState?.slot === 'class' &&
-                  currentCameraClass?.id === item.id ? (
-                    <div className="mb-4">
-                      <CameraCapturePanel
-                        currentCameraClass={currentCameraClass}
-                        onCaptureSession={handleCameraCaptureSession}
-                        onRenameClass={updateClassName}
-                      />
-                    </div>
-                  ) : null}
-                  <SampleGrid
-                    loading={uploadingClassMap[item.id]?.isPending ?? false}
-                    onDeleteSample={handleDeleteSample}
-                    onDeleteSamples={handleDeleteSamples}
-                    samples={item.samples}
-                  />
-                  {!item.samples.length ? (
-                    <Text c="dimmed" className="mt-3" size="sm">
-                      {t('project.label.noImages')}
-                    </Text>
-                  ) : null}
+            return (
+              <div key={item.id}>
+                <div className="flex items-center justify-between gap-3 px-3 py-2.5">
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <ActionIcon
+                      aria-label={openClassMap[item.id] ? 'Collapse class' : 'Expand class'}
+                      onClick={() => {
+                        setOpenClassMap((current) => ({
+                          ...current,
+                          [item.id]: !current[item.id],
+                        }));
+                      } }
+                      size="sm"
+                      variant="subtle"
+                    >
+                      <IconChevronRight
+                        className={clsx(
+                          'size-6',
+                          openClassMap[item.id]
+                            ? 'rotate-90 transition-transform'
+                            : 'transition-transform'
+                        )}
+                        stroke={1.8} />
+                    </ActionIcon>
+                    <Badge size="xs" radius="xs" color={classColor}>{classIdx}</Badge>
+                    <ContentEditable
+                      as="span"
+                      aria-label={`Class name ${item.name}`}
+                      className="font-serif font-semibold inline-block w-fit max-w-full truncate rounded px-1 py-0.5 text-base"
+                      focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
+                      onBlur={(value) => {
+                        updateClassName(item.id, value);
+                      } }
+                      value={item.name} />
+                    <span className="text-xs text-zinc-400 dark:text-zinc-500">
+                      {item.samples.length}
+                    </span>
+                  </div>
+                  <Group gap="xs">
+                    <ProjectActionButton
+                      action="camera"
+                      onClick={() => {
+                        if (cameraTargetState?.slot === 'class' &&
+                          cameraTargetState.classId === item.id) {
+                          void closeInlineCamera();
+                          return;
+                        }
+                        void openInlineCamera({
+                          classId: item.id,
+                          slot: 'class',
+                        });
+                      } }
+                      size="xs"
+                      variant={cameraTargetState?.slot === 'class' &&
+                        cameraTargetState.classId === item.id
+                        ? 'filled'
+                        : undefined}
+                    >
+                      {cameraTargetState?.slot === 'class' &&
+                        cameraTargetState.classId === item.id
+                        ? t('common.close')
+                        : t('project.label.camera')}
+                    </ProjectActionButton>
+                    <UploadSamplesButton
+                      buttonLabel={t('common.upload')}
+                      classId={item.id}
+                      onUploadStateChange={handleUploadStateChange}
+                      size="xs" />
+                    <Menu position="bottom-end" shadow="md" withinPortal>
+                      <Menu.Target>
+                        <ActionIcon
+                          aria-label="Class actions"
+                          size="xs"
+                          variant="subtle"
+                        >
+                          <IconDots size={14} stroke={1.8} />
+                        </ActionIcon>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        <Menu.Item
+                          color="red"
+                          leftSection={<IconTrash size={14} />}
+                          onClick={() => {
+                            setDeleteClassId(item.id);
+                          } }
+                        >
+                          {t('common.delete')}
+                        </Menu.Item>
+                        <Menu.Item
+                          leftSection={<IconDownload size={14} />}
+                          onClick={() => {
+                            toast.message(t('project.label.exportSoon'));
+                          } }
+                        >
+                          {t('common.export')}
+                        </Menu.Item>
+                      </Menu.Dropdown>
+                    </Menu>
+                  </Group>
                 </div>
-              ) : null}
-            </div>
-          ))}
+
+                {openClassMap[item.id] ? (
+                  <div className="border-t border-zinc-200 px-3 py-3 dark:border-zinc-700">
+                    {cameraTargetState?.slot === 'class' &&
+                      currentCameraClass?.id === item.id ? (
+                      <div className="mb-4">
+                        <CameraCapturePanel
+                          currentCameraClass={currentCameraClass}
+                          onCaptureSession={handleCameraCaptureSession}
+                          onRenameClass={updateClassName} />
+                      </div>
+                    ) : null}
+                    <SampleGrid
+                      loading={uploadingClassMap[item.id]?.isPending ?? false}
+                      onDeleteSample={handleDeleteSample}
+                      onDeleteSamples={handleDeleteSamples}
+                      samples={item.samples} />
+                    {!item.samples.length ? (
+                      <Text c="dimmed" className="mt-3" size="sm">
+                        {t('project.label.noImages')}
+                      </Text>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
         </div>
       ) : null}
 

@@ -16,19 +16,20 @@ export const COLOR_CODE_PALETTE = [
 ];
 
 const MANTINE_PALETTE: (keyof MantineThemeColors)[] = [
-  'blue',
-  'orange',
+  // 'dark',
+  // 'gray',
   'teal',
-  'red',
-  'grape',
-  'gray',
-  'green',
-  'indigo',
-  'lime',
-  'pink',
-  'violet',
-  'yellow',
   'cyan',
+  'indigo',
+  'blue',
+  'violet',
+  'pink',
+  'lime',
+  'yellow',
+  'green',
+  'red',
+  'orange',
+  'grape',
 ];
 
 function djb2(str: string): number {
@@ -39,6 +40,7 @@ function djb2(str: string): number {
   return hash >>> 0;
 }
 
-export function getClassColor(seed: string): string {
-  return MANTINE_PALETTE[djb2(seed) % MANTINE_PALETTE.length]!;
+export function colorFromString(seed: string | number): string {
+  const seedStr = typeof seed === 'number' ? seed.toString() : seed;
+  return MANTINE_PALETTE[djb2(seedStr) % MANTINE_PALETTE.length]!;
 }

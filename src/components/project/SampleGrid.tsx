@@ -1,5 +1,6 @@
 import {
   ActionIcon,
+  Badge,
   Button,
   Loader,
   Modal,
@@ -25,6 +26,7 @@ import {
   useState,
 } from 'react';
 import { ProjectSample } from '~/lib/db/domain/samples';
+import { colorFromString } from '~/lib/project/class-color';
 import {
   createSamplePreviewUrl,
   revokeSamplePreviewUrl,
@@ -75,7 +77,9 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
   const [visibleCount, setVisibleCount] = useState(SAMPLE_PAGE_SIZE);
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(
+    null,
+  );
   const [isDeletingBatch, setIsDeletingBatch] = useState(false);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
@@ -329,7 +333,11 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
     setLastSelectedIndex(null);
   }
 
-  function handleThumbnailSelect(sampleId: string, index: number, shiftKey: boolean) {
+  function handleThumbnailSelect(
+    sampleId: string,
+    index: number,
+    shiftKey: boolean,
+  ) {
     if (shiftKey && lastSelectedIndex !== null) {
       const start = Math.min(lastSelectedIndex, index);
       const end = Math.max(lastSelectedIndex, index);
@@ -459,7 +467,9 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
                 <Button
                   size="xs"
                   variant="subtle"
-                  onClick={() => setSelectedIds(new Set(visibleSamples.map((s) => s.id)))}
+                  onClick={() =>
+                    setSelectedIds(new Set(visibleSamples.map((s) => s.id)))
+                  }
                 >
                   Select all
                 </Button>
@@ -584,17 +594,32 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
                     )}
                   >
                     {isSelected && (
-                      <svg viewBox="0 0 10 10" className="size-2.5 text-white" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M1.5 5l2.5 2.5 4.5-4.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <svg
+                        viewBox="0 0 10 10"
+                        className="size-2.5 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path
+                          d="M1.5 5l2.5 2.5 4.5-4.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
                       </svg>
                     )}
                   </div>
                 )}
 
                 {classIdx !== undefined && (
-                  <div className="absolute bottom-1 left-1 flex min-w-[18px] items-center justify-center rounded bg-black/60 px-1 py-px text-[10px] font-bold leading-none text-white">
+                  <Badge
+                    color={colorFromString(classIdx)}
+                    radius="xs"
+                    size="xs"
+                    className="absolute bottom-1 left-1 flex"
+                  >
                     {classIdx}
-                  </div>
+                  </Badge>
                 )}
               </button>
             );

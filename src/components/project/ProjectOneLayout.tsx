@@ -1,5 +1,5 @@
 import { ActionIcon, Badge, Progress, Text } from '@mantine/core';
-import { getClassColor } from '~/lib/project/class-color';
+import { colorFromString } from '~/lib/project/class-color';
 import { useDisclosure } from '@mantine/hooks';
 import {
   IconCircleCheck,
@@ -124,7 +124,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
               const readiness = classReadiness.find(
                 (item) => item.classId === projectClass.id,
               );
-              const classColor = getClassColor(projectClass.id);
+              const classColor = colorFromString(classIndex);
 
               return (
                 <SidebarDatasetItem
@@ -134,7 +134,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
                     <ContentEditable
                       as="span"
                       aria-label={`Class name ${projectClass.name}`}
-                      className="font-semibold font-serif hover:ring-1 ring-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/75 inline-block w-fit max-w-full truncate rounded px-1"
+                      className="font-semibold font-serif hover:ring-1 ring-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/75 inline-block w-fit max-w-full truncate rounded"
                       focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
                       onBlur={(value) => {
                         updateClassName(projectClass.id, value);

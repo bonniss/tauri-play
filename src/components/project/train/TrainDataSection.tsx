@@ -1,10 +1,8 @@
 import { Drawer, SegmentedControl } from '@mantine/core';
-import { useAppProvider } from '~/components/layout/AppProvider';
 import SampleGrid from '~/components/project/SampleGrid';
 import { useDataTrain } from '~/components/project/train/DataTrainProvider';
 
 function TrainDataSection() {
-  const { t } = useAppProvider();
   const {
     displayedSplitSamples,
     inspectDataOpened,
@@ -25,12 +23,6 @@ function TrainDataSection() {
       position="bottom"
       size="75%"
       title={
-        trainDataView === 'train'
-          ? t('project.train.dataset.trainImages')
-          : t('project.train.dataset.validationImages')
-      }
-    >
-      <div className="container space-y-4">
         <SegmentedControl
           data={trainDataViewOptions}
           onChange={(value) => {
@@ -38,7 +30,13 @@ function TrainDataSection() {
           }}
           value={trainDataView}
         />
-        <SampleGrid classIndexMap={splitClassIndexMap} samples={displayedSplitSamples} />
+      }
+    >
+      <div className="container space-y-4">
+        <SampleGrid
+          classIndexMap={splitClassIndexMap}
+          samples={displayedSplitSamples}
+        />
       </div>
     </Drawer>
   );
