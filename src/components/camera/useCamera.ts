@@ -36,14 +36,14 @@ export function useCamera() {
     setError(null)
   }, [])
 
-  const getMediaDevices = navigator.mediaDevices.enumerateDevices
+  const getMediaDevices = navigator.mediaDevices?.enumerateDevices
 
   const connect = useCallback(async () => {
     try {
       setCameraState("connecting")
       setError(null)
 
-      const stream = await navigator.mediaDevices.getUserMedia({
+      const stream = await navigator.mediaDevices?.getUserMedia({
         video: { facingMode: "user" },
         audio: false,
       })
