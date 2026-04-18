@@ -27,7 +27,14 @@
     "name": "Name",
     "description": "Description",
     "save": "Save",
-    "empty": "No data"
+    "empty": "No data",
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "first": "First",
+      "last": "Last",
+      "hint": "{{from}}-{{to}} of {{totalItems}} items · Page {{page}}/{{totalPage}}"
+    }
   },
   "project": {
     "asset": "{{classes}} classes · {{samples}} samples",

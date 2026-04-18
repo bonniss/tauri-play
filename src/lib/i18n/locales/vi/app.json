@@ -27,7 +27,14 @@
     "name": "Tên",
     "description": "Mô tả",
     "save": "Lưu",
-    "empty": "Không có dữ liệu"
+    "empty": "Không có dữ liệu",
+    "pagination": {
+      "previous": "Trước",
+      "next": "Tiếp",
+      "first": "Đầu",
+      "last": "Cuối",
+      "hint": "{{from}}-{{to}} trong {{totalItems}} mục · Trang {{page}}/{{totalPage}}"
+    }
   },
   "project": {
     "asset": "{{classes}} classes · {{samples}} samples",
