@@ -30,7 +30,7 @@ const MarkdownField: FunctionComponent<MarkdownFieldProps> = (props) => {
       error={errorMessage}
       withAsterisk={required}
     >
-      <div data-color-mode={colorScheme}>
+      <div className="mt-2" data-color-mode={colorScheme}>
         <MDEditor
           {...props}
           ref={ref}

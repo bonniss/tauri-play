@@ -29,6 +29,11 @@
     "save": "Save"
   },
   "project": {
+    "create": {
+      "name": "What your project does. E.g. \"Dog vs Cat\", \"Fruit Identifier\".",
+      "description": "In depth description of your project. Markdown supported.",
+      "icon": "An icon that represents your project."
+    },
     "sidebar": {
       "descriptionPlaceholder": "Add project description",
       "dataset": "Dataset",

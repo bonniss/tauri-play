@@ -58,6 +58,7 @@ const createProjectForm = defineConfig<{
   name: {
     type: "text",
     label: "common.name",
+    description: "project.create.name",
     rules: {
       required: true,
     },
@@ -69,10 +70,11 @@ const createProjectForm = defineConfig<{
   icon: {
     type: "inline",
     label: "common.icon",
-    render: ({ value, onChange, label }) => {
+    description: "project.create.icon",
+    render: ({ value, onChange, label, description }) => {
       return (
-        <Input.Wrapper label={label}>
-          <div className="flex flex-wrap gap-2">
+        <Input.Wrapper label={label} description={description}>
+          <div className="flex flex-wrap gap-2 mt-2">
             {ANIMAL_ICON_OPTIONS.map((option) => (
               <ActionIcon
                 size="input-md"
@@ -94,6 +96,7 @@ const createProjectForm = defineConfig<{
   description: {
     type: "longText",
     label: "common.description",
+    description: "project.create.description",
     props: {
       preview: "edit",
     },

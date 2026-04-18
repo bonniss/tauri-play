@@ -29,6 +29,11 @@
     "save": "Lưu"
   },
   "project": {
+    "create": {
+      "name": " Chức năng của dự án. Ví dụ: \"Phân biệt chó và mèo\", \"Nhận diện trái cây\".",
+      "description": "Mô tả chi tiết về dự án. Hỗ trợ Markdown.",
+      "icon": "Một biểu tượng đại diện cho dự án."
+    },
     "sidebar": {
       "descriptionPlaceholder": "Thêm mô tả dự án",
       "dataset": "Dataset",
