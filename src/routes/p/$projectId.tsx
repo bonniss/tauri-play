@@ -449,14 +449,23 @@ const CameraPlayExperience: FunctionComponent = () => {
                     </div>
                   ) : null}
 
-                  {isFullscreen && prediction && topResult && meetsThreshold ? (
+                  {isFullscreen && prediction ? (
                     <div className="flex justify-center pb-8">
-                      <span
-                        key={topResult.index}
-                        className="live-class-fly-up rounded-2xl border border-white/20 bg-black/50 px-8 py-4 text-3xl font-bold text-white backdrop-blur-md"
-                      >
-                        {topResult.className}
-                      </span>
+                      <div className="rounded-2xl border border-white/20 bg-black/50 px-8 py-5 text-center backdrop-blur-md">
+                        <span
+                          key={topResult?.index ?? 'none'}
+                          className={clsx(
+                            'block text-4xl font-bold text-white',
+                            meetsThreshold && topResult
+                              ? 'motion-preset-confetti'
+                              : '',
+                          )}
+                        >
+                          {meetsThreshold && topResult
+                            ? topResult.className
+                            : t('project.play.demo.notConfident')}
+                        </span>
+                      </div>
                     </div>
                   ) : null}
                 </div>
