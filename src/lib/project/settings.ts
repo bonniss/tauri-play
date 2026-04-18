@@ -20,6 +20,8 @@ export interface ProjectTrainSettings {
 export interface ProjectPlaySettings {
   autoPredictOnUpload: boolean
   confidenceThreshold: number
+  liveAspectRatio: "16:9" | "4:3" | "1:1"
+  livePredictInterval: number
   mode: "upload" | "camera"
   showAllClasses: boolean
   showConfidenceScores: boolean
@@ -54,6 +56,8 @@ export interface ProjectTrainSettingsFormValues {
 export interface ProjectPlaySettingsFormValues {
   autoPredictOnUpload: boolean
   confidenceThreshold: string
+  liveAspectRatio: "16:9" | "4:3" | "1:1"
+  livePredictInterval: string
   mode: "upload" | "camera"
   showAllClasses: boolean
   showConfidenceScores: boolean
@@ -80,6 +84,8 @@ export const DEFAULT_PROJECT_TRAIN_SETTINGS: ProjectTrainSettings = {
 export const DEFAULT_PROJECT_PLAY_SETTINGS: ProjectPlaySettings = {
   autoPredictOnUpload: true,
   confidenceThreshold: 0,
+  liveAspectRatio: "16:9",
+  livePredictInterval: 700,
   mode: "upload",
   showAllClasses: true,
   showConfidenceScores: true,
@@ -114,6 +120,8 @@ const trainSettingsInputSchema = type({
 const playSettingsInputSchema = type({
   autoPredictOnUpload: "boolean | undefined",
   confidenceThreshold: "number >= 0 | undefined",
+  liveAspectRatio: "'16:9' | '4:3' | '1:1' | undefined",
+  livePredictInterval: "number > 0 | undefined",
   mode: "'upload' | 'camera' | undefined",
   showAllClasses: "boolean | undefined",
   showConfidenceScores: "boolean | undefined",
@@ -192,6 +200,8 @@ export function normalizeProjectPlaySettings(
   const source = value ?? {
     autoPredictOnUpload: undefined,
     confidenceThreshold: undefined,
+    liveAspectRatio: undefined,
+    livePredictInterval: undefined,
     mode: undefined,
     showAllClasses: undefined,
     showConfidenceScores: undefined,
@@ -205,6 +215,10 @@ export function normalizeProjectPlaySettings(
     confidenceThreshold:
       source.confidenceThreshold ??
       DEFAULT_PROJECT_PLAY_SETTINGS.confidenceThreshold,
+    liveAspectRatio:
+      source.liveAspectRatio ?? DEFAULT_PROJECT_PLAY_SETTINGS.liveAspectRatio,
+    livePredictInterval:
+      source.livePredictInterval ?? DEFAULT_PROJECT_PLAY_SETTINGS.livePredictInterval,
     mode: source.mode ?? DEFAULT_PROJECT_PLAY_SETTINGS.mode,
     showAllClasses:
       source.showAllClasses ?? DEFAULT_PROJECT_PLAY_SETTINGS.showAllClasses,
@@ -353,6 +367,8 @@ export function projectPlaySettingsToFormValues(
   return {
     autoPredictOnUpload: settings.autoPredictOnUpload,
     confidenceThreshold: String(settings.confidenceThreshold),
+    liveAspectRatio: settings.liveAspectRatio,
+    livePredictInterval: String(settings.livePredictInterval),
     mode: settings.mode,
     showAllClasses: settings.showAllClasses,
     showConfidenceScores: settings.showConfidenceScores,
@@ -365,11 +381,16 @@ export function parseProjectPlaySettingsFormValues(
 ): ProjectPlaySettings {
   const nextConfidenceThreshold = Number(values.confidenceThreshold.trim())
   const nextTopK = Number(values.topK.trim())
+  const nextLivePredictInterval = Number(values.livePredictInterval.trim())
 
   return normalizeProjectPlaySettings({
     autoPredictOnUpload: values.autoPredictOnUpload,
     confidenceThreshold: Number.isFinite(nextConfidenceThreshold)
       ? nextConfidenceThreshold
+      : undefined,
+    liveAspectRatio: values.liveAspectRatio,
+    livePredictInterval: Number.isFinite(nextLivePredictInterval) && nextLivePredictInterval > 0
+      ? nextLivePredictInterval
       : undefined,
     mode: values.mode,
     showAllClasses: values.showAllClasses,

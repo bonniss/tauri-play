@@ -108,7 +108,15 @@
         "topK": "Top results",
         "topKDescription": "Number of highest-confidence predictions to display",
         "confidenceThreshold": "Confidence threshold",
-        "confidenceThresholdDescription": "Only show predictions with confidence above this value"
+        "confidenceThresholdDescription": "Only show predictions with confidence above this value",
+        "liveSettings": "Camera settings",
+        "liveAspectRatio": "Camera aspect ratio",
+        "liveAspectRatioDescription": "Frame shape for the live camera view",
+        "liveAspectRatio169": "16:9 — Widescreen",
+        "liveAspectRatio43": "4:3 — Classic",
+        "liveAspectRatio11": "1:1 — Square",
+        "livePredictInterval": "Predict interval (ms)",
+        "livePredictIntervalDescription": "How often the model runs a prediction on the live feed"
       },
       "demo": {
         "noModel": "This project does not have a trained model yet.",

@@ -108,7 +108,15 @@
         "topK": "Số kết quả hàng đầu",
         "topKDescription": "Số dự đoán có độ tin cậy cao nhất cần hiển thị",
         "confidenceThreshold": "Ngưỡng độ tin cậy",
-        "confidenceThresholdDescription": "Chỉ hiển thị dự đoán có độ tin cậy vượt ngưỡng này"
+        "confidenceThresholdDescription": "Chỉ hiển thị dự đoán có độ tin cậy vượt ngưỡng này",
+        "liveSettings": "Cài đặt camera",
+        "liveAspectRatio": "Tỷ lệ khung hình camera",
+        "liveAspectRatioDescription": "Hình dạng khung hình cho chế độ camera trực tiếp",
+        "liveAspectRatio169": "16:9 — Màn hình rộng",
+        "liveAspectRatio43": "4:3 — Cổ điển",
+        "liveAspectRatio11": "1:1 — Vuông",
+        "livePredictInterval": "Khoảng thời gian dự đoán (ms)",
+        "livePredictIntervalDescription": "Tần suất model chạy dự đoán trên luồng camera"
       },
       "demo": {
         "noModel": "Dự án này chưa có model được train.",

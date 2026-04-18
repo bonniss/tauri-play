@@ -87,6 +87,33 @@ function ProjectPlayPage() {
             step: 0.05,
           },
         },
+        liveAspectRatio: {
+          type: 'radio',
+          label: 'project.play.form.liveAspectRatio',
+          description: 'project.play.form.liveAspectRatioDescription',
+          props: {
+            className: 'col-span-full',
+            orientation: 'horizontal',
+            gap: 4,
+            options: [
+              { label: t('project.play.form.liveAspectRatio169'), value: '16:9' },
+              { label: t('project.play.form.liveAspectRatio43'), value: '4:3' },
+              { label: t('project.play.form.liveAspectRatio11'), value: '1:1' },
+            ],
+          },
+        },
+        livePredictInterval: {
+          type: 'numeric',
+          label: 'project.play.form.livePredictInterval',
+          description: 'project.play.form.livePredictIntervalDescription',
+          props: {
+            className: 'col-start-1',
+            allowDecimal: false,
+            min: 100,
+            max: 5000,
+            step: 100,
+          },
+        },
       }),
     [locale],
   );

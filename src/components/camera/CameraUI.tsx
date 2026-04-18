@@ -8,6 +8,7 @@ import CameraCapture, {
 
 interface CameraUIProps {
   autoConnect?: boolean
+  aspectRatio?: "16:9" | "4:3" | "1:1"
   className?: string
   defaultSettings?: Partial<CaptureSettings>
   showModeControls?: boolean
@@ -21,6 +22,7 @@ interface CameraUIProps {
 
 const CameraUI: FunctionComponent<CameraUIProps> = ({
   autoConnect = false,
+  aspectRatio = "16:9",
   className = "",
   defaultSettings,
   showModeControls = true,
@@ -40,6 +42,7 @@ const CameraUI: FunctionComponent<CameraUIProps> = ({
       {(ctx) => (
         <CameraUIInner
           autoConnect={autoConnect}
+          aspectRatio={aspectRatio}
           className={className}
           ctx={ctx}
           showModeControls={showModeControls}
@@ -56,6 +59,7 @@ const CameraUI: FunctionComponent<CameraUIProps> = ({
 
 interface CameraUIInnerProps {
   autoConnect?: boolean
+  aspectRatio?: "16:9" | "4:3" | "1:1"
   ctx: CameraCaptureContext
   className?: string
   children?: (frames: CapturedFrame[]) => React.ReactNode
@@ -65,8 +69,15 @@ interface CameraUIInnerProps {
   viewportOverlay?: (context: CameraCaptureContext) => React.ReactNode
 }
 
+const ASPECT_RATIO_CLASS: Record<string, string> = {
+  "16:9": "aspect-video",
+  "4:3": "aspect-[4/3]",
+  "1:1": "aspect-square",
+}
+
 const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
   autoConnect = false,
+  aspectRatio = "16:9",
   ctx,
   className = "",
   children,
@@ -103,7 +114,7 @@ const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
   return (
     <div className={`flex flex-col gap-3 ${className}`}>
       {/* camera frame */}
-      <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-zinc-950">
+      <div className={`relative ${ASPECT_RATIO_CLASS[aspectRatio] ?? "aspect-video"} w-full overflow-hidden rounded-2xl bg-zinc-950`}>
         {/* video */}
         <video
           ref={videoRef}

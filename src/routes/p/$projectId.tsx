@@ -9,6 +9,8 @@ import {
 import { Dropzone, IMAGE_MIME_TYPE } from '@mantine/dropzone';
 import {
   IconArrowLeft,
+  IconMaximize,
+  IconMinimize,
   IconPhoto,
   IconUpload,
   IconX,
@@ -18,6 +20,7 @@ import clsx from 'clsx';
 import {
   FunctionComponent,
   ReactNode,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -321,15 +324,36 @@ const UploadPlayExperience: FunctionComponent = () => {
 
 const CameraPlayExperience: FunctionComponent = () => {
   const { t } = useAppProvider();
-  const { prediction, projectModel, runPredictionFromVideo, runtimeError } =
+  const { playSettings } = useProjectOne();
+  const { meetsThreshold, prediction, projectModel, runPredictionFromVideo, runtimeError, topResult } =
     useProjectPlayRuntime();
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    if (!containerRef.current) return;
+    if (document.fullscreenElement) {
+      void document.exitFullscreen();
+    } else {
+      void containerRef.current.requestFullscreen();
+    }
+  }, []);
 
   useEffect(() => {
     if (!projectModel) {
       return;
     }
 
+    const interval = playSettings.livePredictInterval;
     const timer = window.setInterval(() => {
       const video = videoRef.current;
 
@@ -340,12 +364,12 @@ const CameraPlayExperience: FunctionComponent = () => {
       void runPredictionFromVideo(video, {
         stableCommitCount: 2,
       });
-    }, 700);
+    }, interval);
 
     return () => {
       window.clearInterval(timer);
     };
-  }, [projectModel, runPredictionFromVideo]);
+  }, [projectModel, playSettings.livePredictInterval, runPredictionFromVideo]);
 
   if (!projectModel) {
     return (
@@ -358,13 +382,10 @@ const CameraPlayExperience: FunctionComponent = () => {
   return (
     <PlayExperienceShell trainedAt={projectModel.trainedAt}>
       <div className="flex min-w-0 flex-col gap-6">
-        <Paper
-          className="relative min-h-[500px] overflow-hidden border border-zinc-200 dark:border-zinc-800"
-          withBorder
-        >
+        <div ref={containerRef} className="overflow-hidden rounded-2xl bg-zinc-950">
           <CameraUI
             autoConnect
-            className="h-full"
+            aspectRatio={playSettings.liveAspectRatio}
             showModeControls={false}
             showSettings={false}
             showShutter={false}
@@ -372,27 +393,51 @@ const CameraPlayExperience: FunctionComponent = () => {
               videoRef.current = context.videoRef.current;
 
               return (
-                <div className="flex h-full flex-col justify-between p-4">
+                <div className="pointer-events-none flex h-full flex-col justify-between p-4">
                   <div className="flex items-center justify-between gap-2">
                     <div className="rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-xs font-medium uppercase tracking-[0.18em] text-white/80 backdrop-blur-sm">
                       {t('project.play.demo.liveCamera')}
                     </div>
-                    <div className="rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-xs text-white/70 backdrop-blur-sm">
-                      {context.cameraState === 'ready'
-                        ? t('project.play.demo.analyzingFeed')
-                        : t('project.play.demo.waitingCamera')}
+                    <div className="flex items-center gap-2">
+                      <div className="rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-xs text-white/70 backdrop-blur-sm">
+                        {context.cameraState === 'ready'
+                          ? t('project.play.demo.analyzingFeed')
+                          : t('project.play.demo.waitingCamera')}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={toggleFullscreen}
+                        className="pointer-events-auto rounded-full border border-white/10 bg-black/40 p-1.5 text-white/70 backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white"
+                        aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                      >
+                        {isFullscreen
+                          ? <IconMinimize className="size-3.5" />
+                          : <IconMaximize className="size-3.5" />}
+                      </button>
                     </div>
                   </div>
+
                   {runtimeError ? (
                     <div className="self-center rounded-full border border-red-400/30 bg-red-500/15 px-4 py-2 text-xs text-red-100 backdrop-blur-sm">
                       {runtimeError}
+                    </div>
+                  ) : null}
+
+                  {isFullscreen && prediction && topResult && meetsThreshold ? (
+                    <div className="flex justify-center pb-8">
+                      <span
+                        key={topResult.index}
+                        className="live-class-fly-up rounded-2xl border border-white/20 bg-black/50 px-8 py-4 text-3xl font-bold text-white backdrop-blur-md"
+                      >
+                        {topResult.className}
+                      </span>
                     </div>
                   ) : null}
                 </div>
               );
             }}
           />
-        </Paper>
+        </div>
 
         {prediction || runtimeError ? <PredictionPanel /> : null}
       </div>
@@ -461,44 +506,57 @@ const PredictionPanel: FunctionComponent = () => {
     isAnalyzing,
     meetsThreshold,
     prediction,
-    predictionTick,
     runtimeError,
     topResult,
     visibleResults,
   } = useProjectPlayRuntime();
 
+  // Only show skeleton when there's no prior result to display
+  const showSkeleton = isAnalyzing && !prediction;
+  // Subtle live indicator when continuously analyzing over an existing result
+  const showLivePulse = isAnalyzing && prediction != null;
+
   return (
     <div className="rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
-      <div className="space-y-6" key={predictionTick}>
+      <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+            {/* key tied to class index so confetti only fires on class change, not every cycle */}
             <span
+              key={topResult?.index ?? 'none'}
               className={
-                !isAnalyzing && prediction && topResult && meetsThreshold
+                prediction && topResult && meetsThreshold
                   ? 'inline-block motion-preset-confetti'
                   : ''
               }
             >
-              {isAnalyzing
+              {showSkeleton
                 ? t('project.play.demo.analyzing')
                 : meetsThreshold && topResult
                   ? topResult.className
-                  : t('project.play.demo.notConfident')}
+                  : prediction
+                    ? t('project.play.demo.notConfident')
+                    : t('project.play.demo.analyzing')}
             </span>
           </h2>
-          {playSettings.showConfidenceScores && prediction && topResult ? (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              {t('project.play.demo.confidence', {
-                params: {
-                  percent: (topResult.confidence * 100).toFixed(1),
-                  ms: prediction.predictTimeMs.toFixed(1),
-                },
-              })}
-            </p>
-          ) : null}
+          <div className="flex items-center gap-3">
+            {showLivePulse && (
+              <span className="size-2 rounded-full bg-green-400 animate-pulse" />
+            )}
+            {playSettings.showConfidenceScores && prediction && topResult ? (
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                {t('project.play.demo.confidence', {
+                  params: {
+                    percent: (topResult.confidence * 100).toFixed(1),
+                    ms: prediction.predictTimeMs.toFixed(1),
+                  },
+                })}
+              </p>
+            ) : null}
+          </div>
         </div>
 
-        {isAnalyzing ? (
+        {showSkeleton ? (
           <AnalyzeSkeleton />
         ) : runtimeError ? (
           <Alert color="red" variant="light">
@@ -521,6 +579,7 @@ const PredictionPanel: FunctionComponent = () => {
                     animated={false}
                     radius="xl"
                     size="sm"
+                    styles={{ section: { transition: 'width 350ms ease' } }}
                     value={result.confidence * 100}
                   />
                 </div>
