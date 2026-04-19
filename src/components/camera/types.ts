@@ -26,10 +26,14 @@ export interface CameraCaptureContext {
   // camera lifecycle
   cameraState: CameraState
   error: string | null
-  connect: () => void
+  connect: (deviceId?: string) => void
   disconnect: () => void
   videoRef: React.RefObject<HTMLVideoElement | null>
   flashRef: React.RefObject<HTMLDivElement | null>
+
+  // device selection
+  devices: MediaDeviceInfo[]
+  activeDeviceId: string | null
 
   // mode
   mode: CaptureMode

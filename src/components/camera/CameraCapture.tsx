@@ -24,7 +24,7 @@ const CameraCapture: FunctionComponent<CameraCaptureProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const flashRef = useRef<HTMLDivElement>(null)
 
-  const { videoRef, cameraState, error, connect, disconnect } = useCamera()
+  const { videoRef, cameraState, error, connect, disconnect, devices, activeDeviceId } = useCamera()
 
   const {
     mode,
@@ -54,6 +54,8 @@ const CameraCapture: FunctionComponent<CameraCaptureProps> = ({
     disconnect,
     videoRef,
     flashRef,
+    devices,
+    activeDeviceId,
     mode,
     setMode,
     isCapturing,

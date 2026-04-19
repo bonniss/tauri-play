@@ -100,6 +100,8 @@ const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
     settings,
     setSettings,
     frames,
+    devices,
+    activeDeviceId,
   } = ctx
 
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -144,7 +146,7 @@ const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
                   </span>
                 )}
                 <button
-                  onClick={connect}
+                  onClick={() => connect()}
                   className="mt-1 rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-xs font-medium text-zinc-200 transition-colors hover:bg-zinc-700"
                 >
                   retry
@@ -156,7 +158,7 @@ const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
               </span>
             ) : (
               <button
-                onClick={connect}
+                onClick={() => connect()}
                 className="group flex flex-col items-center gap-2"
               >
                 <div className="flex h-14 w-14 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800/80 transition-colors group-hover:border-zinc-500 group-hover:bg-zinc-700">
@@ -174,26 +176,40 @@ const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
         {isReady && (showModeControls || showSettings) && (
           <div className="absolute top-0 left-0 right-0 p-3">
             <div className="flex items-start justify-between gap-2">
-              {/* mode segmented */}
-              {showModeControls ? (
-                <div className="flex rounded-lg border border-white/10 bg-black/40 p-0.5 backdrop-blur-sm">
-                  {(["photo", "rec"] as const).map((m) => (
-                    <button
-                      key={m}
-                      onClick={() => setMode(m)}
-                      className={`rounded-md px-3 py-1 text-xs font-medium tracking-wide transition-all ${
-                        mode === m
-                          ? "bg-white/15 text-white"
-                          : "text-white/50 hover:text-white/80"
-                      }`}
-                    >
-                      {m}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div />
-              )}
+              {/* left: mode + device picker */}
+              <div className="flex items-center gap-1.5">
+                {showModeControls ? (
+                  <div className="flex rounded-lg border border-white/10 bg-black/40 p-0.5 backdrop-blur-sm">
+                    {(["photo", "rec"] as const).map((m) => (
+                      <button
+                        key={m}
+                        onClick={() => setMode(m)}
+                        className={`rounded-md px-3 py-1 text-xs font-medium tracking-wide transition-all ${
+                          mode === m
+                            ? "bg-white/15 text-white"
+                            : "text-white/50 hover:text-white/80"
+                        }`}
+                      >
+                        {m}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+
+                {devices.length > 1 && (
+                  <select
+                    value={activeDeviceId ?? ""}
+                    onChange={(e) => connect(e.target.value)}
+                    className="rounded-lg border border-white/10 bg-black/40 px-2 py-1 text-xs text-white/70 backdrop-blur-sm outline-none cursor-pointer"
+                  >
+                    {devices.map((d, i) => (
+                      <option key={d.deviceId} value={d.deviceId} className="bg-zinc-900 text-white">
+                        {d.label || `Camera ${i + 1}`}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
 
               {/* settings */}
               <div className="min-w-0 flex-shrink-0">

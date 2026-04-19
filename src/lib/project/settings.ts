@@ -18,14 +18,17 @@ export interface ProjectTrainSettings {
 }
 
 export interface ProjectPlaySettings {
+  // Base settings
+  mode: "upload" | "camera"
   autoPredictOnUpload: boolean
   confidenceThreshold: number
-  liveAspectRatio: "16:9" | "4:3" | "1:1"
-  livePredictInterval: number
-  mode: "upload" | "camera"
   showAllClasses: boolean
   showConfidenceScores: boolean
   topK: number
+
+  // These settings are used for the live camera view and don't affect the upload mode
+  liveAspectRatio: "16:9" | "4:3" | "1:1"
+  livePredictInterval: number
 }
 
 export interface ProjectSettings {
