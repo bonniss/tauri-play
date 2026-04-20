@@ -93,6 +93,8 @@
     "description": "Mô tả",
     "save": "Lưu",
     "empty": "Không có dữ liệu",
+    "showMore": "Xem thêm",
+    "showLess": "Ẩn bớt",
     "pagination": {
       "previous": "Trước",
       "next": "Tiếp",

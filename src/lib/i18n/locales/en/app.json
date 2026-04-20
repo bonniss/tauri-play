@@ -93,6 +93,8 @@
     "description": "Description",
     "save": "Save",
     "empty": "No data",
+    "showMore": "Show more",
+    "showLess": "Show less",
     "pagination": {
       "previous": "Previous",
       "next": "Next",

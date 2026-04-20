@@ -1,4 +1,4 @@
-import { ActionIcon, Badge, Progress, Text } from '@mantine/core';
+import { ActionIcon, Badge, Progress, Spoiler, Text } from '@mantine/core';
 import { colorFromString } from '~/lib/project/class-color';
 import { useDisclosure } from '@mantine/hooks';
 import {
@@ -49,9 +49,9 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
           <Text c="dimmed" className="font-mono" size="xs">
             {projectId}
           </Text>
-          <div className="mt-2 flex items-start gap-2">
-            <div className="pt-0.5 text-xl leading-none">{projectIcon}</div>
-            <h2 className="min-w-0 flex-1 py-0.5 text-base font-semibold leading-tight text-zinc-950 dark:text-zinc-50">
+          <div className="mt-2 mb-3 flex justify-between items-center gap-2">
+            <h2 className="text-lg line-clamp-2 leading-tight">
+              <span className="mr-2">{projectIcon}</span>
               {projectName}
             </h2>
             <ActionIcon
@@ -64,15 +64,19 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
               <IconPencil stroke={1.8} />
             </ActionIcon>
           </div>
-          {projectDescription ? (
-            <MarkdownViewer className="mt-1 text-xs">
-              {projectDescription}
+          <Spoiler
+            maxHeight={300}
+            showLabel={t('common.showMore')}
+            hideLabel={t('common.showLess')}
+            classNames={{
+              control: 'text-xs',
+            }}
+          >
+            <MarkdownViewer className="py-1 text-xs prose-sm leading-[0.5]">
+              {projectDescription ||
+                t('project.sidebar.descriptionPlaceholder')}
             </MarkdownViewer>
-          ) : (
-            <p className="mt-1 text-xs italic text-zinc-400 dark:text-zinc-500">
-              {t('project.sidebar.descriptionPlaceholder')}
-            </p>
-          )}
+          </Spoiler>
         </div>
 
         <nav className="border-b border-zinc-200 px-3 py-3 dark:border-zinc-700">
@@ -142,7 +146,11 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
                       value={projectClass.name}
                     />
                   }
-                  leading={<Badge size="xs" radius="xs" color={classColor}>{classIndex}</Badge>}
+                  leading={
+                    <Badge size="xs" radius="xs" color={classColor}>
+                      {classIndex}
+                    </Badge>
+                  }
                   progress={readiness?.progress ?? 0}
                   trailing={`${projectClass.samples.length}`}
                 />
