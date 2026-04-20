@@ -15,7 +15,7 @@
   "home": {
     "hero": {
       "title": "Dạy máy tính nhận diện hình ảnh.",
-      "description": "Thu thập ảnh, gán nhãn, train model và thử nghiệm trực tiếp — tất cả chạy ngay trên máy của bạn.",
+      "description": "Thu thập ảnh cho từng nhóm, huấn luyện model và thử nghiệm trực tiếp — tất cả chạy ngay trên máy của bạn.",
       "cta": "Dự án mới"
     },
     "features": {
@@ -32,7 +32,7 @@
         },
         "offline": {
           "title": "100% offline",
-          "description": "Không cần internet để train hay chạy dự đoán."
+          "description": "Không cần internet để huấn luyện hay chạy dự đoán."
         },
         "crossPlatform": {
           "title": "Đa nền tảng",
@@ -40,7 +40,7 @@
         }
       },
       "fast": {
-        "title": "Train nhanh",
+        "title": "Huấn luyện nhanh",
         "description": "Kết quả trong vài giây từ vài chục ảnh. Ít tốn CPU và bộ nhớ."
       },
       "unlimited": {
@@ -56,12 +56,12 @@
         "description": "Thu thập ảnh từ camera hoặc tải lên dataset có sẵn — có thể kết hợp cả hai."
       },
       "easyPlay": {
-        "title": "Play trực quan",
+        "title": "Thử nghiệm trực quan",
         "description": "Thử model trực tiếp với giao diện đơn giản, hiện đại. Tải lên hoặc dùng camera."
       },
       "easyShare": {
         "title": "Dễ chia sẻ",
-        "description": "Chia sẻ demo dự án hoặc xuất model đã train để dùng trong ứng dụng khác."
+        "description": "Chia sẻ demo dự án hoặc xuất model đã huấn luyện để dùng trong ứng dụng khác."
       }
     },
     "intro": {
@@ -74,7 +74,7 @@
         "description": "Thu thập ảnh cho từng thứ bạn muốn máy nhận diện. Chụp bằng camera hoặc tải lên từ thiết bị."
       },
       "train": {
-        "description": "Nhấn Train. Model của bạn sẵn sàng trong vài giây — không code, không cloud, không chờ đợi."
+        "description": "Nhấn Huấn luyện. Model của bạn sẵn sàng trong vài giây — không code, không cloud, không chờ đợi."
       },
       "play": {
         "description": "Trỏ camera hoặc tải ảnh lên để xem model nhận diện mọi thứ theo thời gian thực."
@@ -111,8 +111,8 @@
   },
   "project": {
     "asset": "{{classes}} classes · {{samples}} samples",
-    "lastTrained": "Train gần nhất {{ts}}",
-    "notTrained": "Chưa được train",
+    "lastTrained": "Huấn luyện gần nhất {{ts}}",
+    "notTrained": "Chưa được huấn luyện",
     "create": {
       "name": " Chức năng của dự án. Ví dụ: \"Phân biệt chó và mèo\", \"Nhận diện trái cây\".",
       "description": "Mô tả chi tiết về dự án. Hỗ trợ Markdown.",
@@ -124,17 +124,17 @@
     "confirmDelete": "Gõ \"{{name}}\" để xác nhận xóa. Thao tác này sẽ xóa hết dữ liệu dự án và không thể hoàn tác.",
     "sidebar": {
       "descriptionPlaceholder": "Chưa có mô tả",
-      "dataset": "Dataset",
+      "dataset": "Bộ dữ liệu",
       "allImages": "Tất cả ảnh"
     },
     "nav": {
-      "label": "Label",
-      "train": "Train",
-      "play": "Play"
+      "label": "Thu thập",
+      "train": "Huấn luyện",
+      "play": "Thử nghiệm"
     },
     "label": {
-      "title": "Label",
-      "settingsTitle": "Cài đặt Label",
+      "title": "Thu thập",
+      "settingsTitle": "Cài đặt Thu thập",
       "camera": "Camera",
       "closeCamera": "Đóng Camera",
       "noImages": "Class này chưa có ảnh nào.",
@@ -160,8 +160,8 @@
       }
     },
     "play": {
-      "title": "Play",
-      "settingsTitle": "Cài đặt Play",
+      "title": "Thử nghiệm",
+      "settingsTitle": "Cài đặt Thử nghiệm",
       "settingsDescription": "Các cài đặt này áp dụng cho trang demo của dự án.",
       "description": "Cấu hình cách người dùng trải nghiệm {{name}}, sau đó khởi chạy trang demo.",
       "currentMode": "Chế độ hiện tại: {{mode}}",
@@ -169,9 +169,9 @@
       "back": "Quay lại",
       "form": {
         "mode": "Chế độ demo",
-        "modeUploadLabel": "Upload",
+        "modeUploadLabel": "Tải lên",
         "modeUploadDescription": "Tải ảnh lên để nhận dự đoán",
-        "modeLiveLabel": "Live",
+        "modeLiveLabel": "Trực tiếp",
         "modeLiveDescription": "Dùng camera để nhận dự đoán theo thời gian thực",
         "autoPredictOnUpload": "Tự động dự đoán khi tải lên",
         "autoPredictOnUploadDescription": "Tự động chạy dự đoán sau khi tải ảnh hoặc video",
@@ -193,11 +193,11 @@
         "livePredictIntervalDescription": "Tần suất model chạy dự đoán trên luồng camera"
       },
       "demo": {
-        "noModel": "Dự án này chưa có model được train.",
+        "noModel": "Dự án này chưa có model được huấn luyện.",
         "dropzone": "Kéo ảnh vào đây, hoặc click để chọn từ thiết bị.",
         "currentFile": "File hiện tại: {{name}}",
         "predict": "Dự đoán",
-        "liveCamera": "Live",
+        "liveCamera": "Trực tiếp",
         "analyzingFeed": "Đang phân tích",
         "waitingCamera": "Đang chờ camera",
         "modelSection": "Model",
@@ -213,20 +213,20 @@
       }
     },
     "train": {
-      "title": "Train",
-      "startTraining": "Bắt đầu Train",
-      "stopTraining": "Dừng Train",
-      "notReadyAlert": "Dữ liệu chưa sẵn sàng. Hãy chuẩn bị đủ dữ liệu class và sample tối thiểu.",
+      "title": "Huấn luyện",
+      "startTraining": "Bắt đầu huấn luyện",
+      "stopTraining": "Dừng huấn luyện",
+      "notReadyAlert": "Dữ liệu chưa đủ. Hãy chuẩn bị đủ số class và ảnh tối thiểu.",
       "latestRun": "Lần chạy gần nhất",
       "viewLog": "Xem Log",
       "epochsProgress": "{{current}}/{{total}} epochs",
-      "noRunYet": "Chưa có lần train nào.",
-      "settingsTitle": "Cài đặt Train",
+      "noRunYet": "Chưa có lần huấn luyện nào.",
+      "settingsTitle": "Cài đặt Huấn luyện",
       "status": {
-        "inProgress": "Đang train...",
+        "inProgress": "Đang huấn luyện...",
         "cancelled": "Trạng thái: đã hủy",
         "lastStatus": "Trạng thái: {{status}}",
-        "notStarted": "Chưa bắt đầu train."
+        "notStarted": "Chưa bắt đầu huấn luyện."
       },
       "metrics": {
         "modelAccuracy": "Model Accuracy",
@@ -236,7 +236,7 @@
       },
       "dataset": {
         "validationSplit": "Validation split",
-        "trainImages": "Ảnh Train",
+        "trainImages": "Ảnh huấn luyện",
         "validation": "Validation",
         "validationImages": "Ảnh Validation"
       },
@@ -256,16 +256,16 @@
       "timeline": {
         "tfjs": "TensorFlow.js",
         "mobilenet": "MobileNet",
-        "split": "Chia tập Train / Validation",
+        "split": "Chia tập Huấn luyện / Validation",
         "samples": "Tải Sample",
         "embeddings": "Embeddings",
         "head": "Classifier Head",
-        "training": "Training",
+        "training": "Huấn luyện",
         "saving": "Lưu Model",
         "detail": {
           "tfjs": "Khởi tạo runtime và chọn backend thực thi.",
           "mobilenet": "Tải backbone v{{version}} alpha {{alpha}} đã pretrain.",
-          "split": "Tự động chia mỗi class thành tập train và validation.",
+          "split": "Tự động chia mỗi class thành tập huấn luyện và validation.",
           "samplesLoaded": "Đã tải {{count}} ảnh",
           "samplesDefault": "Đã tải ảnh",
           "embeddings": "Chuyển ảnh thành vector đặc trưng 1280 chiều của MobileNet.",
@@ -276,10 +276,10 @@
         }
       },
       "toast": {
-        "completed": "Train hoàn tất.",
-        "cancelled": "Đã hủy train."
+        "completed": "Huấn luyện hoàn tất.",
+        "cancelled": "Đã hủy huấn luyện."
       },
-      "openPlay": "Mở Play",
+      "openPlay": "Mở Thử nghiệm",
       "exportModel": "Xuất Model",
       "export": {
         "title": "Xuất Model",

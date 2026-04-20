@@ -15,7 +15,7 @@
   "home": {
     "hero": {
       "title": "Teach your computer to see.",
-      "description": "Collect photos, label classes, train a model, and test it live — everything runs locally on your device.",
+      "description": "Collect photos for each class, train a model, and test it live — everything runs locally on your device.",
       "cta": "New Project"
     },
     "features": {
@@ -56,7 +56,7 @@
         "description": "Collect images from your camera or upload an existing dataset — mix both freely."
       },
       "easyPlay": {
-        "title": "Intuitive Play",
+        "title": "Intuitive Demo",
         "description": "Test your model live with a clean, real-time interface. Upload or use your camera."
       },
       "easyShare": {
@@ -128,13 +128,13 @@
       "allImages": "All Images"
     },
     "nav": {
-      "label": "Label",
+      "label": "Collect",
       "train": "Train",
-      "play": "Play"
+      "play": "Demo"
     },
     "label": {
-      "title": "Label",
-      "settingsTitle": "Label Settings",
+      "title": "Collect",
+      "settingsTitle": "Collect Settings",
       "camera": "Camera",
       "closeCamera": "Close Camera",
       "noImages": "No images in this class yet.",
@@ -160,8 +160,8 @@
       }
     },
     "play": {
-      "title": "Play",
-      "settingsTitle": "Play Settings",
+      "title": "Demo",
+      "settingsTitle": "Demo Settings",
       "settingsDescription": "These settings apply to this project demo page.",
       "description": "Configure how people will experience {{name}}, then launch the project demo page.",
       "currentMode": "Current mode: {{mode}}",
@@ -209,14 +209,14 @@
         "analyzing": "Analyzing...",
         "notConfident": "Not confident enough",
         "confidence": "Confidence {{percent}}% · {{ms}} ms",
-        "confidenceDisabled": "Confidence display is disabled for this play mode."
+        "confidenceDisabled": "Confidence display is disabled for this demo mode."
       }
     },
     "train": {
       "title": "Train",
       "startTraining": "Start Training",
       "stopTraining": "Stop Training",
-      "notReadyAlert": "Label data is not ready yet. Complete the minimum class and sample requirements first.",
+      "notReadyAlert": "Not enough data yet. Complete the minimum class and sample requirements first.",
       "latestRun": "Latest run",
       "viewLog": "View Log",
       "epochsProgress": "{{current}}/{{total}} epochs",
@@ -279,7 +279,7 @@
         "completed": "Training completed.",
         "cancelled": "Training cancelled."
       },
-      "openPlay": "Open Play",
+      "openPlay": "Open Demo",
       "exportModel": "Export Model",
       "export": {
         "title": "Export Model",
