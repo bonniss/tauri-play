@@ -6,6 +6,7 @@ import {
 } from "@tabler/icons-react"
 import { FunctionComponent } from "react"
 import { useAppProvider } from "../layout/AppProvider"
+import { Paper } from "@mantine/core"
 
 type PlatformCard = {
   bgClass: string
@@ -55,9 +56,10 @@ const HomePlatform: FunctionComponent = () => {
         {PLATFORM_CARDS.map((card) => {
           const Icon = card.icon
           return (
-            <div
+            <Paper
               key={card.titleKey}
-              className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900"
+              withBorder
+              className="flex flex-col gap-3 p-6"
             >
               <div
                 className={`flex size-10 items-center justify-center rounded-xl ${card.bgClass}`}
@@ -72,7 +74,7 @@ const HomePlatform: FunctionComponent = () => {
                   {t(card.descriptionKey)}
                 </p>
               </div>
-            </div>
+            </Paper>
           )
         })}
       </div>
