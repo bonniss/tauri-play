@@ -43,7 +43,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
   });
 
   return (
-    <section className="flex min-h-[calc(100vh-60px)]">
+    <section className="flex items-start min-h-[calc(100vh-60px)]">
       <aside className="sticky top-[60px] flex h-[calc(100vh-60px)] w-72 shrink-0 flex-col overflow-y-auto border-r border-zinc-200 dark:border-zinc-700">
         <div className="border-b border-zinc-200 px-4 py-4 dark:border-zinc-700">
           <Text c="dimmed" className="font-mono" size="xs">

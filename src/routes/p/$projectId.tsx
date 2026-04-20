@@ -133,7 +133,7 @@ function ProjectPlayerPage() {
 
   return (
     <section className="mx-auto w-full max-w-7xl px-4 py-8 md:px-6">
-      <div className="mb-8 flex items-start justify-between gap-4">
+      <div className="mb-6 flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h1 className="flex items-center gap-3 text-4xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
             <span className="text-3xl leading-none">{projectIcon}</span>
@@ -482,7 +482,7 @@ const CameraPlayExperience: FunctionComponent = () => {
                                 <Text
                                   c={topColor ?? 'white'}
                                   fw={700}
-                                  className='text-5xl leading-relaxed'
+                                  className="text-5xl leading-relaxed"
                                 >
                                   {meetsThreshold && topResult
                                     ? topResult.className
@@ -547,11 +547,9 @@ const PlayExperienceShell: FunctionComponent<{
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
             {t('project.play.demo.descriptionSection')}
           </p>
-          <div className="max-h-72 overflow-y-auto pr-2 text-sm leading-7 text-zinc-600 dark:text-zinc-300">
-            <MarkdownViewer className="prose-sm">
-              {projectDescription || t('project.play.demo.noDescription')}
-            </MarkdownViewer>
-          </div>
+          <MarkdownViewer className="text-xs prose-sm leading-[0.5]">
+            {projectDescription || t('project.play.demo.noDescription')}
+          </MarkdownViewer>
         </section>
       </aside>
 
@@ -682,7 +680,7 @@ const ClassPreviewItem: FunctionComponent<{
 
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+      <p className="font-serif text-base font-medium truncate text-ellipsis">
         {name}
       </p>
       <div className="flex gap-2">
