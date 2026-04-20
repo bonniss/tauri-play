@@ -1,4 +1,3 @@
-import { Paper } from '@mantine/core';
 import { createFileRoute } from '@tanstack/react-router';
 import { DataTrainProvider } from '~/components/project/train/DataTrainProvider';
 import TrainPageContent from '~/components/project/train/TrainPageContent';

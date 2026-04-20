@@ -31,6 +31,7 @@ import { IconDataTrain } from '~/components/icon/semantic';
 import { useAppProvider } from '~/components/layout/AppProvider';
 import ClassColorBadge from '~/components/project/ClassColorBadge';
 import ProjectActionButton from '~/components/project/ProjectActionButton';
+import ProjectPlayButton from '~/components/project/ProjectPlayButton';
 import { useProjectOne } from '~/components/project/ProjectOneProvider';
 import SampleGrid from '~/components/project/SampleGrid';
 import UploadSamplesButton from '~/components/project/UploadSamplesButton';
@@ -92,6 +93,7 @@ function ProjectLabelPage() {
   const {
     addSamplesToClass,
     applyLabelSettings,
+    canPlay,
     classes,
     getLabelSettingsFormValues,
     isApplyingLabelSettings,
@@ -455,7 +457,9 @@ function ProjectLabelPage() {
             {t('project.label.title')}
           </h2>
           <div className="flex items-center gap-2">
-            {isReadyForTrain && (
+            {canPlay ? (
+              <ProjectPlayButton />
+            ) : isReadyForTrain ? (
               <Button
                 component={Link}
                 leftSection={<IconDataTrain className="size-4" />}
@@ -465,7 +469,7 @@ function ProjectLabelPage() {
               >
                 {t('project.nav.train')}
               </Button>
-            )}
+            ) : null}
             <Popover
               onDismiss={() => {
                 setLabelSettingsOpened(false);
