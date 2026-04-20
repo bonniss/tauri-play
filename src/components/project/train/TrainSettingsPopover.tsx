@@ -1,4 +1,4 @@
-import { Button, Group, Popover, Text } from '@mantine/core';
+import { ActionIcon, Button, Group, Popover, Text } from '@mantine/core';
 import { IconSettings } from '@tabler/icons-react';
 import { useMemo } from 'react';
 import { defineConfig, Form } from '~/components/form';
@@ -82,16 +82,17 @@ function TrainSettingsPopover() {
       withArrow
     >
       <Popover.Target>
-        <Button
+        <ActionIcon
           disabled={isTraining}
-          leftSection={<IconSettings className="size-4" />}
+          size="input-sm"
+          title={t('common.settings')}
           onClick={() => {
             setTrainSettingsOpened(!trainSettingsOpened);
           }}
           variant="default"
         >
-          {t('common.settings')}
-        </Button>
+          <IconSettings className="size-4" />
+        </ActionIcon>
       </Popover.Target>
       <Popover.Dropdown>
         <Form

@@ -161,6 +161,7 @@
     },
     "play": {
       "title": "Demo",
+      "demoTitle": "Demo",
       "settingsTitle": "Demo Settings",
       "settingsDescription": "These settings apply to this project demo page.",
       "description": "Configure how people will experience {{name}}, then launch the project demo page.",

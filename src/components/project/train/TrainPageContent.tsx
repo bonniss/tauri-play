@@ -1,7 +1,9 @@
 import { Alert, Button, Paper } from '@mantine/core';
 import { IconPlayerPlay, IconPlayerStop } from '@tabler/icons-react';
+import { Link } from '@tanstack/react-router';
 import { useAppProvider } from '~/components/layout/AppProvider';
 import { useDataTrain } from '~/components/project/train/DataTrainProvider';
+import { useProjectOne } from '~/components/project/ProjectOneProvider';
 import TrainDataSection from '~/components/project/train/TrainDataSection';
 import TrainLogDrawer from '~/components/project/train/TrainLogDrawer';
 import TrainRunSummaryCard from '~/components/project/train/TrainRunSummaryCard';
@@ -10,6 +12,7 @@ import TrainTimelinePanel from '~/components/project/train/TrainTimelinePanel';
 
 function TrainPageContent() {
   const { t } = useAppProvider();
+  const { canPlay, projectId } = useProjectOne();
   const {
     displayedTrainLog,
     isReadyForTrain,
@@ -17,8 +20,6 @@ function TrainPageContent() {
     requestStopTraining,
     startTraining,
   } = useDataTrain();
-  // const { projectId, projectName, projectModel } = useProjectOne()
-  // const [exportOpened, { open: openExport, close: closeExport }] = useDisclosure(false)
 
   return (
     <div className="space-y-4 p-4">
@@ -27,6 +28,16 @@ function TrainPageContent() {
           {t('project.train.title')}
         </h2>
         <div className="flex gap-2">
+          {canPlay && (
+            <Button
+              component={Link}
+              params={{ projectId } as never}
+              to="/p/$projectId"
+              variant="light"
+            >
+              {t('project.play.demoTitle')}
+            </Button>
+          )}
           <Button
             color={isTraining ? 'red' : undefined}
             disabled={!isReadyForTrain && !isTraining}

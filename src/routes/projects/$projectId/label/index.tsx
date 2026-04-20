@@ -19,14 +19,15 @@ import {
   IconTrash,
 } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import clsx from 'clsx';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import CameraUI from '~/components/camera/CameraUI';
 import { CaptureSession } from '~/components/camera/types';
-import { Form, defineConfig } from '~/components/form';
+import { defineConfig, Form } from '~/components/form';
 import ContentEditable from '~/components/headless/ContentEditable';
+import { IconDataTrain } from '~/components/icon/semantic';
 import { useAppProvider } from '~/components/layout/AppProvider';
 import ClassColorBadge from '~/components/project/ClassColorBadge';
 import ProjectActionButton from '~/components/project/ProjectActionButton';
@@ -94,6 +95,7 @@ function ProjectLabelPage() {
     classes,
     getLabelSettingsFormValues,
     isApplyingLabelSettings,
+    isReadyForTrain,
     projectId,
     projectStatus,
     removeClass,
@@ -200,7 +202,10 @@ function ProjectLabelPage() {
     });
 
     byClassId.forEach((classSamples, classId) => {
-      removeSamplesFromClass(classId, classSamples.map((s) => s.id));
+      removeSamplesFromClass(
+        classId,
+        classSamples.map((s) => s.id),
+      );
     });
 
     const deleted: typeof samplesToDelete = [];
@@ -449,61 +454,75 @@ function ProjectLabelPage() {
           <h2 className="text-2xl font-semibold tracking-tight">
             {t('project.label.title')}
           </h2>
-          <Popover
-            onDismiss={() => {
-              setLabelSettingsOpened(false);
-            }}
-            opened={labelSettingsOpened}
-            position="bottom-end"
-            shadow="md"
-            width={360}
-            withArrow
-          >
-            <Popover.Target>
+          <div className="flex items-center gap-2">
+            {isReadyForTrain && (
               <Button
-                leftSection={<IconSettings className="size-4" />}
-                onClick={() => {
-                  setLabelSettingsOpened((current) => !current);
-                }}
-                variant="default"
+                component={Link}
+                leftSection={<IconDataTrain className="size-4" />}
+                params={{ projectId } as never}
+                to="/projects/$projectId/train"
+                variant="filled"
               >
-                {t('common.settings')}
+                {t('project.nav.train')}
               </Button>
-            </Popover.Target>
-            <Popover.Dropdown>
-              <Form
-                key={JSON.stringify(getLabelSettingsFormValues())}
-                config={labelSettingsForm}
-                defaultValues={getLabelSettingsFormValues()}
-                onSubmit={async (values) => {
-                  await applyLabelSettings(values);
-                  setLabelSettingsOpened(false);
-                }}
-                renderRoot={({ children, onSubmit }) => (
-                  <form className="space-y-3" onSubmit={onSubmit}>
-                    <Text fw={600} size="sm">
-                      {t('project.label.settingsTitle')}
-                    </Text>
-                    {children}
-                    <Group justify="flex-end">
-                      <Button
-                        onClick={() => {
-                          setLabelSettingsOpened(false);
-                        }}
-                        type="button"
-                        variant="default"
-                      >
-                        {t('common.cancel')}
-                      </Button>
-                      <Button loading={isApplyingLabelSettings} type="submit">
-                        {t('common.apply')}
-                      </Button>
-                    </Group>
-                  </form>
-                )}
-              />
-            </Popover.Dropdown>
-          </Popover>
+            )}
+            <Popover
+              onDismiss={() => {
+                setLabelSettingsOpened(false);
+              }}
+              opened={labelSettingsOpened}
+              position="bottom-end"
+              shadow="md"
+              width={360}
+              withArrow
+            >
+              <Popover.Target>
+                <ActionIcon
+                  size="input-sm"
+                  title={t('common.settings')}
+                  onClick={() => {
+                    setLabelSettingsOpened((current) => !current);
+                  }}
+                  variant="default"
+                >
+                  <IconSettings className="size-4" />
+                </ActionIcon>
+              </Popover.Target>
+              <Popover.Dropdown>
+                <Form
+                  key={JSON.stringify(getLabelSettingsFormValues())}
+                  config={labelSettingsForm}
+                  defaultValues={getLabelSettingsFormValues()}
+                  onSubmit={async (values) => {
+                    await applyLabelSettings(values);
+                    setLabelSettingsOpened(false);
+                  }}
+                  renderRoot={({ children, onSubmit }) => (
+                    <form className="space-y-3" onSubmit={onSubmit}>
+                      <Text fw={600} size="sm">
+                        {t('project.label.settingsTitle')}
+                      </Text>
+                      {children}
+                      <Group justify="flex-end">
+                        <Button
+                          onClick={() => {
+                            setLabelSettingsOpened(false);
+                          }}
+                          type="button"
+                          variant="default"
+                        >
+                          {t('common.cancel')}
+                        </Button>
+                        <Button loading={isApplyingLabelSettings} type="submit">
+                          {t('common.apply')}
+                        </Button>
+                      </Group>
+                    </form>
+                  )}
+                />
+              </Popover.Dropdown>
+            </Popover>
+          </div>
         </div>
         <div className="overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-700">
           <div className="px-4 py-3">
@@ -596,13 +615,17 @@ function ProjectLabelPage() {
                 <div className="flex items-center justify-between gap-3 px-3 py-2.5">
                   <div className="flex min-w-0 items-center gap-1.5">
                     <ActionIcon
-                      aria-label={openClassMap[item.id] ? 'Collapse class' : 'Expand class'}
+                      aria-label={
+                        openClassMap[item.id]
+                          ? 'Collapse class'
+                          : 'Expand class'
+                      }
                       onClick={() => {
                         setOpenClassMap((current) => ({
                           ...current,
                           [item.id]: !current[item.id],
                         }));
-                      } }
+                      }}
                       size="sm"
                       variant="subtle"
                     >
@@ -611,11 +634,16 @@ function ProjectLabelPage() {
                           'size-6',
                           openClassMap[item.id]
                             ? 'rotate-90 transition-transform'
-                            : 'transition-transform'
+                            : 'transition-transform',
                         )}
-                        stroke={1.8} />
+                        stroke={1.8}
+                      />
                     </ActionIcon>
-                    <ClassColorBadge classId={item.id} classIndex={classIdx} settings={item.settings} />
+                    <ClassColorBadge
+                      classId={item.id}
+                      classIndex={classIdx}
+                      settings={item.settings}
+                    />
                     <ContentEditable
                       as="span"
                       aria-label={`Class name ${item.name}`}
@@ -623,8 +651,9 @@ function ProjectLabelPage() {
                       focusedClassName="bg-zinc-100 ring-1 ring-zinc-300 dark:bg-zinc-800 dark:ring-zinc-700"
                       onBlur={(value) => {
                         updateClassName(item.id, value);
-                      } }
-                      value={item.name} />
+                      }}
+                      value={item.name}
+                    />
                     <span className="text-xs text-zinc-400 dark:text-zinc-500">
                       {item.samples.length}
                     </span>
@@ -633,8 +662,10 @@ function ProjectLabelPage() {
                     <ProjectActionButton
                       action="camera"
                       onClick={() => {
-                        if (cameraTargetState?.slot === 'class' &&
-                          cameraTargetState.classId === item.id) {
+                        if (
+                          cameraTargetState?.slot === 'class' &&
+                          cameraTargetState.classId === item.id
+                        ) {
                           void closeInlineCamera();
                           return;
                         }
@@ -642,15 +673,17 @@ function ProjectLabelPage() {
                           classId: item.id,
                           slot: 'class',
                         });
-                      } }
+                      }}
                       size="xs"
-                      variant={cameraTargetState?.slot === 'class' &&
+                      variant={
+                        cameraTargetState?.slot === 'class' &&
                         cameraTargetState.classId === item.id
-                        ? 'filled'
-                        : undefined}
+                          ? 'filled'
+                          : undefined
+                      }
                     >
                       {cameraTargetState?.slot === 'class' &&
-                        cameraTargetState.classId === item.id
+                      cameraTargetState.classId === item.id
                         ? t('common.close')
                         : t('project.label.camera')}
                     </ProjectActionButton>
@@ -658,7 +691,8 @@ function ProjectLabelPage() {
                       buttonLabel={t('common.upload')}
                       classId={item.id}
                       onUploadStateChange={handleUploadStateChange}
-                      size="xs" />
+                      size="xs"
+                    />
                     <Menu position="bottom-end" shadow="md" withinPortal>
                       <Menu.Target>
                         <ActionIcon
@@ -675,7 +709,7 @@ function ProjectLabelPage() {
                           leftSection={<IconTrash size={14} />}
                           onClick={() => {
                             setDeleteClassId(item.id);
-                          } }
+                          }}
                         >
                           {t('common.delete')}
                         </Menu.Item>
@@ -683,7 +717,7 @@ function ProjectLabelPage() {
                           leftSection={<IconDownload size={14} />}
                           onClick={() => {
                             toast.message(t('project.label.exportSoon'));
-                          } }
+                          }}
                         >
                           {t('common.export')}
                         </Menu.Item>
@@ -695,19 +729,21 @@ function ProjectLabelPage() {
                 {openClassMap[item.id] ? (
                   <div className="border-t border-zinc-200 px-3 py-3 dark:border-zinc-700">
                     {cameraTargetState?.slot === 'class' &&
-                      currentCameraClass?.id === item.id ? (
+                    currentCameraClass?.id === item.id ? (
                       <div className="mb-4">
                         <CameraCapturePanel
                           currentCameraClass={currentCameraClass}
                           onCaptureSession={handleCameraCaptureSession}
-                          onRenameClass={updateClassName} />
+                          onRenameClass={updateClassName}
+                        />
                       </div>
                     ) : null}
                     <SampleGrid
                       loading={uploadingClassMap[item.id]?.isPending ?? false}
                       onDeleteSample={handleDeleteSample}
                       onDeleteSamples={handleDeleteSamples}
-                      samples={item.samples} />
+                      samples={item.samples}
+                    />
                     {!item.samples.length ? (
                       <Text c="dimmed" className="mt-3" size="sm">
                         {t('project.label.noImages')}

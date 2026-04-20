@@ -161,6 +161,7 @@
     },
     "play": {
       "title": "Thử nghiệm",
+      "demoTitle": "Trình diễn",
       "settingsTitle": "Cài đặt Thử nghiệm",
       "settingsDescription": "Các cài đặt này áp dụng cho trang demo của dự án.",
       "description": "Cấu hình cách người dùng trải nghiệm {{name}}, sau đó khởi chạy trang demo.",
