@@ -116,10 +116,35 @@ export default Component
 
 ### i18n
 
-- All user-facing strings go through `t()` from `~/lib/i18n`. No hardcoded strings in components.
+- All user-facing strings go through `t()`. No hardcoded strings in components.
 - Locale files live in `src/lib/i18n/locales/{locale}/app.json`.
 - Group keys by feature area (`home.hero.title`, `settings.language`). Put repeated cross-feature strings under `common.*`.
 - Use imperative, neutral tone for actions. No second-person address (`"Tạo dự án"` not `"Bạn hãy tạo"`).
+
+#### How to use `t()` correctly
+
+There are two contexts with different rules:
+
+**Inside React components — use `useAppProvider()`:**
+
+```tsx
+const { t } = useAppProvider()
+// t() is now reactive: re-renders automatically when locale changes
+```
+
+Do NOT call `useLocale()` manually in components. Do NOT import `t` directly from `~/lib/i18n` for rendering — the standalone `t` is not reactive and will not update on locale change.
+
+**Outside components (form config, module-level code) — use `t` from `~/lib/i18n`:**
+
+```ts
+import { t } from "~/lib/i18n"
+
+const form = defineConfig({
+  name: { label: "common.name" }, // form's i18nConfig calls t() at render time
+})
+```
+
+For `defineConfig` field labels, pass the key as a plain string — the form's `i18nConfig` in `src/components/form/index.tsx` calls `t()` internally. Do not wrap with `t()` at the call site.
 
 #### Terms to keep in English (do not translate)
 
