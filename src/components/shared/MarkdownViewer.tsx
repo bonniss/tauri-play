@@ -1,7 +1,7 @@
 import { useMantineColorScheme } from '@mantine/core';
-import MDEditor from '@uiw/react-md-editor';
 import clsx from 'clsx';
 import { FunctionComponent } from 'react';
+import Markdown from 'react-markdown';
 
 interface MarkdownViewerProps {
   className?: string;
@@ -19,7 +19,7 @@ const MarkdownViewer: FunctionComponent<MarkdownViewerProps> = ({
       className={clsx('prose dark:prose-invert', className)}
       data-color-mode={colorScheme}
     >
-      <MDEditor.Markdown source={children || ''} />
+      <Markdown>{children || ''}</Markdown>
     </div>
   );
 };
