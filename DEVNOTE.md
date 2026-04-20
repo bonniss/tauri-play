@@ -282,3 +282,17 @@ readFile(sample.filePath, { baseDir: BaseDirectory.AppData })
 Omitting `baseDir` resolves the path against the wrong directory in production builds. In dev, Tauri may be more permissive, masking this bug.
 
 Using `fetch()` with `convertFileSrc()` (asset:// URLs) for reading sample bytes also fails in production — the CSP has no `connect-src` for `asset:`, so `fetch()` is blocked. `asset://` URLs are valid only as `<img src>` (covered by `img-src asset:`), not as fetch targets.
+
+## FAQ
+
+You can currently train Teachable Machine with images (pulled from your webcam or image files). More types of training may be coming soon :)
+
+You train a computer to recognize your images, sounds, and poses without writing any machine learning code. Then, use your model in your own projects, sites, apps, and more.
+
+This tool can help anyone understand how machine learning works. Along the way, you might discover situations where your model isn’t working the way you want. Those are great opportunities to play around, learn, and try different approaches to improving your model. Here are some examples:
+- Changing backgrounds/environments. Try training an image-based model to recognize a few objects. Then, see if it still works when those objects are against a different background, or a different lighting condition or time of day.
+- Framing your examples. PoseNet (the technology Teachable Machine uses to track poses) doesn’t only tracks how your pose appears, like if your arms are up or down. It also tracks where you appear in the frame. So if you’re standing still on the left side of the frame, it appears to PoseNet that you’re in a different pose than if you’re standing still on the right side of the frame. To see how we dealt with this when training our head tilting demo, read our tutorial.
+- Changing microphones/spaces. Try training a sound-based model, but then try testing it using a different microphone, changing your proximity to the mic, or change the room you’re in and see if it still works.
+- Capturing audio samples. Teachable Machine is built to recognize only 1-second samples, not longer ones. You can upload audio files created with the tool, but for now, you can’t upload external .mp3s.
+- Understanding bias. Bias is a critical concept to understand when creating machine learning models, and this tool can help give you a starting glimpse at what it’s all about. First, watch this video to get a sense of how bias can affect machine learning models. Then, try training a model with some sounds using your voice, and testing it with someone whose voice is a bit different from yours. Does it still work as well? If not, what can you do to improve it?
+- Confusing examples. It’s sometimes fun to deliberately try confusing the computer and see what works. For example, train a model holding your right hand up, and see if it still recognizes that class if you hold your other hand up instead. Or, if you train it to recognize a certain object, what happens if you try tricking the computer with a photo or a drawing of that object? And that’s just scratching the surface. Understanding how machine learning works is a really deep (and exciting!) field, and these are just starting points.

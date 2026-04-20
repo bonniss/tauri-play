@@ -269,6 +269,19 @@
       "toast": {
         "completed": "Train hoàn tất.",
         "cancelled": "Đã hủy train."
+      },
+      "openPlay": "Mở Play",
+      "exportModel": "Xuất Model",
+      "export": {
+        "title": "Xuất Model",
+        "successTitle": "Đã tải xuống — giải nén và mở index.html, hoặc kéo thả thư mục lên Netlify.",
+        "exportAgain": "Xuất lại",
+        "contentsTitle": "Nội dung file zip",
+        "deployTitle": "Chạy thử",
+        "deployNetlify": "Kéo thả thư mục vào app.netlify.com/drop — xong.",
+        "deployLocal": "Chạy local: npx serve . rồi mở localhost:3000.",
+        "embedTitle": "Nhúng vào trang web của bạn",
+        "embedHint": "Sau đó load model bằng tf.loadLayersModel(\"model.json\")."
       }
     }
   }

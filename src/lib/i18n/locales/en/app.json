@@ -269,6 +269,19 @@
       "toast": {
         "completed": "Training completed.",
         "cancelled": "Training cancelled."
+      },
+      "openPlay": "Open Play",
+      "exportModel": "Export Model",
+      "export": {
+        "title": "Export Model",
+        "successTitle": "Downloaded — unzip and open index.html, or drop the folder on Netlify.",
+        "exportAgain": "Export again",
+        "contentsTitle": "What's inside",
+        "deployTitle": "Run it",
+        "deployNetlify": "Drag the unzipped folder into app.netlify.com/drop — done.",
+        "deployLocal": "Locally: npx serve . then open localhost:3000.",
+        "embedTitle": "Embed in your own page",
+        "embedHint": "Then load your model with tf.loadLayersModel(\"model.json\")."
       }
     }
   }
