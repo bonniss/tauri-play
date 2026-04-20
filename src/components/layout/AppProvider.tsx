@@ -1,12 +1,25 @@
 import { MantineProvider, localStorageColorSchemeManager } from '@mantine/core';
 import { useHotkey } from '@tanstack/react-hotkeys';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  QueryClient,
+  QueryClientProvider,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { FunctionComponent, PropsWithChildren } from 'react';
 import { appTheme } from './theme';
 
 import { useDisclosure } from '@mantine/hooks';
 import { createProvider } from 'react-easy-provider';
 import { Toaster } from 'sonner';
+import {
+  DEFAULT_APP_SETTINGS,
+  getAppSettings,
+  setAppSetting,
+  type AppSettingKey,
+  type AppSettingValues,
+} from '~/lib/db/domain/app-settings';
 import { useTranslate } from '~/lib/i18n';
 
 const COLOR_SCHEME_STORAGE_KEY = '$colorScheme';
@@ -44,6 +57,7 @@ export const AppProvider: FunctionComponent<AppProviderProps> = ({
 
 const [useAppProvider, InternalProvider] = createProvider(() => {
   const translateHandlers = useTranslate();
+  const qc = useQueryClient();
 
   const [
     appSettingsOpened,
@@ -51,8 +65,26 @@ const [useAppProvider, InternalProvider] = createProvider(() => {
   ] = useDisclosure();
   useHotkey('Shift+S', toggleAppSettings);
 
+  const { data: appSettings = DEFAULT_APP_SETTINGS } = useQuery({
+    queryKey: ['app-settings'],
+    queryFn: getAppSettings,
+    staleTime: Infinity,
+  });
+
+  type AppSettingUpdate = {
+    [K in AppSettingKey]: { key: K; value: AppSettingValues[K] };
+  }[AppSettingKey];
+
+  const updateAppSettingMutation = useMutation<void, Error, AppSettingUpdate>({
+    mutationFn: ({ key, value }) =>
+      setAppSetting(key, value as AppSettingValues[typeof key]),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['app-settings'] }),
+  });
+
   return {
     ...translateHandlers,
+    appSettings,
+    updateAppSetting: updateAppSettingMutation.mutateAsync,
     appSettingsOpened,
     toggleAppSettings,
     closeAppSettings,

@@ -5,7 +5,12 @@
     "projects": "Dự án"
   },
   "settings": {
-    "language": "Ngôn ngữ"
+    "theme": "Chủ đề giao diện",
+    "language": "Ngôn ngữ",
+    "system": "Hệ thống",
+    "appInfo": "Thông tin ứng dụng",
+    "samplePathPattern": "Cấu trúc đường dẫn mẫu",
+    "samplePathPatternDescription": "Mẫu đường dẫn lưu file cho từng ảnh. Biến bắt buộc: {projectId}, {classId}, {fileName}."
   },
   "home": {
     "hero": {
@@ -92,6 +97,7 @@
     "name": "Tên",
     "description": "Mô tả",
     "save": "Lưu",
+    "reset": "Đặt lại mặc định",
     "empty": "Không có dữ liệu",
     "showMore": "Xem thêm",
     "showLess": "Ẩn bớt",

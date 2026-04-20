@@ -5,7 +5,12 @@
     "projects": "Projects"
   },
   "settings": {
-    "language": "Language"
+    "theme": "Theme",
+    "language": "Language",
+    "system": "System",
+    "appInfo": "About",
+    "samplePathPattern": "Sample path pattern",
+    "samplePathPatternDescription": "Template for the file path of each sample. Required variables: {projectId}, {classId}, {fileName}."
   },
   "home": {
     "hero": {
@@ -92,6 +97,7 @@
     "name": "Name",
     "description": "Description",
     "save": "Save",
+    "reset": "Reset to default",
     "empty": "No data",
     "showMore": "Show more",
     "showLess": "Show less",

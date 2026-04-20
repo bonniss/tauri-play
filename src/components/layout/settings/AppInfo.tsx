@@ -24,7 +24,6 @@ import {
   platform,
 } from "@tauri-apps/plugin-os"
 import { isDev } from "~/lib/env"
-import ColorSchemer from "./ColorSchemer"
 
 const { Tr, Td, Th, Tbody } = Table
 
@@ -202,16 +201,6 @@ const AppInfo = () => {
           </Td>
         </Tr>
         {devRows}
-        <Tr>
-          <Th className="w-32 align-middle">
-            <Text c="dimmed" fw={500} size="sm">
-              Theme
-            </Text>
-          </Th>
-          <Td className="align-middle">
-            <ColorSchemer size="sm" />
-          </Td>
-        </Tr>
       </Tbody>
     </Table>
   )

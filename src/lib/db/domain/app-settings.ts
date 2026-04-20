@@ -4,6 +4,15 @@ import { getKysely } from '../kysely';
 const DEFAULT_SAMPLE_PATH_PATTERN =
   'projects/{projectId}/samples/{classId}/{fileName}';
 
+const REQUIRED_PLACEHOLDERS = ['{projectId}', '{classId}', '{fileName}'] as const;
+
+export function validateSamplePathPattern(value: string): string | null {
+  for (const p of REQUIRED_PLACEHOLDERS) {
+    if (!value.includes(p)) return `Missing placeholder ${p}`;
+  }
+  return null;
+}
+
 const appSettingsSchema = type({
   samplePathPattern: type('string > 0').default(DEFAULT_SAMPLE_PATH_PATTERN),
 });
