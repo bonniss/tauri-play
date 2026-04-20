@@ -257,7 +257,7 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
   const importProjectMutation = useMutation({
     mutationFn: async (file: File) => importProject(file),
     onSuccess: async (newProjectId) => {
-      toast.success('Project imported successfully.');
+      toast.success(t('project.directory.import.success'));
       await queryClient.invalidateQueries({ queryKey: ['projects'] });
       startTransition(() => {
         void navigate({
@@ -268,18 +268,26 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
     },
     onError: (error) => {
       toast.error(
-        `Import failed: ${error instanceof Error ? error.message : String(error)}`,
+        t('project.directory.import.error', {
+          params: {
+            message: error instanceof Error ? error.message : String(error),
+          },
+        }),
       );
     },
   });
   const exportProjectMutation = useMutation({
     mutationFn: async (projectId: string) => exportProject(projectId),
     onSuccess: (zipPath) => {
-      toast.success(`Saved to: ${zipPath}`);
+      toast.success(t('project.directory.export.success', { params: { zipPath } }));
     },
     onError: (error) => {
       toast.error(
-        `Export failed: ${error instanceof Error ? error.message : String(error)}`,
+        t('project.directory.export.error', {
+          params: {
+            message: error instanceof Error ? error.message : String(error),
+          },
+        }),
       );
     },
   });
@@ -377,10 +385,10 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
               type="button"
               variant="default"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button loading={createProjectMutation.isPending} type="submit">
-              Create Project
+              {t('project.directory.createAction')}
             </Button>
           </div>
         </Form>
@@ -393,7 +401,7 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
           setProjectPendingDelete(null);
         }}
         opened={projectPendingDelete != null}
-        title="Delete project?"
+        title={t('project.directory.deleteTitle')}
       >
         <Stack gap="md">
           <Text c="dimmed" size="sm">
@@ -420,7 +428,7 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
               }}
               variant="default"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               color="red"
@@ -434,19 +442,21 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
                 deleteProjectMutation.mutate(projectPendingDelete.id);
               }}
             >
-              Delete Project
+              {t('project.directory.deleteAction')}
             </Button>
           </div>
         </Stack>
       </Modal>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {t('header.projects')}
+        </h1>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <TextInput
             className="w-full sm:w-56"
             onChange={(event) => setSearch(event.currentTarget.value)}
-            placeholder="Search projects by name"
+            placeholder={t('project.directory.searchPlaceholder')}
             value={search}
           />
           <Button
@@ -455,12 +465,12 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
             onClick={() => importFileRef.current?.click()}
             variant="default"
           >
-            Import
+            {t('project.directory.importAction')}
           </Button>
           <input
             ref={importFileRef}
             accept=".zip"
-            aria-label="Import project ZIP file"
+            aria-label={t('project.directory.importAriaLabel')}
             className="hidden"
             type="file"
             onChange={(e) => {
@@ -477,16 +487,20 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
               createProjectHandlers.open();
             }}
           >
-            New Project
+            {t('project.directory.newAction')}
           </Button>
         </div>
       </div>
 
       {createProjectMutation.error ? (
-        <Alert color="red" title="Failed to create project" variant="light">
+        <Alert
+          color="red"
+          title={t('project.directory.createErrorTitle')}
+          variant="light"
+        >
           {createProjectMutation.error instanceof Error
             ? createProjectMutation.error.message
-            : 'Unknown error while creating the project.'}
+            : t('project.directory.createErrorFallback')}
         </Alert>
       ) : null}
 
@@ -497,10 +511,14 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
       ) : null}
 
       {projectsQuery.error ? (
-        <Alert color="red" title="Failed to load projects" variant="light">
+        <Alert
+          color="red"
+          title={t('project.directory.loadErrorTitle')}
+          variant="light"
+        >
           {projectsQuery.error instanceof Error
             ? projectsQuery.error.message
-            : 'Unknown error while loading projects.'}
+            : t('project.directory.loadErrorFallback')}
         </Alert>
       ) : null}
 
@@ -627,13 +645,13 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
           <Stack gap="xs">
             <Text fw={600}>
               {deferredSearch
-                ? 'No projects match this search.'
-                : 'No projects yet.'}
+                ? t('project.directory.emptySearchTitle')
+                : t('project.directory.emptyTitle')}
             </Text>
             <Text c="dimmed" size="sm">
               {deferredSearch
-                ? 'Try a different project name.'
-                : 'Create the first project to start collecting labels and samples.'}
+                ? t('project.directory.emptySearchDescription')
+                : t('project.directory.emptyDescription')}
             </Text>
           </Stack>
         </Paper>

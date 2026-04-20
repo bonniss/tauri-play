@@ -1,5 +1,6 @@
 import { getKysely } from "../kysely"
 import { deleteProjectStorage } from "~/lib/project/project-storage"
+import { t } from "~/lib/i18n"
 import { DEFAULT_PROJECT_SETTINGS } from "~/lib/project/settings"
 import { listProjectClasses, type ProjectClass } from "./classes"
 import { listProjectSamples, type ProjectSample } from "./samples"
@@ -165,7 +166,7 @@ export async function getProject(projectId: string) {
     .executeTakeFirst()
 
   if (!row) {
-    throw new Error("Project not found.")
+    throw new Error(t("project.errors.notFound"))
   }
 
   return mapProjectRecord(row as ProjectRow)
@@ -204,7 +205,7 @@ export async function createProject({
   const trimmedName = name.trim()
 
   if (!trimmedName) {
-    throw new Error("Project name is required.")
+    throw new Error(t("project.errors.nameRequired"))
   }
 
   const projectId = id ?? crypto.randomUUID()

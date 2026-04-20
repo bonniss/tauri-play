@@ -122,6 +122,38 @@
       "title": "Edit Project"
     },
     "confirmDelete": "Type \"${name}\" to confirm deletion. This will remove the all project data and cannot be undone.",
+    "errors": {
+      "notFound": "Project not found.",
+      "nameRequired": "Project name is required."
+    },
+    "class": {
+      "changeColor": "Change color"
+    },
+    "directory": {
+      "createAction": "Create Project",
+      "createErrorTitle": "Failed to create project",
+      "createErrorFallback": "Unknown error while creating the project.",
+      "deleteAction": "Delete Project",
+      "deleteTitle": "Delete project?",
+      "emptyTitle": "No projects yet.",
+      "emptyDescription": "Create the first project to start collecting labels and samples.",
+      "emptySearchTitle": "No projects match this search.",
+      "emptySearchDescription": "Try a different project name.",
+      "searchPlaceholder": "Search projects by name",
+      "importAction": "Import",
+      "importAriaLabel": "Import project ZIP file",
+      "import": {
+        "success": "Project imported successfully.",
+        "error": "Import failed: {{message}}"
+      },
+      "export": {
+        "success": "Saved to: {{zipPath}}",
+        "error": "Export failed: {{message}}"
+      },
+      "loadErrorTitle": "Failed to load projects",
+      "loadErrorFallback": "Unknown error while loading projects.",
+      "newAction": "New Project"
+    },
     "sidebar": {
       "descriptionPlaceholder": "No description yet",
       "dataset": "Dataset",
@@ -195,6 +227,9 @@
       },
       "demo": {
         "noModel": "This project does not have a trained model yet.",
+        "selectedUpload": "Selected upload",
+        "enterFullscreen": "Enter fullscreen",
+        "exitFullscreen": "Exit fullscreen",
         "dropzone": "Drop an image here, or click to browse from your device.",
         "currentFile": "Current file: {{name}}",
         "predict": "Predict",

@@ -207,9 +207,7 @@ const UploadPlayExperience: FunctionComponent = () => {
   return (
     <PlayExperienceShell trainedAt={projectModel.trainedAt}>
       <div className="flex min-w-0 flex-col gap-6">
-        <Paper
-          className="relative min-h-[400px] overflow-hidden border border-dashed border-zinc-400 dark:border-zinc-500"
-        >
+        <Paper className="relative min-h-[400px] overflow-hidden border-2 border-dashed border-zinc-400 dark:border-zinc-500">
           <Dropzone
             className="absolute inset-0"
             accept={IMAGE_MIME_TYPE}
@@ -233,7 +231,7 @@ const UploadPlayExperience: FunctionComponent = () => {
               <>
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.06)_1px,transparent_1px),linear-gradient(135deg,#f8fafc,#eef2f7)] bg-[size:20px_20px,20px_20px,100%_100%] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(135deg,#09090b,#111827)] dark:bg-[size:20px_20px,20px_20px,100%_100%]">
                   <img
-                    alt={selectedFile?.name ?? 'Selected upload'}
+                    alt={selectedFile?.name ?? t('project.play.demo.selectedUpload')}
                     className="h-full w-full object-contain"
                     src={selectedFileUrl as string}
                   />
@@ -241,7 +239,9 @@ const UploadPlayExperience: FunctionComponent = () => {
                 <Dropzone.Accept>
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/50">
                     <IconUpload className="size-10 text-white" />
-                    <p className="text-sm text-white">{t('project.play.demo.dropzone')}</p>
+                    <p className="text-sm text-white">
+                      {t('project.play.demo.dropzone')}
+                    </p>
                   </div>
                 </Dropzone.Accept>
                 <Dropzone.Reject>
@@ -251,7 +251,7 @@ const UploadPlayExperience: FunctionComponent = () => {
                 </Dropzone.Reject>
               </>
             ) : (
-              <div className="flex h-full w-full flex-col items-center justify-center gap-3 p-8">
+              <div className="absolute inset-0 flex items-center justify-center gap-3 p-8">
                 <Dropzone.Accept>
                   <IconUpload className="size-10 text-blue-500" />
                 </Dropzone.Accept>
@@ -261,7 +261,7 @@ const UploadPlayExperience: FunctionComponent = () => {
                 <Dropzone.Idle>
                   <IconPhoto className="size-10 text-zinc-400" />
                 </Dropzone.Idle>
-                <p className="text-base leading-7 text-zinc-500 dark:text-zinc-400">
+                <p className="text-center text-base leading-7">
                   {t('project.play.demo.dropzone')}
                 </p>
               </div>
@@ -397,7 +397,9 @@ const CameraPlayExperience: FunctionComponent = () => {
                         onClick={toggleFullscreen}
                         className="pointer-events-auto rounded-full border border-white/10 bg-black/40 p-1.5 text-white/70 backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white"
                         aria-label={
-                          isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'
+                          isFullscreen
+                            ? t('project.play.demo.exitFullscreen')
+                            : t('project.play.demo.enterFullscreen')
                         }
                       >
                         {isFullscreen ? (

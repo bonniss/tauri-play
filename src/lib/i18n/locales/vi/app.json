@@ -122,6 +122,38 @@
       "title": "Chỉnh sửa dự án"
     },
     "confirmDelete": "Gõ \"{{name}}\" để xác nhận xóa. Thao tác này sẽ xóa hết dữ liệu dự án và không thể hoàn tác.",
+    "errors": {
+      "notFound": "Không tìm thấy dự án.",
+      "nameRequired": "Tên dự án là bắt buộc."
+    },
+    "class": {
+      "changeColor": "Đổi màu"
+    },
+    "directory": {
+      "createAction": "Tạo dự án",
+      "createErrorTitle": "Không thể tạo dự án",
+      "createErrorFallback": "Đã xảy ra lỗi khi tạo dự án.",
+      "deleteAction": "Xóa dự án",
+      "deleteTitle": "Xóa dự án?",
+      "emptyTitle": "Chưa có dự án nào.",
+      "emptyDescription": "Tạo dự án đầu tiên để bắt đầu thu thập class và sample.",
+      "emptySearchTitle": "Không có dự án nào khớp tìm kiếm.",
+      "emptySearchDescription": "Thử tên dự án khác.",
+      "searchPlaceholder": "Tìm dự án theo tên",
+      "importAction": "Nhập",
+      "importAriaLabel": "Nhập file ZIP dự án",
+      "import": {
+        "success": "Đã nhập dự án thành công.",
+        "error": "Nhập dự án thất bại: {{message}}"
+      },
+      "export": {
+        "success": "Đã lưu tại: {{zipPath}}",
+        "error": "Xuất dự án thất bại: {{message}}"
+      },
+      "loadErrorTitle": "Không thể tải danh sách dự án",
+      "loadErrorFallback": "Đã xảy ra lỗi khi tải danh sách dự án.",
+      "newAction": "Dự án mới"
+    },
     "sidebar": {
       "descriptionPlaceholder": "Chưa có mô tả",
       "dataset": "Bộ dữ liệu",
@@ -195,6 +227,9 @@
       },
       "demo": {
         "noModel": "Dự án này chưa có model được huấn luyện.",
+        "selectedUpload": "Ảnh đã chọn",
+        "enterFullscreen": "Mở toàn màn hình",
+        "exitFullscreen": "Thoát toàn màn hình",
         "dropzone": "Kéo ảnh vào đây, hoặc click để chọn từ thiết bị.",
         "currentFile": "File hiện tại: {{name}}",
         "predict": "Dự đoán",

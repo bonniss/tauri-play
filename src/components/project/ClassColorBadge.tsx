@@ -1,5 +1,6 @@
 import { Badge, Tooltip } from '@mantine/core';
 import { createContext, FunctionComponent, useContext } from 'react';
+import { useAppProvider } from '~/components/layout/AppProvider';
 import { colorFromString } from '~/lib/project/class-color';
 import { parseClassSettings } from '~/lib/project/class-settings';
 
@@ -18,6 +19,7 @@ const ClassColorBadge: FunctionComponent<ClassColorBadgeProps> = ({
   classIndex,
   settings,
 }) => {
+  const { t } = useAppProvider();
   const cycleClassColor = useContext(ClassColorCycleContext);
   const color = parseClassSettings(settings).classColor ?? colorFromString(classId);
 
@@ -36,7 +38,12 @@ const ClassColorBadge: FunctionComponent<ClassColorBadgeProps> = ({
   if (!cycleClassColor) return badge;
 
   return (
-    <Tooltip label="Change color" withArrow openDelay={600} withinPortal>
+    <Tooltip
+      label={t('project.class.changeColor')}
+      withArrow
+      openDelay={600}
+      withinPortal
+    >
       {badge}
     </Tooltip>
   );
