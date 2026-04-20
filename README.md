@@ -10,6 +10,25 @@ A reusable desktop app starter built with:
 - TanStack Router with file-based routing
 - SQLite via Tauri SQL plugin
 
+
+## Features
+
+### Platform
+
+- **Easy to install** — desktop app, install and run, no additional setup required
+- **No account required** — you own the machine, you own the app
+- **100% offline** — no internet needed to train or run predictions
+- **Cross-platform** — Windows, macOS, Linux
+
+### Core features
+
+- **Fast training** — results in seconds from just a few dozen images; small CPU and memory footprint
+- **Unlimited projects** — as many projects, classes, and samples as your disk allows; no artificial caps
+- **Sensible defaults** — works great out of the box; easy to customize epochs, batch size, and more when needed
+- **Flexible input** — collect images directly from your camera or upload an existing dataset; mix both freely
+- **Intuitive Play** — test your model live with a clean, real-time interface; upload or use your camera
+- **Easy sharing** — share a demo of your project or export your trained model to use in other apps
+
 ## What this starter already includes
 
 - App shell and header navigation

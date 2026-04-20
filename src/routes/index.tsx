@@ -1,5 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router"
+import HomeCtaFooter from "~/components/home/HomeCtaFooter"
+import HomeFeatures from "~/components/home/HomeFeatures"
 import HomeHero from "~/components/home/HomeHero"
+import HomeHowItWorks from "~/components/home/HomeHowItWorks"
+import HomeIntro from "~/components/home/HomeIntro"
+import HomePlatform from "~/components/home/HomePlatform"
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -7,9 +12,14 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-col gap-10 py-10">
+    <div className="flex flex-col gap-16 pb-24">
       <HomeHero />
-    </section>
+      <HomeIntro />
+      <HomePlatform />
+      <HomeFeatures />
+      <HomeHowItWorks />
+      <HomeCtaFooter />
+    </div>
   )
 }
 

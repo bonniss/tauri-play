@@ -12,6 +12,71 @@
       "title": "Dạy máy tính nhận diện hình ảnh.",
       "description": "Thu thập ảnh, gán nhãn, train model và thử nghiệm trực tiếp — tất cả chạy ngay trên máy của bạn.",
       "cta": "Dự án mới"
+    },
+    "features": {
+      "platformTitle": "Môi trường",
+      "coreTitle": "Tính năng",
+      "env": {
+        "install": {
+          "title": "Dễ cài đặt",
+          "description": "Desktop app. Cài là chạy — không cần terminal, không cần cài thêm gì."
+        },
+        "noAccount": {
+          "title": "Không cần tài khoản",
+          "description": "Chủ máy cũng là chủ app. Không đăng ký, không email, không gói phí."
+        },
+        "offline": {
+          "title": "100% offline",
+          "description": "Không cần internet để train hay chạy dự đoán."
+        },
+        "crossPlatform": {
+          "title": "Đa nền tảng",
+          "description": "Chạy trên Windows, macOS và Linux."
+        }
+      },
+      "fast": {
+        "title": "Train nhanh",
+        "description": "Kết quả trong vài giây từ vài chục ảnh. Ít tốn CPU và bộ nhớ."
+      },
+      "unlimited": {
+        "title": "Vô hạn dự án",
+        "description": "Bao nhiêu dự án, class, ảnh tuỳ thích. Chỉ giới hạn bởi ổ đĩa."
+      },
+      "defaults": {
+        "title": "Mặc định thông minh",
+        "description": "Hoạt động tốt ngay khi mở. Dễ tuỳ chỉnh epochs, batch size và nhiều hơn khi cần."
+      },
+      "flexibleInput": {
+        "title": "Linh hoạt đầu vào",
+        "description": "Thu thập ảnh từ camera hoặc tải lên dataset có sẵn — có thể kết hợp cả hai."
+      },
+      "easyPlay": {
+        "title": "Play trực quan",
+        "description": "Thử model trực tiếp với giao diện đơn giản, hiện đại. Tải lên hoặc dùng camera."
+      },
+      "easyShare": {
+        "title": "Dễ chia sẻ",
+        "description": "Chia sẻ demo dự án hoặc xuất model đã train để dùng trong ứng dụng khác."
+      }
+    },
+    "intro": {
+      "headline": "Dạy máy tính nhận diện bất cứ thứ gì bạn nhìn thấy.",
+      "tagline": "Cách nhanh và thú vị để trải nghiệm machine learning — không code, không cloud, không cần chuyên môn."
+    },
+    "howItWorks": {
+      "title": "Cách hoạt động",
+      "label": {
+        "description": "Thu thập ảnh cho từng thứ bạn muốn máy nhận diện. Chụp bằng camera hoặc tải lên từ thiết bị."
+      },
+      "train": {
+        "description": "Nhấn Train. Model của bạn sẵn sàng trong vài giây — không code, không cloud, không chờ đợi."
+      },
+      "play": {
+        "description": "Trỏ camera hoặc tải ảnh lên để xem model nhận diện mọi thứ theo thời gian thực."
+      }
+    },
+    "cta": {
+      "title": "Sẵn sàng dạy máy tính của bạn?"
     }
   },
   "common": {

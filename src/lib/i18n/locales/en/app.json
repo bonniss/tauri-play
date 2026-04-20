@@ -12,6 +12,71 @@
       "title": "Teach your computer to see.",
       "description": "Collect photos, label classes, train a model, and test it live — everything runs locally on your device.",
       "cta": "New Project"
+    },
+    "features": {
+      "platformTitle": "Platform",
+      "coreTitle": "Features",
+      "env": {
+        "install": {
+          "title": "Easy to install",
+          "description": "Desktop app. Install and run — no terminal, no extra dependencies."
+        },
+        "noAccount": {
+          "title": "No account required",
+          "description": "You own the machine, you own the app. No sign-up, no email, no subscription."
+        },
+        "offline": {
+          "title": "100% offline",
+          "description": "No internet needed to train or run predictions. Ever."
+        },
+        "crossPlatform": {
+          "title": "Cross-platform",
+          "description": "Works on Windows, macOS, and Linux."
+        }
+      },
+      "fast": {
+        "title": "Fast training",
+        "description": "Results in seconds from just a few dozen images. Small CPU and memory footprint."
+      },
+      "unlimited": {
+        "title": "Unlimited projects",
+        "description": "As many projects, classes, and samples as your disk allows. No artificial caps."
+      },
+      "defaults": {
+        "title": "Sensible defaults",
+        "description": "Works great out of the box. Easy to customize epochs, batch size, and more when needed."
+      },
+      "flexibleInput": {
+        "title": "Flexible input",
+        "description": "Collect images from your camera or upload an existing dataset — mix both freely."
+      },
+      "easyPlay": {
+        "title": "Intuitive Play",
+        "description": "Test your model live with a clean, real-time interface. Upload or use your camera."
+      },
+      "easyShare": {
+        "title": "Easy sharing",
+        "description": "Share a demo of your project or export your trained model to use in other apps."
+      }
+    },
+    "intro": {
+      "headline": "Train a computer to recognize anything you point your camera at.",
+      "tagline": "A fast, fun way to experience machine learning — no coding, no cloud, no expertise required."
+    },
+    "howItWorks": {
+      "title": "How it works",
+      "label": {
+        "description": "Collect photos for each thing you want the computer to recognize. Use your camera or upload images from your device."
+      },
+      "train": {
+        "description": "Click train. Your model is ready in seconds — no code, no cloud, no waiting."
+      },
+      "play": {
+        "description": "Point your camera or upload a photo to see your model recognize things in real time."
+      }
+    },
+    "cta": {
+      "title": "Ready to teach your computer?"
     }
   },
   "common": {
