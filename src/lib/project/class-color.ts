@@ -15,7 +15,7 @@ export const COLOR_CODE_PALETTE = [
   '#a855f7',
 ];
 
-const MANTINE_PALETTE: (keyof MantineThemeColors)[] = [
+export const MANTINE_PALETTE: (keyof MantineThemeColors)[] = [
   // 'dark',
   // 'gray',
   'teal',
@@ -43,4 +43,16 @@ function djb2(str: string): number {
 export function colorFromString(seed: string | number): string {
   const seedStr = typeof seed === 'number' ? seed.toString() : seed;
   return MANTINE_PALETTE[djb2(seedStr) % MANTINE_PALETTE.length]!;
+}
+
+export function getNextClassColor(currentColor: string | undefined, classId: string): string {
+  const palette = MANTINE_PALETTE as string[];
+  if (!currentColor) {
+    const defaultColor = colorFromString(classId);
+    const idx = palette.indexOf(defaultColor);
+    return palette[(idx + 1) % palette.length]!;
+  }
+  const idx = palette.indexOf(currentColor);
+  if (idx === -1) return palette[0]!;
+  return palette[(idx + 1) % palette.length]!;
 }

@@ -184,6 +184,12 @@ pub fn run() {
             sql: include_str!("../migrations/0006_create_app_settings.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 7,
+            description: "add_settings_to_classes",
+            sql: include_str!("../migrations/0007_add_settings_to_classes.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     #[cfg(debug_assertions)]

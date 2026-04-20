@@ -1,5 +1,6 @@
 import { Center, Loader } from "@mantine/core"
 import { createFileRoute } from "@tanstack/react-router"
+import { ClassColorCycleContext } from "~/components/project/ClassColorBadge"
 import ProjectOneLayout from "~/components/project/ProjectOneLayout"
 import {
   ProjectOneProvider,
@@ -21,7 +22,7 @@ function ProjectOneRoute() {
 }
 
 const Inner = () => {
-  const { isLoading } = useProjectOne()
+  const { isLoading, cycleClassColor } = useProjectOne()
 
   if (isLoading) {
     return (
@@ -31,5 +32,9 @@ const Inner = () => {
     )
   }
 
-  return <ProjectOneLayout />
+  return (
+    <ClassColorCycleContext.Provider value={cycleClassColor}>
+      <ProjectOneLayout />
+    </ClassColorCycleContext.Provider>
+  )
 }

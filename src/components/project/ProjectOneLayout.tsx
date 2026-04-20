@@ -1,4 +1,6 @@
-import { ActionIcon, Badge, Progress, Spoiler, Text } from '@mantine/core';
+import { ActionIcon, Progress, Spoiler, Text } from '@mantine/core';
+import ClassColorBadge from './ClassColorBadge';
+import { parseClassSettings } from '~/lib/project/class-settings';
 import { colorFromString } from '~/lib/project/class-color';
 import { useDisclosure } from '@mantine/hooks';
 import {
@@ -128,7 +130,9 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
               const readiness = classReadiness.find(
                 (item) => item.classId === projectClass.id,
               );
-              const classColor = colorFromString(projectClass.id);
+              const classColor =
+                parseClassSettings(projectClass.settings).classColor ??
+                colorFromString(projectClass.id);
 
               return (
                 <SidebarDatasetItem
@@ -147,9 +151,11 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
                     />
                   }
                   leading={
-                    <Badge size="xs" radius="xs" color={classColor}>
-                      {classIndex}
-                    </Badge>
+                    <ClassColorBadge
+                      classId={projectClass.id}
+                      classIndex={classIndex}
+                      settings={projectClass.settings}
+                    />
                   }
                   progress={readiness?.progress ?? 0}
                   trailing={`${projectClass.samples.length}`}

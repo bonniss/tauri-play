@@ -5,6 +5,7 @@ export type ProjectClass = {
   projectId: string;
   name: string;
   description: string | null;
+  settings: string;
   order: number;
   sampleCount: number;
   createdAt: string;
@@ -17,6 +18,7 @@ type ProjectClassRow = {
   id: string;
   name: string;
   project_id: string;
+  settings: string;
   order: number;
   sampleCount: number | string;
   updated_at?: string;
@@ -34,6 +36,7 @@ function mapProjectClass(row: ProjectClassRow): ProjectClass {
     projectId: row.project_id,
     name: row.name,
     description: row.description,
+    settings: row.settings ?? '{}',
     order: Number(row.order),
     sampleCount: Number(row.sampleCount),
     createdAt: row.created_at,
@@ -51,6 +54,7 @@ export async function listProjectClasses(projectId: string) {
       'c.project_id',
       'c.name',
       'c.description',
+      'c.settings',
       'c.order',
       'c.created_at',
       'c.updated_at',
@@ -62,6 +66,7 @@ export async function listProjectClasses(projectId: string) {
       'c.project_id',
       'c.name',
       'c.description',
+      'c.settings',
       'c.order',
       'c.created_at',
       'c.updated_at',
@@ -103,12 +108,14 @@ export async function createClass({
   projectId,
   name,
   description = null,
+  settings = '{}',
 }: {
   order?: number;
   id?: string;
   projectId: string;
   name: string;
   description?: string | null;
+  settings?: string;
 }) {
   const db = getKysely();
   const trimmedName = name.trim();
@@ -131,6 +138,7 @@ export async function createClass({
     project_id: projectId,
     name: trimmedName,
     description,
+    settings,
     order: nextOrder,
   };
 
@@ -171,6 +179,15 @@ export async function renameClass({
   await db
     .updateTable('classes')
     .set(update)
+    .where('id', '=', classId)
+    .execute();
+}
+
+export async function updateClassSettings(classId: string, settings: string) {
+  const db = getKysely();
+  await db
+    .updateTable('classes')
+    .set({ settings, updated_at: new Date().toISOString() })
     .where('id', '=', classId)
     .execute();
 }

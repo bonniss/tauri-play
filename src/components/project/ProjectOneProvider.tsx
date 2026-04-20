@@ -1,7 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createProvider } from 'react-easy-provider';
-import { ProjectClass, renameClass } from '~/lib/db/domain/classes';
+import { toast } from 'sonner';
+import {
+  ProjectClass,
+  renameClass,
+  updateClassSettings,
+} from '~/lib/db/domain/classes';
 import {
   getLatestProjectTrainLog,
   getProjectModel,
@@ -12,6 +17,11 @@ import {
   updateProject,
 } from '~/lib/db/domain/projects';
 import { ProjectSample } from '~/lib/db/domain/samples';
+import { colorFromString, getNextClassColor } from '~/lib/project/class-color';
+import {
+  parseClassSettings,
+  stringifyClassSettings,
+} from '~/lib/project/class-settings';
 import { genClassId, genSampleId } from '~/lib/project/id-generator';
 import {
   parseProjectLabelSettingsFormValues,
@@ -19,10 +29,10 @@ import {
   parseProjectSettings,
   parseProjectTrainSettingsFormValues,
   ProjectLabelSettingsFormValues,
-  ProjectPlaySettingsFormValues,
-  ProjectTrainSettingsFormValues,
   projectLabelSettingsToFormValues,
+  ProjectPlaySettingsFormValues,
   projectPlaySettingsToFormValues,
+  ProjectTrainSettingsFormValues,
   projectTrainSettingsToFormValues,
   stringifyProjectSettings,
 } from '~/lib/project/settings';
@@ -45,7 +55,7 @@ function getSampleIdFromFilePath(filePath: string) {
 
 export type ProjectOneClass = Pick<
   ProjectClass,
-  'id' | 'projectId' | 'name' | 'description' | 'order'
+  'id' | 'projectId' | 'name' | 'description' | 'order' | 'settings'
 > & {
   samples: ProjectSample[];
 };
@@ -76,9 +86,14 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
     const queryClient = useQueryClient();
 
     const [isInitialized, setIsInitialized] = useState(false);
-    const [isApplyingLabelSettings, setIsApplyingLabelSettings] = useState(false);
+    const [isApplyingLabelSettings, setIsApplyingLabelSettings] =
+      useState(false);
+    const cycleColorTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+      new Map(),
+    );
     const [isApplyingPlaySettings, setIsApplyingPlaySettings] = useState(false);
-    const [isApplyingTrainSettings, setIsApplyingTrainSettings] = useState(false);
+    const [isApplyingTrainSettings, setIsApplyingTrainSettings] =
+      useState(false);
     const [project, setProject] = useState<ProjectRecord | undefined>();
     const [classes, setClasses] = useState<ProjectOneClass[]>([]);
 
@@ -94,6 +109,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
               name: cls.name,
               description: cls.description,
               order: cls.order,
+              settings: cls.settings,
               samples: workspace.samples.filter(
                 (sample) => sample.classId === cls.id,
               ),
@@ -149,9 +165,11 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       isReady: cls.samples.length >= labelSettings.minSamplesPerClass,
     }));
     const hasReachedMaxClasses =
-      labelSettings.maxClasses != null && totalClasses >= labelSettings.maxClasses;
+      labelSettings.maxClasses != null &&
+      totalClasses >= labelSettings.maxClasses;
     const isOverClassLimit =
-      labelSettings.maxClasses != null && totalClasses > labelSettings.maxClasses;
+      labelSettings.maxClasses != null &&
+      totalClasses > labelSettings.maxClasses;
     const requiredSamplesForTrain =
       Math.max(totalClasses, labelSettings.minClasses) *
       labelSettings.minSamplesPerClass;
@@ -241,7 +259,9 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
               ? 'The latest training run failed. Review the train page and try again.'
               : 'Dataset is ready, but no successful training run exists yet.';
     const trainNavProgress =
-      trainStatus === 'training' || trainStatus === 'trained' || trainStatus === 'failed'
+      trainStatus === 'training' ||
+      trainStatus === 'trained' ||
+      trainStatus === 'failed'
         ? trainRunProgress
         : trainProgress;
     const canPlay = projectModel != null;
@@ -275,6 +295,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
         name: payload.name,
         description: payload.description ?? null,
         order: payload.order ?? totalClasses,
+        settings: '{}',
         samples: [],
       };
       setClasses((prev) => [...prev, newClass]);
@@ -293,6 +314,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
         name: `Class ${totalClasses + 1}`,
         description: null,
         order: totalClasses,
+        settings: '{}',
         samples: [],
       };
       setClasses((prev) => [...prev, newClass]);
@@ -314,7 +336,10 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
 
           const startOrder = cls.samples.length;
           optimisticSamples = nextSamples.map((sample, index) => ({
-            id: sample.id ?? getSampleIdFromFilePath(sample.filePath) ?? genSampleId(),
+            id:
+              sample.id ??
+              getSampleIdFromFilePath(sample.filePath) ??
+              genSampleId(),
             projectId,
             classId,
             filePath: sample.filePath,
@@ -351,7 +376,9 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
           cls.id === classId
             ? {
                 ...cls,
-                samples: cls.samples.filter((sample) => !sampleIdSet.has(sample.id)),
+                samples: cls.samples.filter(
+                  (sample) => !sampleIdSet.has(sample.id),
+                ),
               }
             : cls,
         ),
@@ -378,7 +405,11 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
           : indexOrClassId;
       const currentClass = classes.find((cls) => cls.id === currentClassId);
 
-      if (!trimmedName || !currentClassId || currentClass?.name === trimmedName) {
+      if (
+        !trimmedName ||
+        !currentClassId ||
+        currentClass?.name === trimmedName
+      ) {
         return;
       }
 
@@ -397,10 +428,48 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       });
     };
 
+    const cycleClassColor = (classId: string) => {
+      const cls = classes.find((c) => c.id === classId);
+      if (!cls) return;
+
+      const currentColor =
+        parseClassSettings(cls.settings).classColor ?? colorFromString(classId);
+      const nextColor = getNextClassColor(currentColor, classId);
+      const nextSettings = stringifyClassSettings({
+        ...parseClassSettings(cls.settings),
+        classColor: nextColor,
+      });
+
+      setClasses((prev) =>
+        prev.map((c) =>
+          c.id === classId ? { ...c, settings: nextSettings } : c,
+        ),
+      );
+
+      const existing = cycleColorTimers.current.get(classId);
+      if (existing) clearTimeout(existing);
+
+      const timer = setTimeout(async () => {
+        cycleColorTimers.current.delete(classId);
+        try {
+          await updateClassSettings(classId, nextSettings);
+        } catch {
+          setClasses((prev) =>
+            prev.map((c) =>
+              c.id === classId ? { ...c, settings: cls.settings } : c,
+            ),
+          );
+          toast.error('Failed to save class color.');
+        }
+      }, 600);
+
+      cycleColorTimers.current.set(classId, timer);
+    };
+
     const refreshProject = async () => {
-      const workspace = await getProjectWorkspace(projectId)
-      setProject(workspace.project)
-    }
+      const workspace = await getProjectWorkspace(projectId);
+      setProject(workspace.project);
+    };
 
     const getLabelSettingsFormValues = (): ProjectLabelSettingsFormValues =>
       projectLabelSettingsToFormValues(labelSettings);
@@ -453,6 +522,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
             name: cls.name,
             description: cls.description,
             order: cls.order,
+            settings: cls.settings,
             samples: workspace.samples.filter(
               (sample) => sample.classId === cls.id,
             ),
@@ -506,6 +576,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
             name: cls.name,
             description: cls.description,
             order: cls.order,
+            settings: cls.settings,
             samples: workspace.samples.filter(
               (sample) => sample.classId === cls.id,
             ),
@@ -517,9 +588,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       }
     };
 
-    const applyPlaySettings = async (
-      values: ProjectPlaySettingsFormValues,
-    ) => {
+    const applyPlaySettings = async (values: ProjectPlaySettingsFormValues) => {
       const nextPlaySettings = parseProjectPlaySettingsFormValues(values);
       const nextProjectSettings = {
         ...projectSettings,
@@ -559,6 +628,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
             name: cls.name,
             description: cls.description,
             order: cls.order,
+            settings: cls.settings,
             samples: workspace.samples.filter(
               (sample) => sample.classId === cls.id,
             ),
@@ -587,6 +657,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       removeSamplesFromClass,
       setProjectStatus,
       updateClassName,
+      cycleClassColor,
       getLabelSettingsFormValues,
       getPlaySettingsFormValues,
       getTrainSettingsFormValues,

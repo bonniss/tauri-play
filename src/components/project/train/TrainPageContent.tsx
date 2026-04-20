@@ -1,27 +1,22 @@
-import { Button, Paper } from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
-import { IconPackageExport, IconPlayerPlay, IconPlayerStop } from '@tabler/icons-react'
-import { Link } from '@tanstack/react-router'
-import { Alert } from '@mantine/core'
-import { useAppProvider } from '~/components/layout/AppProvider'
-import { useProjectOne } from '~/components/project/ProjectOneProvider'
-import { useDataTrain } from '~/components/project/train/DataTrainProvider'
-import ExportModelModal from '~/components/project/train/ExportModelModal'
-import TrainDataSection from '~/components/project/train/TrainDataSection'
-import TrainLogDrawer from '~/components/project/train/TrainLogDrawer'
-import TrainRunSummaryCard from '~/components/project/train/TrainRunSummaryCard'
-import TrainSettingsPopover from '~/components/project/train/TrainSettingsPopover'
-import TrainTimelinePanel from '~/components/project/train/TrainTimelinePanel'
+import { Alert, Button, Paper } from '@mantine/core';
+import { IconPlayerPlay, IconPlayerStop } from '@tabler/icons-react';
+import { useAppProvider } from '~/components/layout/AppProvider';
+import { useDataTrain } from '~/components/project/train/DataTrainProvider';
+import TrainDataSection from '~/components/project/train/TrainDataSection';
+import TrainLogDrawer from '~/components/project/train/TrainLogDrawer';
+import TrainRunSummaryCard from '~/components/project/train/TrainRunSummaryCard';
+import TrainSettingsPopover from '~/components/project/train/TrainSettingsPopover';
+import TrainTimelinePanel from '~/components/project/train/TrainTimelinePanel';
 
 function TrainPageContent() {
-  const { t } = useAppProvider()
+  const { t } = useAppProvider();
   const {
     displayedTrainLog,
     isReadyForTrain,
     isTraining,
     requestStopTraining,
     startTraining,
-  } = useDataTrain()
+  } = useDataTrain();
   // const { projectId, projectName, projectModel } = useProjectOne()
   // const [exportOpened, { open: openExport, close: closeExport }] = useDisclosure(false)
 
@@ -44,10 +39,10 @@ function TrainPageContent() {
             }
             onClick={() => {
               if (isTraining) {
-                requestStopTraining()
-                return
+                requestStopTraining();
+                return;
               }
-              void startTraining()
+              void startTraining();
             }}
           >
             {isTraining
@@ -84,7 +79,7 @@ function TrainPageContent() {
         </>
       )}
     </div>
-  )
+  );
 }
 
-export default TrainPageContent
+export default TrainPageContent;

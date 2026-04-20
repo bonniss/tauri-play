@@ -22,7 +22,6 @@ import { Route as ProjectsProjectIdIndexRouteImport } from './routes/projects/$p
 import { Route as ProjectsProjectIdTrainRouteImport } from './routes/projects/$projectId/train'
 import { Route as ProjectsProjectIdPlayRouteImport } from './routes/projects/$projectId/play'
 import { Route as ProjectsProjectIdLabelIndexRouteImport } from './routes/projects/$projectId/label/index'
-import { Route as ProjectsProjectIdLabelClassIdRouteImport } from './routes/projects/$projectId/label/$classId'
 
 const TodosRoute = TodosRouteImport.update({
   id: '/todos',
@@ -90,12 +89,6 @@ const ProjectsProjectIdLabelIndexRoute =
     path: '/label/',
     getParentRoute: () => ProjectsProjectIdRouteRoute,
   } as any)
-const ProjectsProjectIdLabelClassIdRoute =
-  ProjectsProjectIdLabelClassIdRouteImport.update({
-    id: '/label/$classId',
-    path: '/label/$classId',
-    getParentRoute: () => ProjectsProjectIdRouteRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -110,7 +103,6 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/play': typeof ProjectsProjectIdPlayRoute
   '/projects/$projectId/train': typeof ProjectsProjectIdTrainRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
-  '/projects/$projectId/label/$classId': typeof ProjectsProjectIdLabelClassIdRoute
   '/projects/$projectId/label/': typeof ProjectsProjectIdLabelIndexRoute
 }
 export interface FileRoutesByTo {
@@ -124,7 +116,6 @@ export interface FileRoutesByTo {
   '/projects/$projectId/play': typeof ProjectsProjectIdPlayRoute
   '/projects/$projectId/train': typeof ProjectsProjectIdTrainRoute
   '/projects/$projectId': typeof ProjectsProjectIdIndexRoute
-  '/projects/$projectId/label/$classId': typeof ProjectsProjectIdLabelClassIdRoute
   '/projects/$projectId/label': typeof ProjectsProjectIdLabelIndexRoute
 }
 export interface FileRoutesById {
@@ -141,7 +132,6 @@ export interface FileRoutesById {
   '/projects/$projectId/play': typeof ProjectsProjectIdPlayRoute
   '/projects/$projectId/train': typeof ProjectsProjectIdTrainRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
-  '/projects/$projectId/label/$classId': typeof ProjectsProjectIdLabelClassIdRoute
   '/projects/$projectId/label/': typeof ProjectsProjectIdLabelIndexRoute
 }
 export interface FileRouteTypes {
@@ -159,7 +149,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/play'
     | '/projects/$projectId/train'
     | '/projects/$projectId/'
-    | '/projects/$projectId/label/$classId'
     | '/projects/$projectId/label/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -173,7 +162,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/play'
     | '/projects/$projectId/train'
     | '/projects/$projectId'
-    | '/projects/$projectId/label/$classId'
     | '/projects/$projectId/label'
   id:
     | '__root__'
@@ -189,7 +177,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/play'
     | '/projects/$projectId/train'
     | '/projects/$projectId/'
-    | '/projects/$projectId/label/$classId'
     | '/projects/$projectId/label/'
   fileRoutesById: FileRoutesById
 }
@@ -295,13 +282,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdLabelIndexRouteImport
       parentRoute: typeof ProjectsProjectIdRouteRoute
     }
-    '/projects/$projectId/label/$classId': {
-      id: '/projects/$projectId/label/$classId'
-      path: '/label/$classId'
-      fullPath: '/projects/$projectId/label/$classId'
-      preLoaderRoute: typeof ProjectsProjectIdLabelClassIdRouteImport
-      parentRoute: typeof ProjectsProjectIdRouteRoute
-    }
   }
 }
 
@@ -320,7 +300,6 @@ interface ProjectsProjectIdRouteRouteChildren {
   ProjectsProjectIdPlayRoute: typeof ProjectsProjectIdPlayRoute
   ProjectsProjectIdTrainRoute: typeof ProjectsProjectIdTrainRoute
   ProjectsProjectIdIndexRoute: typeof ProjectsProjectIdIndexRoute
-  ProjectsProjectIdLabelClassIdRoute: typeof ProjectsProjectIdLabelClassIdRoute
   ProjectsProjectIdLabelIndexRoute: typeof ProjectsProjectIdLabelIndexRoute
 }
 
@@ -329,7 +308,6 @@ const ProjectsProjectIdRouteRouteChildren: ProjectsProjectIdRouteRouteChildren =
     ProjectsProjectIdPlayRoute: ProjectsProjectIdPlayRoute,
     ProjectsProjectIdTrainRoute: ProjectsProjectIdTrainRoute,
     ProjectsProjectIdIndexRoute: ProjectsProjectIdIndexRoute,
-    ProjectsProjectIdLabelClassIdRoute: ProjectsProjectIdLabelClassIdRoute,
     ProjectsProjectIdLabelIndexRoute: ProjectsProjectIdLabelIndexRoute,
   }
 

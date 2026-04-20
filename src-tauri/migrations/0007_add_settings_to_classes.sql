@@ -1,0 +1,1 @@
+ALTER TABLE classes ADD COLUMN settings TEXT NOT NULL DEFAULT '{}';

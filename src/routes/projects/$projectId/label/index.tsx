@@ -1,6 +1,5 @@
 import {
   ActionIcon,
-  Badge,
   Button,
   Group,
   Menu,
@@ -29,6 +28,7 @@ import { CaptureSession } from '~/components/camera/types';
 import { Form, defineConfig } from '~/components/form';
 import ContentEditable from '~/components/headless/ContentEditable';
 import { useAppProvider } from '~/components/layout/AppProvider';
+import ClassColorBadge from '~/components/project/ClassColorBadge';
 import ProjectActionButton from '~/components/project/ProjectActionButton';
 import { useProjectOne } from '~/components/project/ProjectOneProvider';
 import SampleGrid from '~/components/project/SampleGrid';
@@ -36,7 +36,6 @@ import UploadSamplesButton from '~/components/project/UploadSamplesButton';
 import { createClass, deleteClass } from '~/lib/db/domain/classes';
 import { activateProject, updateProject } from '~/lib/db/domain/projects';
 import { createSample, deleteSample } from '~/lib/db/domain/samples';
-import { colorFromString } from '~/lib/project/class-color';
 import {
   deleteSampleFile,
   saveCapturedSampleFrames,
@@ -592,8 +591,6 @@ function ProjectLabelPage() {
       {hasClasses ? (
         <div className="mt-4 divide-y divide-zinc-200 overflow-hidden rounded-md border border-zinc-200 dark:divide-zinc-700 dark:border-zinc-700">
           {visibleClasses.map((item, classIdx) => {
-            const classColor = colorFromString(item.id);
-
             return (
               <div key={item.id}>
                 <div className="flex items-center justify-between gap-3 px-3 py-2.5">
@@ -618,7 +615,7 @@ function ProjectLabelPage() {
                         )}
                         stroke={1.8} />
                     </ActionIcon>
-                    <Badge size="xs" radius="xs" color={classColor}>{classIdx}</Badge>
+                    <ClassColorBadge classId={item.id} classIndex={classIdx} settings={item.settings} />
                     <ContentEditable
                       as="span"
                       aria-label={`Class name ${item.name}`}
