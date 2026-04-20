@@ -34,6 +34,7 @@ import {
 
 interface SampleGridProps {
   activeSampleId?: string;
+  classColorMap?: Record<string, string>;
   classIndexMap?: Record<string, number>;
   defaultActiveSampleId?: string;
   emptyState?: ReactNode;
@@ -50,6 +51,7 @@ const SAMPLE_PAGE_SIZE = 60;
 
 const SampleGrid: FunctionComponent<SampleGridProps> = ({
   activeSampleId,
+  classColorMap,
   classIndexMap,
   defaultActiveSampleId,
   emptyState = null,
@@ -613,12 +615,12 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
 
                 {classIdx !== undefined && (
                   <Badge
-                    color={colorFromString(sample.classId)}
+                    color={classColorMap?.[sample.classId] ?? colorFromString(sample.classId)}
                     radius="xs"
                     size="xs"
                     className="absolute bottom-1 left-1 flex"
                   >
-                    {classIdx}
+                    {classIdx + 1}
                   </Badge>
                 )}
               </button>

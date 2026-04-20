@@ -43,6 +43,7 @@ import {
 } from '~/components/project/ProjectOneProvider';
 import MarkdownViewer from '~/components/shared/MarkdownViewer';
 import { colorFromString } from '~/lib/project/class-color';
+import { parseClassSettings } from '~/lib/project/class-settings';
 import {
   createSamplePreviewUrl,
   revokeSamplePreviewUrl,
@@ -206,119 +207,83 @@ const UploadPlayExperience: FunctionComponent = () => {
   return (
     <PlayExperienceShell trainedAt={projectModel.trainedAt}>
       <div className="flex min-w-0 flex-col gap-6">
-        <div
-          className={clsx(
-            hasPreview &&
-              'grid gap-6 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)]',
-          )}
+        <Paper
+          className="relative min-h-[400px] overflow-hidden border border-dashed border-zinc-400 dark:border-zinc-500"
         >
-          <Paper
-            className={clsx(
-              'min-h-[400px] relative border border-dashed border-zinc-400 dark:border-zinc-500 order-2',
-            )}
+          <Dropzone
+            className="absolute inset-0"
+            accept={IMAGE_MIME_TYPE}
+            loading={false}
+            maxFiles={1}
+            multiple={false}
+            onDrop={(files: File[]) => {
+              const file = files[0];
+              if (!file) return;
+              setSelectedFile(file);
+              clearPrediction();
+              if (playSettings.autoPredictOnUpload) {
+                void runPredictionFromFile(file);
+              }
+            }}
+            onReject={() => {
+              clearPrediction();
+            }}
           >
-            <Dropzone
-              className={clsx(
-                'absolute inset-0 flex items-center justify-center p-4',
-              )}
-              accept={IMAGE_MIME_TYPE}
-              loading={false}
-              maxFiles={1}
-              multiple={false}
-              onDrop={(files: File[]) => {
-                const file = files[0];
-
-                if (!file) {
-                  return;
-                }
-
-                setSelectedFile(file);
-                clearPrediction();
-
-                if (playSettings.autoPredictOnUpload) {
-                  void runPredictionFromFile(file);
-                }
-              }}
-              onReject={() => {
-                clearPrediction();
-              }}
-            >
-              <div
-                className={clsx(
-                  'flex items-center gap-4',
-                  hasPreview ? 'flex-col' : 'flex-row',
-                )}
-              >
-                <div>
-                  <Dropzone.Accept>
-                    <IconUpload className="size-10" />
-                  </Dropzone.Accept>
-                  <Dropzone.Reject>
-                    <IconX className="size-10" />
-                  </Dropzone.Reject>
-                  <Dropzone.Idle>
-                    <IconPhoto className="size-10" />
-                  </Dropzone.Idle>
+            {hasPreview ? (
+              <>
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.06)_1px,transparent_1px),linear-gradient(135deg,#f8fafc,#eef2f7)] bg-[size:20px_20px,20px_20px,100%_100%] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(135deg,#09090b,#111827)] dark:bg-[size:20px_20px,20px_20px,100%_100%]">
+                  <img
+                    alt={selectedFile?.name ?? 'Selected upload'}
+                    className="h-full w-full object-contain"
+                    src={selectedFileUrl as string}
+                  />
                 </div>
-
-                <div>
-                  <p
-                    className={`text-zinc-500 dark:text-zinc-400 ${
-                      hasPreview ? 'text-sm' : 'text-base leading-7'
-                    }`}
-                  >
-                    {t('project.play.demo.dropzone')}
-                  </p>
-                  {selectedFile ? (
-                    <p className="truncate text-sm text-zinc-500 dark:text-zinc-400">
-                      {t('project.play.demo.currentFile', {
-                        params: { name: selectedFile.name },
-                      })}
-                    </p>
-                  ) : null}
-                </div>
+                <Dropzone.Accept>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/50">
+                    <IconUpload className="size-10 text-white" />
+                    <p className="text-sm text-white">{t('project.play.demo.dropzone')}</p>
+                  </div>
+                </Dropzone.Accept>
+                <Dropzone.Reject>
+                  <div className="absolute inset-0 flex items-center justify-center bg-red-500/40">
+                    <IconX className="size-10 text-white" />
+                  </div>
+                </Dropzone.Reject>
+              </>
+            ) : (
+              <div className="flex h-full w-full flex-col items-center justify-center gap-3 p-8">
+                <Dropzone.Accept>
+                  <IconUpload className="size-10 text-blue-500" />
+                </Dropzone.Accept>
+                <Dropzone.Reject>
+                  <IconX className="size-10 text-red-500" />
+                </Dropzone.Reject>
+                <Dropzone.Idle>
+                  <IconPhoto className="size-10 text-zinc-400" />
+                </Dropzone.Idle>
+                <p className="text-base leading-7 text-zinc-500 dark:text-zinc-400">
+                  {t('project.play.demo.dropzone')}
+                </p>
               </div>
+            )}
+          </Dropzone>
+        </Paper>
 
-              {!playSettings.autoPredictOnUpload ? (
-                <div className="pt-4">
-                  <Button
-                    disabled={!selectedFile}
-                    loading={isAnalyzing}
-                    onClick={(event) => {
-                      event.stopPropagation();
-
-                      if (!selectedFile) {
-                        return;
-                      }
-
-                      void runPredictionFromFile(selectedFile);
-                    }}
-                    size="md"
-                    variant="default"
-                  >
-                    {t('project.play.demo.predict')}
-                  </Button>
-                </div>
-              ) : null}
-            </Dropzone>
-          </Paper>
-
-          {hasPreview ? (
-            <Paper
-              className={clsx(
-                'relative h-[500px] overflow-hidden',
-                'bg-[linear-gradient(to_right,rgba(15,23,42,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.06)_1px,transparent_1px),linear-gradient(135deg,#f8fafc,#eef2f7)] bg-[size:20px_20px,20px_20px,100%_100%] dark:border-zinc-800 dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(135deg,#09090b,#111827)] dark:bg-[size:20px_20px,20px_20px,100%_100%]',
-              )}
-              withBorder
+        {!playSettings.autoPredictOnUpload && selectedFile ? (
+          <div>
+            <Button
+              disabled={!selectedFile}
+              loading={isAnalyzing}
+              onClick={() => {
+                if (selectedFile) void runPredictionFromFile(selectedFile);
+              }}
+              size="md"
+              variant="default"
             >
-              <img
-                alt={selectedFile?.name ?? 'Selected upload'}
-                className="h-full w-full object-contain"
-                src={selectedFileUrl as string}
-              />
-            </Paper>
-          ) : null}
-        </div>
+              {t('project.play.demo.predict')}
+            </Button>
+          </div>
+        ) : null}
 
         {shouldShowPredictionPanel ? <PredictionPanel /> : null}
       </div>
@@ -587,9 +552,12 @@ const PredictionPanel: FunctionComponent = () => {
             {playSettings.showConfidenceScores ? (
               <>
                 {visibleResults.map((result) => {
-                  const classId =
-                    classes[result.index]?.id ?? String(result.index);
-                  const color = colorFromString(classId);
+                  const cls = classes[result.index];
+                  const classId = cls?.id ?? String(result.index);
+                  const liveName = cls?.name ?? result.className;
+                  const color =
+                    parseClassSettings(cls?.settings).classColor ??
+                    colorFromString(classId);
                   const isTop =
                     result.index === topResult.index && meetsThreshold;
 
@@ -604,7 +572,7 @@ const PredictionPanel: FunctionComponent = () => {
                               : 'text-base',
                           )}
                         >
-                          {result.className}
+                          {liveName}
                         </span>
                         <span className="shrink-0 text-base font-light tabular-nums text-zinc-500 dark:text-zinc-400">
                           {(result.confidence * 100).toFixed(1)}%

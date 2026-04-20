@@ -4,6 +4,8 @@ import { createProvider } from 'react-easy-provider';
 import { toast } from 'sonner';
 import { useAppProvider } from '~/components/layout/AppProvider';
 import { useProjectOne } from '~/components/project/ProjectOneProvider';
+import { colorFromString } from '~/lib/project/class-color';
+import { parseClassSettings } from '~/lib/project/class-settings';
 import {
   appendModelTrainLogEvent,
   createModelTrainLog,
@@ -937,6 +939,16 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
       ),
     [inspectedDataSnapshot],
   );
+  const splitClassColorMap = useMemo(
+    () =>
+      Object.fromEntries(
+        classes.map((cls) => [
+          cls.id,
+          parseClassSettings(cls.settings).classColor ?? colorFromString(cls.id),
+        ]),
+      ),
+    [classes],
+  );
   const logEntries =
     displayedTrainLog?.events.map((event, index) => ({
       key: `${event.at}-${index}`,
@@ -952,6 +964,7 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
     formatMetric,
     getTrainSettingsFormValues,
     hasTrainData,
+    splitClassColorMap,
     splitClassIndexMap,
     inspectDataOpened,
     inspectedDataSnapshot,

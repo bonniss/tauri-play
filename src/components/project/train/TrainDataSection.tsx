@@ -8,6 +8,7 @@ function TrainDataSection() {
     inspectDataOpened,
     setInspectDataOpened,
     setTrainDataView,
+    splitClassColorMap,
     splitClassIndexMap,
     trainDataView,
     trainDataViewOptions,
@@ -34,6 +35,7 @@ function TrainDataSection() {
     >
       <div className="container space-y-4">
         <SampleGrid
+          classColorMap={splitClassColorMap}
           classIndexMap={splitClassIndexMap}
           samples={displayedSplitSamples}
         />
