@@ -97,7 +97,14 @@ type ModelTrainLogTable = {
   updated_at: ColumnType<string, string | undefined, string>
 }
 
+type AppSettingsTable = {
+  key: string
+  value: string
+  updated_at: ColumnType<string, string | undefined, string>
+}
+
 export interface DatabaseSchema {
+  app_settings: AppSettingsTable
   classes: ClassTable
   models: ModelTable
   model_train_logs: ModelTrainLogTable

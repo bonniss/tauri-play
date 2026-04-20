@@ -178,6 +178,12 @@ pub fn run() {
             sql: include_str!("../migrations/0005_add_model_train_logs.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 6,
+            description: "create_app_settings",
+            sql: include_str!("../migrations/0006_create_app_settings.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     #[cfg(debug_assertions)]
