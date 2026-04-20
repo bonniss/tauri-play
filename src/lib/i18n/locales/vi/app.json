@@ -113,6 +113,7 @@
     "edit": {
       "title": "Chỉnh sửa dự án"
     },
+    "confirmDelete": "Gõ \"{{name}}\" để xác nhận xóa. Thao tác này sẽ xóa hết dữ liệu dự án và không thể hoàn tác.",
     "sidebar": {
       "descriptionPlaceholder": "Chưa có mô tả",
       "dataset": "Dataset",
@@ -207,7 +208,7 @@
       "title": "Train",
       "startTraining": "Bắt đầu Train",
       "stopTraining": "Dừng Train",
-      "notReadyAlert": "Dữ liệu chưa sẵn sàng. Hãy hoàn thành số lượng class và Sample tối thiểu trước.",
+      "notReadyAlert": "Dữ liệu chưa sẵn sàng. Hãy chuẩn bị đủ dữ liệu class và sample tối thiểu.",
       "latestRun": "Lần chạy gần nhất",
       "viewLog": "Xem Log",
       "epochsProgress": "{{current}}/{{total}} epochs",

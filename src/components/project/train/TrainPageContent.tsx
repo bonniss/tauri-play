@@ -15,7 +15,6 @@ import TrainTimelinePanel from '~/components/project/train/TrainTimelinePanel'
 
 function TrainPageContent() {
   const { t } = useAppProvider()
-  const { projectId, projectName, projectModel } = useProjectOne()
   const {
     displayedTrainLog,
     isReadyForTrain,
@@ -23,7 +22,8 @@ function TrainPageContent() {
     requestStopTraining,
     startTraining,
   } = useDataTrain()
-  const [exportOpened, { open: openExport, close: closeExport }] = useDisclosure(false)
+  // const { projectId, projectName, projectModel } = useProjectOne()
+  // const [exportOpened, { open: openExport, close: closeExport }] = useDisclosure(false)
 
   return (
     <div className="space-y-4 p-4">
@@ -59,57 +59,30 @@ function TrainPageContent() {
       </div>
 
       {!isReadyForTrain ? (
-        <Alert color="yellow" variant="light">
-          {t('project.train.notReadyAlert')}
-        </Alert>
+        <Alert variant="default">{t('project.train.notReadyAlert')}</Alert>
       ) : null}
 
-      <div className="grid items-start gap-4 xl:grid-cols-[3fr_2fr]">
-        <Paper className="p-4" withBorder radius="md">
-          <TrainTimelinePanel />
-        </Paper>
-        <div className="flex flex-col gap-4">
-          {projectModel ? (
-            <>
-              <Button
-                component={Link}
-                to="/projects/$projectId/play"
-                params={{ projectId } as never}
-                size="md"
-                fullWidth
-                leftSection={<IconPlayerPlay className="size-4" />}
-              >
-                {t('project.train.openPlay')}
-              </Button>
-              <Button
-                variant="light"
-                fullWidth
-                leftSection={<IconPackageExport className="size-4" />}
-                onClick={openExport}
-              >
-                {t('project.train.exportModel')}
-              </Button>
-            </>
-          ) : null}
-          {displayedTrainLog ? (
-            <Paper className="p-4" withBorder radius="md">
+      {!displayedTrainLog && !isTraining ? (
+        <p>Chưa có log run nào</p>
+      ) : (
+        <>
+          <Paper
+            withBorder
+            radius="md"
+            className="flex flex-col gap-4 md:flex-row md:gap-0"
+          >
+            <section className="md:flex-1 p-4">
               <TrainRunSummaryCard />
-            </Paper>
-          ) : null}
-        </div>
-      </div>
+            </section>
+            <section className="md:flex-1 p-4 border-l dark:border-white/10">
+              <TrainTimelinePanel />
+            </section>
+          </Paper>
 
-      <TrainDataSection />
-      <TrainLogDrawer />
-
-      {projectModel ? (
-        <ExportModelModal
-          opened={exportOpened}
-          onClose={closeExport}
-          artifactPath={projectModel.artifactPath}
-          projectName={projectName}
-        />
-      ) : null}
+          <TrainDataSection />
+          <TrainLogDrawer />
+        </>
+      )}
     </div>
   )
 }

@@ -267,7 +267,9 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
       });
     },
     onError: (error) => {
-      toast.error(`Import failed: ${error instanceof Error ? error.message : String(error)}`);
+      toast.error(
+        `Import failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
     },
   });
   const exportProjectMutation = useMutation({
@@ -276,7 +278,9 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
       toast.success(`Saved to: ${zipPath}`);
     },
     onError: (error) => {
-      toast.error(`Export failed: ${error instanceof Error ? error.message : String(error)}`);
+      toast.error(
+        `Export failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
     },
   });
   const updateProjectSettingsMutation = useMutation({
@@ -384,6 +388,7 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
 
       <Modal
         centered
+        trapFocus
         onClose={() => {
           setProjectPendingDelete(null);
         }}
@@ -393,7 +398,11 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
         <Stack gap="md">
           <Text c="dimmed" size="sm">
             {projectPendingDelete
-              ? `Type "${projectPendingDelete.name}" to confirm deletion. This will remove the project and all local files.`
+              ? t('project.confirmDelete', {
+                  params: {
+                    name: projectPendingDelete.name,
+                  },
+                })
               : ''}
           </Text>
           <TextInput
@@ -432,12 +441,7 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
       </Modal>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
-          <Text c="dimmed" size="sm">
-            Manage datasets, training runs, and playable demos.
-          </Text>
-        </div>
+        <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <TextInput
             className="w-full sm:w-56"

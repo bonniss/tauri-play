@@ -113,6 +113,7 @@
     "edit": {
       "title": "Edit Project"
     },
+    "confirmDelete": "Type \"${name}\" to confirm deletion. This will remove the all project data and cannot be undone.",
     "sidebar": {
       "descriptionPlaceholder": "No description yet",
       "dataset": "Dataset",
