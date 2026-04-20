@@ -3,12 +3,14 @@ import { useCamera } from './useCamera'
 import { useCapture } from './useCapture'
 import type {
   CameraCaptureContext,
+  CameraViewportAspectRatio,
   CapturedFrame,
   CaptureSession,
   CaptureSettings,
 } from './types'
 
 interface CameraCaptureProps {
+  aspectRatio?: CameraViewportAspectRatio
   children: (context: CameraCaptureContext) => React.ReactNode
   defaultSettings?: Partial<CaptureSettings>
   onCapture?: (frame: CapturedFrame) => void
@@ -16,6 +18,7 @@ interface CameraCaptureProps {
 }
 
 const CameraCapture: FunctionComponent<CameraCaptureProps> = ({
+  aspectRatio = '16:9',
   children,
   defaultSettings,
   onCapture,
@@ -45,6 +48,7 @@ const CameraCapture: FunctionComponent<CameraCaptureProps> = ({
     onCapture,
     onCaptureSession,
     defaultSettings,
+    viewportAspectRatio: aspectRatio,
   })
 
   const context: CameraCaptureContext = {

@@ -1,14 +1,23 @@
-import { useEffect, useState, type FunctionComponent } from "react"
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type FunctionComponent,
+  type PointerEvent as ReactPointerEvent,
+} from "react"
 import CameraCapture, {
   type CameraCaptureContext,
   type CapturedFrame,
   type CaptureSession,
   type CaptureSettings,
 } from "./CameraCapture"
+import SvgCrop from "./SvgCrop"
+import SvgFlip from "./SvgFlip"
+import type { CameraCropRect, CameraViewportAspectRatio } from "./types"
 
 interface CameraUIProps {
   autoConnect?: boolean
-  aspectRatio?: "16:9" | "4:3" | "1:1"
+  aspectRatio?: CameraViewportAspectRatio
   className?: string
   defaultSettings?: Partial<CaptureSettings>
   showModeControls?: boolean
@@ -19,6 +28,17 @@ interface CameraUIProps {
   children?: (frames: CapturedFrame[]) => React.ReactNode
   viewportOverlay?: (context: CameraCaptureContext) => React.ReactNode
 }
+
+type CropEditorMode = "idle" | "pan" | "resize"
+
+const ASPECT_RATIO_CLASS: Record<string, string> = {
+  "16:9": "aspect-video",
+  "4:3": "aspect-[4/3]",
+  "1:1": "aspect-square",
+}
+
+const DEFAULT_CROP_SIZE = 0.72
+const MIN_CROP_SIZE = 0.24
 
 const CameraUI: FunctionComponent<CameraUIProps> = ({
   autoConnect = false,
@@ -35,6 +55,7 @@ const CameraUI: FunctionComponent<CameraUIProps> = ({
 }) => {
   return (
     <CameraCapture
+      aspectRatio={aspectRatio}
       defaultSettings={defaultSettings}
       onCapture={onCapture}
       onCaptureSession={onCaptureSession}
@@ -59,7 +80,7 @@ const CameraUI: FunctionComponent<CameraUIProps> = ({
 
 interface CameraUIInnerProps {
   autoConnect?: boolean
-  aspectRatio?: "16:9" | "4:3" | "1:1"
+  aspectRatio?: CameraViewportAspectRatio
   ctx: CameraCaptureContext
   className?: string
   children?: (frames: CapturedFrame[]) => React.ReactNode
@@ -69,10 +90,41 @@ interface CameraUIInnerProps {
   viewportOverlay?: (context: CameraCaptureContext) => React.ReactNode
 }
 
-const ASPECT_RATIO_CLASS: Record<string, string> = {
-  "16:9": "aspect-video",
-  "4:3": "aspect-[4/3]",
-  "1:1": "aspect-square",
+function createDefaultCropRect(): CameraCropRect {
+  const inset = (1 - DEFAULT_CROP_SIZE) / 2
+
+  return {
+    x: inset,
+    y: inset,
+    width: DEFAULT_CROP_SIZE,
+    height: DEFAULT_CROP_SIZE,
+  }
+}
+
+function clampCropRect(rect: CameraCropRect): CameraCropRect {
+  const size = Math.min(1, Math.max(MIN_CROP_SIZE, rect.width))
+  const x = Math.min(1 - size, Math.max(0, rect.x))
+  const y = Math.min(1 - size, Math.max(0, rect.y))
+
+  return {
+    x,
+    y,
+    width: size,
+    height: size,
+  }
+}
+
+function getCropPreviewStyle(cropRect: CameraCropRect | null) {
+  const scale = cropRect ? 1 / cropRect.width : 1
+  const translateX = cropRect ? -cropRect.x * 100 * scale : 0
+  const translateY = cropRect ? -cropRect.y * 100 * scale : 0
+
+  return {
+    height: `${scale * 100}%`,
+    left: `${translateX}%`,
+    top: `${translateY}%`,
+    width: `${scale * 100}%`,
+  }
 }
 
 const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
@@ -105,6 +157,13 @@ const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
   } = ctx
 
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [cropEditorOpen, setCropEditorOpen] = useState(false)
+  const [draftCropRect, setDraftCropRect] = useState<CameraCropRect | null>(null)
+  const [cropEditorMode, setCropEditorMode] = useState<CropEditorMode>("idle")
+  const [pointerStart, setPointerStart] = useState<{ x: number; y: number } | null>(
+    null,
+  )
+  const [rectStart, setRectStart] = useState<CameraCropRect | null>(null)
   const isReady = cameraState === "ready"
 
   useEffect(() => {
@@ -113,39 +172,189 @@ const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
     }
   }, [autoConnect, cameraState, connect])
 
+  const previewStyle = useMemo(
+    () => getCropPreviewStyle(cropEditorOpen ? null : settings.cropRect),
+    [cropEditorOpen, settings.cropRect],
+  )
+
+  function getNormalizedPoint(event: ReactPointerEvent<HTMLElement>) {
+    const bounds = event.currentTarget.getBoundingClientRect()
+
+    return {
+      x: Math.min(1, Math.max(0, (event.clientX - bounds.left) / bounds.width)),
+      y: Math.min(1, Math.max(0, (event.clientY - bounds.top) / bounds.height)),
+    }
+  }
+
+  function openCropEditor() {
+    setDraftCropRect(settings.cropRect ?? createDefaultCropRect())
+    setCropEditorMode("idle")
+    setPointerStart(null)
+    setRectStart(null)
+    setCropEditorOpen(true)
+    setSettingsOpen(false)
+  }
+
+  function cancelCropEditor() {
+    setDraftCropRect(settings.cropRect)
+    setCropEditorMode("idle")
+    setPointerStart(null)
+    setRectStart(null)
+    setCropEditorOpen(false)
+  }
+
+  function clearCropSelection() {
+    setSettings({ cropRect: null })
+    setDraftCropRect(null)
+    setCropEditorMode("idle")
+    setPointerStart(null)
+    setRectStart(null)
+    setCropEditorOpen(false)
+  }
+
+  function applyCropSelection() {
+    if (!draftCropRect) {
+      return
+    }
+
+    setSettings({ cropRect: clampCropRect(draftCropRect) })
+    setCropEditorMode("idle")
+    setPointerStart(null)
+    setRectStart(null)
+    setCropEditorOpen(false)
+  }
+
+  function startCropPan(event: ReactPointerEvent<HTMLDivElement>) {
+    event.stopPropagation()
+    setCropEditorMode("pan")
+    setPointerStart(getNormalizedPoint(event))
+    setRectStart(draftCropRect)
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  function startCropResize(event: ReactPointerEvent<HTMLButtonElement>) {
+    event.stopPropagation()
+    setCropEditorMode("resize")
+    setPointerStart(getNormalizedPoint(event))
+    setRectStart(draftCropRect)
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  function updateCropFromPointer(event: ReactPointerEvent<HTMLElement>) {
+    if (!pointerStart || !rectStart || !draftCropRect) {
+      return
+    }
+
+    const point = getNormalizedPoint(event)
+    const deltaX = point.x - pointerStart.x
+    const deltaY = point.y - pointerStart.y
+
+    if (cropEditorMode === "pan") {
+      setDraftCropRect(
+        clampCropRect({
+          ...rectStart,
+          x: rectStart.x + deltaX,
+          y: rectStart.y + deltaY,
+        }),
+      )
+      return
+    }
+
+    if (cropEditorMode === "resize") {
+      const delta = Math.max(deltaX, deltaY)
+
+      setDraftCropRect(
+        clampCropRect({
+          ...rectStart,
+          width: rectStart.width + delta,
+          height: rectStart.height + delta,
+        }),
+      )
+    }
+  }
+
+  function endCropInteraction() {
+    setCropEditorMode("idle")
+    setPointerStart(null)
+    setRectStart(null)
+  }
+
   return (
     <div className={`flex flex-col gap-3 ${className}`}>
-      {/* camera frame */}
-      <div className={`relative ${ASPECT_RATIO_CLASS[aspectRatio] ?? "aspect-video"} w-full overflow-hidden rounded-2xl bg-zinc-950`}>
-        {/* video */}
-        <video
-          ref={videoRef}
-          autoPlay
-          muted
-          playsInline
-          className="h-full w-full object-cover"
-        />
+      <div
+        className={`relative ${ASPECT_RATIO_CLASS[aspectRatio] ?? "aspect-video"} w-full overflow-hidden rounded-2xl bg-zinc-950`}
+      >
+        <div
+          className="absolute inset-0"
+          style={previewStyle}
+        >
+          <video
+            ref={videoRef}
+            autoPlay
+            muted
+            playsInline
+            className="h-full w-full object-cover"
+            style={{
+              transform: settings.mirrorCamera ? "scaleX(-1)" : undefined,
+            }}
+          />
+        </div>
 
-        {/* flash overlay */}
+        {cropEditorOpen && draftCropRect ? (
+          <CropGuide cropRect={draftCropRect} />
+        ) : null}
+
+        {cropEditorOpen && draftCropRect ? (
+          <div
+            className="absolute inset-0 z-[4]"
+            onPointerMove={updateCropFromPointer}
+            onPointerUp={endCropInteraction}
+            onPointerCancel={endCropInteraction}
+          >
+            <div
+              className="absolute rounded-2xl border border-white/80 bg-white/5 backdrop-blur-[1px]"
+              style={{
+                left: `${draftCropRect.x * 100}%`,
+                top: `${draftCropRect.y * 100}%`,
+                width: `${draftCropRect.width * 100}%`,
+                height: `${draftCropRect.height * 100}%`,
+              }}
+              onPointerDown={startCropPan}
+            >
+              <div className="absolute inset-0 grid grid-cols-3 grid-rows-3">
+                {Array.from({ length: 9 }).map((_, index) => (
+                  <div key={index} className="border border-white/10" />
+                ))}
+              </div>
+              <button
+                type="button"
+                aria-label="Resize crop"
+                className="absolute bottom-2 right-2 h-4 w-4 rounded-full border border-white/70 bg-black/60 shadow-lg"
+                onPointerDown={startCropResize}
+              />
+            </div>
+          </div>
+        ) : null}
+
         <div
           ref={flashRef}
           className="pointer-events-none absolute inset-0 bg-white opacity-0 [&.flashing]:animate-[cameraFlash_180ms_ease-out_forwards]"
         />
 
-        {/* idle / connecting / error overlay */}
-        {cameraState !== "ready" && (
+        {cameraState !== "ready" ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-zinc-950/80">
             {cameraState === "error" ? (
               <>
-                <span className="text-xs font-medium tracking-widest text-red-400 uppercase">
+                <span className="text-xs font-medium uppercase tracking-widest text-red-400">
                   camera error
                 </span>
-                {error && (
+                {error ? (
                   <span className="max-w-xs text-center text-xs text-zinc-500">
                     {error}
                   </span>
-                )}
+                ) : null}
                 <button
+                  type="button"
                   onClick={() => connect()}
                   className="mt-1 rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-xs font-medium text-zinc-200 transition-colors hover:bg-zinc-700"
                 >
@@ -153,66 +362,110 @@ const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
                 </button>
               </>
             ) : cameraState === "connecting" ? (
-              <span className="text-xs font-medium tracking-widest text-zinc-400 uppercase">
+              <span className="text-xs font-medium uppercase tracking-widest text-zinc-400">
                 connecting...
               </span>
             ) : (
               <button
+                type="button"
                 onClick={() => connect()}
                 className="group flex flex-col items-center gap-2"
               >
                 <div className="flex h-14 w-14 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800/80 transition-colors group-hover:border-zinc-500 group-hover:bg-zinc-700">
                   <CameraIcon />
                 </div>
-                <span className="text-xs font-medium tracking-widest text-zinc-500 uppercase transition-colors group-hover:text-zinc-300">
+                <span className="text-xs font-medium uppercase tracking-widest text-zinc-500 transition-colors group-hover:text-zinc-300">
                   start camera
                 </span>
               </button>
             )}
           </div>
-        )}
+        ) : null}
 
-        {/* top bar overlay */}
-        {isReady && (showModeControls || showSettings) && (
-          <div className="absolute top-0 left-0 right-0 p-3">
+        {isReady && (showModeControls || showSettings) ? (
+          <div className="absolute left-0 right-0 top-0 z-[5] p-3">
             <div className="flex items-start justify-between gap-2">
-              {/* left: mode + device picker */}
-              <div className="flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
                 {showModeControls ? (
                   <div className="flex rounded-lg border border-white/10 bg-black/40 p-0.5 backdrop-blur-sm">
-                    {(["photo", "rec"] as const).map((m) => (
+                    {(["photo", "rec"] as const).map((nextMode) => (
                       <button
-                        key={m}
-                        onClick={() => setMode(m)}
+                        key={nextMode}
+                        type="button"
+                        onClick={() => setMode(nextMode)}
                         className={`rounded-md px-3 py-1 text-xs font-medium tracking-wide transition-all ${
-                          mode === m
+                          mode === nextMode
                             ? "bg-white/15 text-white"
                             : "text-white/50 hover:text-white/80"
                         }`}
                       >
-                        {m}
+                        {nextMode}
                       </button>
                     ))}
                   </div>
                 ) : null}
 
-                {devices.length > 1 && (
+                {devices.length > 1 ? (
                   <select
                     value={activeDeviceId ?? ""}
-                    onChange={(e) => connect(e.target.value)}
-                    className="rounded-lg border border-white/10 bg-black/40 px-2 py-1 text-xs text-white/70 backdrop-blur-sm outline-none cursor-pointer"
+                    onChange={(event) => connect(event.target.value)}
+                    className="cursor-pointer rounded-lg border border-white/10 bg-black/40 px-2 py-1 text-xs text-white/70 outline-none backdrop-blur-sm"
                   >
-                    {devices.map((d, i) => (
-                      <option key={d.deviceId} value={d.deviceId} className="bg-zinc-900 text-white">
-                        {d.label || `Camera ${i + 1}`}
+                    {devices.map((device, index) => (
+                      <option
+                        key={device.deviceId}
+                        value={device.deviceId}
+                        className="bg-zinc-900 text-white"
+                      >
+                        {device.label || `Camera ${index + 1}`}
                       </option>
                     ))}
                   </select>
-                )}
+                ) : null}
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSettings({
+                      mirrorCamera: !settings.mirrorCamera,
+                    })
+                  }
+                  className={`rounded-lg border px-3 py-1 text-xs font-medium backdrop-blur-sm transition-colors ${
+                    settings.mirrorCamera
+                      ? "border-white/30 bg-white/15 text-white"
+                      : "border-white/10 bg-black/40 text-white/70 hover:bg-white/10"
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <SvgFlip className="size-4 stroke-current" />
+                    flip
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (cropEditorOpen) {
+                      cancelCropEditor()
+                      return
+                    }
+
+                    openCropEditor()
+                  }}
+                  className={`rounded-lg border px-3 py-1 text-xs font-medium backdrop-blur-sm transition-colors ${
+                    cropEditorOpen || settings.cropRect
+                      ? "border-white/30 bg-white/15 text-white"
+                      : "border-white/10 bg-black/40 text-white/70 hover:bg-white/10"
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <SvgCrop className="size-4 stroke-current" />
+                    crop
+                  </span>
+                </button>
               </div>
 
-              {/* settings */}
-              <div className="min-w-0 flex-shrink-0">
+              <div className="min-w-0 shrink-0">
                 {showSettings && settingsOpen ? (
                   <SettingsPanel
                     mode={mode}
@@ -222,6 +475,7 @@ const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
                   />
                 ) : showSettings ? (
                   <button
+                    type="button"
                     onClick={() => setSettingsOpen(true)}
                     className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/40 px-3 py-1.5 backdrop-blur-sm transition-colors hover:bg-white/10"
                   >
@@ -236,21 +490,47 @@ const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
               </div>
             </div>
           </div>
-        )}
+        ) : null}
 
-        {/* rec indicator */}
-        {isCapturing && mode === "rec" && (
-          <div className="absolute top-14 left-1/2 -translate-x-1/2">
+        {isCapturing && mode === "rec" ? (
+          <div className="absolute left-1/2 top-14 z-[5] -translate-x-1/2">
             <div className="flex items-center gap-1.5 rounded-full border border-red-500/30 bg-black/50 px-3 py-1 backdrop-blur-sm">
               <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
               <span className="text-xs font-medium text-red-400">rec</span>
             </div>
           </div>
-        )}
+        ) : null}
 
-        {/* shutter bottom center */}
-        {isReady && showShutter && (
-          <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-4">
+        {isReady && cropEditorOpen ? (
+          <div className="absolute bottom-0 left-0 right-0 z-[5] flex justify-center pb-4">
+            <div className="pointer-events-auto flex items-center gap-2 rounded-xl border border-white/10 bg-black/50 px-3 py-2 backdrop-blur-sm">
+              <button
+                type="button"
+                onClick={cancelCropEditor}
+                className="rounded-md px-2.5 py-1 text-xs text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                cancel
+              </button>
+              <button
+                type="button"
+                onClick={clearCropSelection}
+                className="rounded-md px-2.5 py-1 text-xs text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                clear
+              </button>
+              <button
+                type="button"
+                onClick={applyCropSelection}
+                className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-zinc-950"
+              >
+                done
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {isReady && showShutter && !cropEditorOpen ? (
+          <div className="absolute bottom-0 left-0 right-0 z-[5] flex justify-center pb-4">
             <ShutterButton
               onShutterDown={onShutterDown}
               onShutterUp={onShutterUp}
@@ -258,16 +538,15 @@ const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
               mode={mode}
             />
           </div>
-        )}
+        ) : null}
 
         {isReady && viewportOverlay ? (
-          <div className="pointer-events-none absolute inset-0">
+          <div className="pointer-events-none absolute inset-0 z-[6]">
             {viewportOverlay(ctx)}
           </div>
         ) : null}
       </div>
 
-      {/* frames — render prop */}
       {children?.(frames)}
     </div>
   )
@@ -289,10 +568,11 @@ const SettingsPanel: FunctionComponent<SettingsPanelProps> = ({
   return (
     <div className="w-48 animate-[slideDown_160ms_ease-out] rounded-xl border border-white/10 bg-black/70 p-3 backdrop-blur-md">
       <div className="mb-2.5 flex items-center justify-between">
-        <span className="text-xs font-medium tracking-wide text-white/50 uppercase">
+        <span className="text-xs font-medium uppercase tracking-wide text-white/50">
           settings
         </span>
         <button
+          type="button"
           onClick={onClose}
           className="text-white/40 transition-colors hover:text-white/80"
         >
@@ -307,9 +587,9 @@ const SettingsPanel: FunctionComponent<SettingsPanelProps> = ({
           min={1}
           max={15}
           step={1}
-          onChange={(v) => setSettings({ fps: v })}
+          onChange={(value) => setSettings({ fps: value })}
         />
-        {mode === "rec" && (
+        {mode === "rec" ? (
           <>
             <SettingRow
               label="delay (s)"
@@ -317,7 +597,7 @@ const SettingsPanel: FunctionComponent<SettingsPanelProps> = ({
               min={0}
               max={3}
               step={0.5}
-              onChange={(v) => setSettings({ recDelay: v * 1000 })}
+              onChange={(value) => setSettings({ recDelay: value * 1000 })}
             />
             <SettingRow
               label="duration (s)"
@@ -325,10 +605,10 @@ const SettingsPanel: FunctionComponent<SettingsPanelProps> = ({
               min={1}
               max={10}
               step={0.5}
-              onChange={(v) => setSettings({ recDuration: v * 1000 })}
+              onChange={(value) => setSettings({ recDuration: value * 1000 })}
             />
           </>
-        )}
+        ) : null}
       </div>
     </div>
   )
@@ -340,7 +620,7 @@ interface SettingRowProps {
   min: number
   max: number
   step: number
-  onChange: (v: number) => void
+  onChange: (value: number) => void
 }
 
 const SettingRow: FunctionComponent<SettingRowProps> = ({
@@ -362,7 +642,7 @@ const SettingRow: FunctionComponent<SettingRowProps> = ({
       max={max}
       step={step}
       value={value}
-      onChange={(e) => onChange(Number(e.target.value))}
+      onChange={(event) => onChange(Number(event.target.value))}
       className="h-1 w-full cursor-pointer appearance-none rounded-full bg-white/20 accent-white"
     />
   </div>
@@ -388,17 +668,15 @@ const ShutterButton: FunctionComponent<ShutterButtonProps> = ({
     className="group relative flex h-14 w-14 items-center justify-center"
     aria-label="capture"
   >
-    {/* outer ring */}
     <div
       className={`absolute inset-0 rounded-full border-2 transition-all duration-150 ${
         isCapturing
           ? mode === "rec"
-            ? "border-red-400 scale-110"
-            : "border-white/60 scale-105"
+            ? "scale-110 border-red-400"
+            : "scale-105 border-white/60"
           : "border-white/70 group-active:scale-95"
       }`}
     />
-    {/* inner disc */}
     <div
       className={`h-10 w-10 rounded-full transition-all duration-150 ${
         isCapturing
@@ -411,7 +689,31 @@ const ShutterButton: FunctionComponent<ShutterButtonProps> = ({
   </button>
 )
 
-// icons — inline svg, no deps
+interface CropGuideProps {
+  cropRect: CameraCropRect
+}
+
+const CropGuide: FunctionComponent<CropGuideProps> = ({ cropRect }) => {
+  return (
+    <div className="pointer-events-none absolute inset-0 z-[3]">
+      <div
+        className="absolute rounded-2xl border border-white/70 shadow-[0_0_0_999px_rgba(0,0,0,0.34)]"
+        style={{
+          left: `${cropRect.x * 100}%`,
+          top: `${cropRect.y * 100}%`,
+          width: `${cropRect.width * 100}%`,
+          height: `${cropRect.height * 100}%`,
+        }}
+      >
+        <div className="absolute inset-0 grid grid-cols-3 grid-rows-3">
+          {Array.from({ length: 9 }).map((_, index) => (
+            <div key={index} className="border border-white/10" />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function CameraIcon() {
   return (

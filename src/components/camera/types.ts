@@ -1,8 +1,16 @@
 export type CameraState = "idle" | "connecting" | "ready" | "error"
+export type CameraViewportAspectRatio = "16:9" | "4:3" | "1:1"
 
 export type CaptureMode = "photo" | "rec"
 
 export type CaptureSource = "single" | "burst" | "rec"
+
+export interface CameraCropRect {
+  x: number
+  y: number
+  width: number
+  height: number
+}
 
 export interface CapturedFrame {
   id: string
@@ -17,7 +25,9 @@ export interface CaptureSession {
 }
 
 export interface CaptureSettings {
+  cropRect: CameraCropRect | null
   fps: number
+  mirrorCamera: boolean
   recDelay: number
   recDuration: number
 }
