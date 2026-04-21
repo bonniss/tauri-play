@@ -35,9 +35,9 @@ const HomeHowItWorks: FunctionComponent = () => {
 
   return (
     <section className="mx-auto w-full max-w-6xl px-6 md:px-10">
-      <h3 className="mb-8 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+      {/* <h3 className="mb-8 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
         {t("home.howItWorks.title")}
-      </h3>
+      </h3> */}
       <div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
         {STEPS.map((step, index) => {
           const Icon = step.icon

@@ -3,6 +3,7 @@ import { useHeadroom, useWindowScroll } from '@mantine/hooks';
 import { Link } from '@tanstack/react-router';
 import clsx from 'clsx';
 import { FunctionComponent } from 'react';
+import SvgLogo from '../shared/logo/Logo';
 import { useAppProvider } from './AppProvider';
 import AppSettings from './AppSettings';
 
@@ -39,10 +40,8 @@ const AppHeader: FunctionComponent<AppHeaderProps> = () => {
             {t('header.projects')}
           </Button>
           <Link to="/" title={t('header.home')}>
-            <img
-              alt="Logo"
-              className={clsx('transition-all', isTop ? 'size-14' : 'size-10')}
-              src="/logo.svg"
+            <SvgLogo
+              className={clsx('transition-all', isTop ? 'size-16' : 'size-10')}
             />
           </Link>
           <AppSettings />

@@ -1,0 +1,75 @@
+.logo {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.shadow {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: shadowPulse 5.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.plant {
+  transform-box: fill-box;
+  transform-origin: 50% 95%;
+  animation: windSway 5.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.leafRight {
+  transform-box: fill-box;
+  transform-origin: 10% 100%;
+  animation: leafRight 5.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.leafLeft {
+  transform-box: fill-box;
+  transform-origin: 90% 100%;
+  animation: leafLeft 5.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+@keyframes windSway {
+  0%   { transform: rotate(0deg)   translateY(0px); }
+  18%  { transform: rotate(2.2deg) translateY(-1.5px); }
+  32%  { transform: rotate(0.8deg) translateY(-0.8px); }
+  50%  { transform: rotate(2.8deg) translateY(-2px); }
+  66%  { transform: rotate(1.2deg) translateY(-1px); }
+  80%  { transform: rotate(0.4deg) translateY(-0.4px); }
+  100% { transform: rotate(0deg)   translateY(0px); }
+}
+
+@keyframes leafRight {
+  0%   { transform: rotate(0deg); }
+  18%  { transform: rotate(2deg); }
+  32%  { transform: rotate(0.6deg); }
+  50%  { transform: rotate(3.2deg); }
+  66%  { transform: rotate(1.4deg); }
+  80%  { transform: rotate(0.3deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes leafLeft {
+  0%   { transform: rotate(0deg); }
+  18%  { transform: rotate(-0.8deg); }
+  32%  { transform: rotate(-0.2deg); }
+  50%  { transform: rotate(-1.2deg); }
+  66%  { transform: rotate(-0.5deg); }
+  80%  { transform: rotate(-0.1deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes shadowPulse {
+  0%,
+  100% { transform: scaleX(1)    scaleY(1);    opacity: 0.95; }
+  50%  { transform: scaleX(0.91) scaleY(0.88); opacity: 0.75; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shadow,
+  .plant,
+  .leafLeft,
+  .leafRight {
+    animation: none;
+  }
+}

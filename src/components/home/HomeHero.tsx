@@ -1,8 +1,58 @@
 import { Button } from '@mantine/core';
 import { IconArrowRight } from '@tabler/icons-react';
 import { Link } from '@tanstack/react-router';
-import { FunctionComponent } from 'react';
+import { FunctionComponent, useEffect, useState } from 'react';
 import { useAppProvider } from '../layout/AppProvider';
+
+const COUNTER_CONFIG = {
+  duration: 1600,    // ms to reach final value
+  stagger: 140,      // ms delay between each card
+  decimals: 1,       // decimal places to show
+} as const;
+
+function useCountUp(target: number, duration: number, delay: number) {
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    let raf: number;
+    let startTime: number | null = null;
+
+    const timer = setTimeout(() => {
+      const step = (ts: number) => {
+        if (!startTime) startTime = ts;
+        const progress = Math.min((ts - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        setCurrent(eased * target);
+        if (progress < 1) raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    }, delay);
+
+    return () => {
+      clearTimeout(timer);
+      cancelAnimationFrame(raf);
+    };
+  }, [target, duration, delay]);
+
+  return current;
+}
+
+function AnimatedConfidence({ value, delay }: { value: string; delay: number }) {
+  const numeric = parseFloat(value);
+  const animated = useCountUp(numeric, COUNTER_CONFIG.duration, delay);
+
+  return <>{animated.toFixed(COUNTER_CONFIG.decimals)}%</>;
+}
+
+function renderWithBreaks(text: string) {
+  const parts = text.split(/<br\s*\/?>/i);
+  return parts.map((part, i) => (
+    <span key={i}>
+      {part}
+      {i < parts.length - 1 && <br />}
+    </span>
+  ));
+}
 
 const heroAnimals = [
   {
@@ -130,10 +180,10 @@ const HomeHero: FunctionComponent = () => {
         <div className="space-y-5 lg:max-w-3xl">
           <div className="space-y-4">
             <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-zinc-950 md:text-5xl dark:text-zinc-50">
-              {t('home.hero.title')}
+              {renderWithBreaks(t('home.hero.title'))}
             </h1>
             <p className="max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300">
-              {t('home.hero.description')}
+              {renderWithBreaks(t('home.hero.description'))}
             </p>
           </div>
 
@@ -159,7 +209,7 @@ const HomeHero: FunctionComponent = () => {
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(34,197,94,0.12),transparent_55%)] dark:bg-[radial-gradient(circle_at_center,rgba(34,197,94,0.18),transparent_55%)]" />
               </div>
             </div>
-            {heroAnimals.map((animal) => (
+            {heroAnimals.map((animal, index) => (
               <div
                 className={`home-hero-drift home-hero-float absolute ${animal.position} ${animal.size}`}
                 key={animal.label}
@@ -192,7 +242,10 @@ const HomeHero: FunctionComponent = () => {
                           : '-bottom-3 right-3'
                     }`}
                   >
-                    {animal.confidence}
+                    <AnimatedConfidence
+                    value={animal.confidence}
+                    delay={index * COUNTER_CONFIG.stagger}
+                  />
                   </div>
                 </div>
               </div>
