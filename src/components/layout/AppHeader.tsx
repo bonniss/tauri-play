@@ -41,6 +41,7 @@ const AppHeader: FunctionComponent<AppHeaderProps> = () => {
           </Button>
           <Link to="/" title={t('header.home')}>
             <SvgLogo
+              animated
               className={clsx('transition-all', isTop ? 'size-16' : 'size-10')}
             />
           </Link>

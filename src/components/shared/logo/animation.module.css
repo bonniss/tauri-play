@@ -1,31 +1,33 @@
 .logo {
   display: block;
-  width: 100%;
-  height: auto;
   overflow: visible;
 }
 
 .shadow {
   transform-box: fill-box;
   transform-origin: center;
+  will-change: transform, opacity;
   animation: shadowPulse 5.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
 .plant {
   transform-box: fill-box;
   transform-origin: 50% 95%;
+  will-change: transform;
   animation: windSway 5.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
 .leafRight {
   transform-box: fill-box;
   transform-origin: 10% 100%;
+  will-change: transform;
   animation: leafRight 5.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
 .leafLeft {
   transform-box: fill-box;
   transform-origin: 90% 100%;
+  will-change: transform;
   animation: leafLeft 5.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
