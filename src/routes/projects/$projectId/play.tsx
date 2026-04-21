@@ -169,6 +169,7 @@ function ProjectPlayPage() {
             await navigate({
               to: "/p/$projectId",
               params: { projectId },
+              search: { mode: undefined },
             })
           }}
           renderRoot={({ children, onSubmit }) => (

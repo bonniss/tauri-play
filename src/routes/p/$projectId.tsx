@@ -32,7 +32,10 @@ import {
 import CameraUI from '~/components/camera/CameraUI';
 import { useAppProvider } from '~/components/layout/AppProvider';
 import PlayRuntimeSettings from '~/components/project/play/PlayRuntimeSettings';
-import { ProjectPlayProvider } from '~/components/project/play/ProjectPlayProvider';
+import {
+  ProjectPlayProvider,
+  useProjectPlay,
+} from '~/components/project/play/ProjectPlayProvider';
 import {
   ProjectPlayRuntimeProvider,
   useProjectPlayRuntime,
@@ -49,17 +52,27 @@ import {
   revokeSamplePreviewUrl,
 } from '~/lib/project/sample-preview';
 import { resolveSampleFilePath } from '~/lib/project/sample-path';
+import type { ProjectPlayLaunchMode } from '~/lib/project/play-mode';
 
 export const Route = createFileRoute('/p/$projectId')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    mode:
+      search.mode === 'auto' ||
+      search.mode === 'upload' ||
+      search.mode === 'camera'
+        ? (search.mode as ProjectPlayLaunchMode)
+        : undefined,
+  }),
   component: ProjectPlayerRoute,
 });
 
 function ProjectPlayerRoute() {
   const { projectId } = Route.useParams();
+  const search = Route.useSearch();
 
   return (
     <ProjectOneProvider defaultValue={{ projectId }}>
-      <ProjectPlayProvider>
+      <ProjectPlayProvider defaultValue={{ requestedMode: search.mode }}>
         <ProjectPlayRuntimeProvider>
           <ProjectPlayerPage />
         </ProjectPlayRuntimeProvider>
@@ -122,8 +135,8 @@ function pickSeededSamples<T extends { id: string }>(
 
 function ProjectPlayerPage() {
   const { t } = useAppProvider();
-  const { isLoading, playSettings, projectIcon, projectId, projectName } =
-    useProjectOne();
+  const { isLoading, projectIcon, projectId, projectName } = useProjectOne();
+  const { playSettings } = useProjectPlay();
 
   if (isLoading) {
     return (
@@ -167,7 +180,7 @@ function ProjectPlayerPage() {
 
 const UploadPlayExperience: FunctionComponent = () => {
   const { t } = useAppProvider();
-  const { playSettings } = useProjectOne();
+  const { playSettings } = useProjectPlay();
   const {
     clearPrediction,
     isAnalyzing,
@@ -294,7 +307,8 @@ const UploadPlayExperience: FunctionComponent = () => {
 
 const CameraPlayExperience: FunctionComponent = () => {
   const { t } = useAppProvider();
-  const { classes, playSettings } = useProjectOne();
+  const { classes } = useProjectOne();
+  const { playSettings } = useProjectPlay();
   const {
     meetsThreshold,
     prediction,
@@ -529,7 +543,8 @@ const PlayExperienceShell: FunctionComponent<{
 
 const PredictionPanel: FunctionComponent = () => {
   const { t } = useAppProvider();
-  const { classes, playSettings } = useProjectOne();
+  const { classes } = useProjectOne();
+  const { playSettings } = useProjectPlay();
   const {
     isAnalyzing,
     meetsThreshold,
@@ -662,7 +677,9 @@ const ClassPreviewItem: FunctionComponent<{
         {previewUrls.length ? (
           previewUrls.map((url, index) => (
             <img
-              alt={`${name} sample ${index + 1}`}
+              alt={t('project.play.demo.sampleAlt', {
+                params: { index: index + 1, name },
+              })}
               className="size-[60px] rounded-xl object-cover"
               key={url}
               src={url}

@@ -113,9 +113,10 @@ const ProjectCard: FunctionComponent<ProjectCardProps> = ({
                 disabled={!canPlay}
                 leftSection={<IconDataPlay className="size-4" />}
                 params={{ projectId: project.id } as never}
-                to="/projects/$projectId/play"
+                search={{ mode: 'auto' } as never}
+                to="/p/$projectId"
               >
-                {t('project.card.play')}
+                {t('project.play.demoTitle')}
               </Menu.Item>
               <Menu.Divider />
               <Menu.Item

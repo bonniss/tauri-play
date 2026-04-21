@@ -20,6 +20,7 @@ const ProjectPlayButton: FunctionComponent<ProjectPlayButtonProps> = ({
       component={Link}
       leftSection={leftSection ?? <IconDataPlay className="size-4" />}
       params={{ projectId } as never}
+      search={{ mode: 'auto' } as never}
       to="/p/$projectId"
       variant={variant ?? 'light'}
       {...props}

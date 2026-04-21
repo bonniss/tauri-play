@@ -41,7 +41,7 @@ export type ProjectWorkspace = {
 type ProjectListRow = {
   classCount: number | string
   description: string | null
-  hasModel: number
+  hasModel: number | string
   id: string
   name: string
   sampleCount: number | string
@@ -73,7 +73,7 @@ function mapProjectRow(row: ProjectListRow): ProjectListItem {
     taskType: row.task_type,
     classCount: Number(row.classCount),
     sampleCount: Number(row.sampleCount),
-    hasModel: row.hasModel > 0,
+    hasModel: Number(row.hasModel) > 0,
     trainedAt: row.trained_at,
     updatedAt: row.updated_at,
   }
@@ -118,7 +118,7 @@ export async function listProjects({
       "p.updated_at",
       fn.count<string>(ref("c.id")).distinct().as("classCount"),
       fn.count<string>(ref("s.id")).distinct().as("sampleCount"),
-      fn.max<number>(ref("m.id")).as("hasModel"),
+      fn.count<string>(ref("m.id")).distinct().as("hasModel"),
     ])
     .groupBy([
       "p.id",

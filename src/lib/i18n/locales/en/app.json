@@ -272,7 +272,15 @@
         "analyzing": "Analyzing...",
         "notConfident": "Not confident enough",
         "confidence": "Confidence {{percent}}% · {{ms}} ms",
-        "confidenceDisabled": "Confidence display is disabled for this demo mode."
+        "confidenceDisabled": "Confidence display is disabled for this demo mode.",
+        "classFallback": "Class {{index}}",
+        "sampleAlt": "{{name}} sample {{index}}"
+      },
+      "errors": {
+        "noTrainedModel": "No trained model found for this project.",
+        "predictionFailed": "Prediction failed.",
+        "readCurrentFrame": "Could not read the current camera frame.",
+        "encodeCurrentFrame": "Could not encode the current camera frame."
       }
     },
     "train": {

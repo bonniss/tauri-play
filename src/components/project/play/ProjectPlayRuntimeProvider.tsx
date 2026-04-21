@@ -3,6 +3,8 @@ import type * as tf from "@tensorflow/tfjs"
 import { useQuery } from "@tanstack/react-query"
 import { createProvider } from "react-easy-provider"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { useAppProvider } from "~/components/layout/AppProvider"
+import { useProjectPlay } from "~/components/project/play/ProjectPlayProvider"
 import { useProjectOne } from "~/components/project/ProjectOneProvider"
 import { getProjectModel } from "~/lib/db/domain/models"
 import { initTf } from "~/lib/ml/backend"
@@ -17,14 +19,22 @@ type PredictionResult = {
   predictTimeMs: number
 }
 
-function captureVideoFrameFile(video: HTMLVideoElement) {
+function captureVideoFrameFile({
+  encodeErrorMessage,
+  readErrorMessage,
+  video,
+}: {
+  encodeErrorMessage: string
+  readErrorMessage: string
+  video: HTMLVideoElement
+}) {
   const canvas = document.createElement("canvas")
   canvas.width = video.videoWidth
   canvas.height = video.videoHeight
   const context = canvas.getContext("2d")
 
   if (!context) {
-    throw new Error("Could not read the current camera frame.")
+    throw new Error(readErrorMessage)
   }
 
   context.drawImage(video, 0, 0, canvas.width, canvas.height)
@@ -33,7 +43,7 @@ function captureVideoFrameFile(video: HTMLVideoElement) {
     canvas.toBlob(
       (blob) => {
         if (!blob) {
-          reject(new Error("Could not encode the current camera frame."))
+          reject(new Error(encodeErrorMessage))
           return
         }
 
@@ -51,7 +61,9 @@ function captureVideoFrameFile(video: HTMLVideoElement) {
 
 export const [useProjectPlayRuntime, ProjectPlayRuntimeProvider] =
   createProvider(() => {
-    const { classes, playSettings, projectId } = useProjectOne()
+    const { t } = useAppProvider()
+    const { classes, projectId } = useProjectOne()
+    const { playSettings } = useProjectPlay()
     const projectModelQuery = useQuery({
       queryKey: ["project-model", projectId],
       queryFn: () => getProjectModel(projectId),
@@ -80,7 +92,7 @@ export const [useProjectPlayRuntime, ProjectPlayRuntimeProvider] =
 
     async function ensureModelsReady() {
       if (!projectModelQuery.data?.artifactPath) {
-        throw new Error("No trained model found for this project.")
+        throw new Error(t("project.play.errors.noTrainedModel"))
       }
 
       if (!embeddingModelRef.current) {
@@ -140,7 +152,9 @@ export const [useProjectPlayRuntime, ProjectPlayRuntimeProvider] =
       } catch (error) {
         setPrediction(null)
         setRuntimeError(
-          error instanceof Error ? error.message : "Prediction failed.",
+          error instanceof Error
+            ? error.message
+            : t("project.play.errors.predictionFailed"),
         )
       } finally {
         setIsAnalyzing(false)
@@ -162,7 +176,11 @@ export const [useProjectPlayRuntime, ProjectPlayRuntimeProvider] =
       setRuntimeError(null)
 
       try {
-        const frameFile = await captureVideoFrameFile(video)
+        const frameFile = await captureVideoFrameFile({
+          encodeErrorMessage: t("project.play.errors.encodeCurrentFrame"),
+          readErrorMessage: t("project.play.errors.readCurrentFrame"),
+          video,
+        })
         const result = await predictFile(frameFile)
         const stableCommitCount = options?.stableCommitCount ?? 2
 
@@ -180,7 +198,9 @@ export const [useProjectPlayRuntime, ProjectPlayRuntimeProvider] =
         }
       } catch (error) {
         setRuntimeError(
-          error instanceof Error ? error.message : "Prediction failed.",
+          error instanceof Error
+            ? error.message
+            : t("project.play.errors.predictionFailed"),
         )
       } finally {
         cameraInFlightRef.current = false
@@ -198,7 +218,9 @@ export const [useProjectPlayRuntime, ProjectPlayRuntimeProvider] =
           className:
             modelClassNamesRef.current[index] ??
             classes[index]?.name ??
-            `Class ${index + 1}`,
+            t("project.play.demo.classFallback", {
+              params: { index: index + 1 },
+            }),
           confidence,
           index,
         }))

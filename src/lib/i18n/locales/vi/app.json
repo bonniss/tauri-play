@@ -272,7 +272,15 @@
         "analyzing": "Đang phân tích...",
         "notConfident": "Không đủ độ tin cậy",
         "confidence": "Độ tin cậy {{percent}}% · {{ms}} ms",
-        "confidenceDisabled": "Tắt hiển thị độ tin cậy ở chế độ này."
+        "confidenceDisabled": "Tắt hiển thị độ tin cậy ở chế độ này.",
+        "classFallback": "Class {{index}}",
+        "sampleAlt": "Mẫu {{index}} của {{name}}"
+      },
+      "errors": {
+        "noTrainedModel": "Chưa có model đã huấn luyện cho dự án này.",
+        "predictionFailed": "Dự đoán thất bại.",
+        "readCurrentFrame": "Không thể đọc khung hình camera hiện tại.",
+        "encodeCurrentFrame": "Không thể mã hóa khung hình camera hiện tại."
       }
     },
     "train": {
