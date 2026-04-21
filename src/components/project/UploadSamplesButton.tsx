@@ -6,6 +6,7 @@ import { activateProject, updateProject } from "~/lib/db/domain/projects"
 import { createSample } from "~/lib/db/domain/samples"
 import { genSampleId } from "~/lib/project/id-generator"
 import { saveUploadedSampleFile } from "~/lib/project/sample-storage"
+import { useAppProvider } from "~/components/layout/AppProvider"
 import ProjectActionButton from "./ProjectActionButton"
 import { useProjectOne } from "./ProjectOneProvider"
 
@@ -44,6 +45,7 @@ const UploadSamplesButton: FunctionComponent<UploadSamplesButtonProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const queryClient = useQueryClient()
+  const { appSettings } = useAppProvider()
   const {
     projectId,
     projectStatus,
@@ -85,9 +87,10 @@ const UploadSamplesButton: FunctionComponent<UploadSamplesButtonProps> = ({
         await Promise.all(
           selectedFiles.map(async (file) => {
             const sampleId = genSampleId()
-            const { filePath, metadata } = await saveUploadedSampleFile({
+            const { fileName, metadata } = await saveUploadedSampleFile({
               classId: seededClass.id,
               file,
+              pattern: appSettings.samplePathPattern,
               projectId,
               sampleId,
             })
@@ -95,7 +98,7 @@ const UploadSamplesButton: FunctionComponent<UploadSamplesButtonProps> = ({
             return {
               id: sampleId,
               classId: seededClass.id,
-              filePath,
+              fileName,
               mimeType: metadata.mimeType,
               width: metadata.width,
               height: metadata.height,
@@ -127,7 +130,7 @@ const UploadSamplesButton: FunctionComponent<UploadSamplesButtonProps> = ({
               id: sample.id,
               projectId,
               classId: sample.classId,
-              filePath: sample.filePath,
+              fileName: sample.fileName,
               mimeType: sample.mimeType,
               width: sample.width,
               height: sample.height,

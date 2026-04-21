@@ -31,6 +31,7 @@ import {
   createSamplePreviewUrl,
   revokeSamplePreviewUrl,
 } from '~/lib/project/sample-preview';
+import { resolveSampleFilePath } from '~/lib/project/sample-path';
 
 interface SampleGridProps {
   actions?: ReactNode;
@@ -64,7 +65,7 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
   onDeleteSamples,
   samples,
 }) => {
-  const { t } = useAppProvider();
+  const { appSettings, t } = useAppProvider();
   const isActiveControlled = activeSampleId !== undefined;
   const [internalActiveSampleId, setInternalActiveSampleId] = useState<
     string | null
@@ -157,7 +158,7 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
     void Promise.all(
       visibleSamples.map(
         async (sample) =>
-          [sample.id, await createSamplePreviewUrl(sample.filePath)] as const,
+          [sample.id, await createSamplePreviewUrl(resolveSampleFilePath(appSettings.samplePathPattern, sample.projectId, sample.classId, sample.fileName))] as const,
       ),
     )
       .then((entries) => {
@@ -781,7 +782,7 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
                   <MetadataRow
                     label="Path"
                     value={
-                      lightboxSample.originalFilePath ?? lightboxSample.filePath
+                      lightboxSample.originalFilePath ?? lightboxSample.fileName
                     }
                   />
                   <MetadataRow

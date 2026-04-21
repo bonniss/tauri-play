@@ -53,6 +53,7 @@ import {
   stringifyProjectSettings,
 } from '~/lib/project/settings';
 import { useAppProvider } from '../layout/AppProvider';
+import { resolveSampleFilePath } from '~/lib/project/sample-path';
 
 const PAGE_SIZE = 12;
 
@@ -119,7 +120,7 @@ interface ProjectDirectoryProps {
 }
 
 function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
-  const { t } = useAppProvider();
+  const { appSettings, t } = useAppProvider();
 
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -579,7 +580,7 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
                   sampleFilePaths={
                     projectPreviewSampleMap
                       .get(project.id)
-                      ?.map((item) => item.filePath) ?? []
+                      ?.map((item) => resolveSampleFilePath(appSettings.samplePathPattern, item.projectId, item.classId, item.fileName)) ?? []
                   }
                 />
               );

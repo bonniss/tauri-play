@@ -5,14 +5,15 @@ export type SampleSource = "camera" | "upload"
 export type ProjectSamplePreview = {
   id: string
   projectId: string
-  filePath: string
+  classId: string
+  fileName: string
 }
 
 export type ProjectSample = {
   id: string
   projectId: string
   classId: string
-  filePath: string
+  fileName: string
   mimeType: string | null
   width: number | null
   height: number | null
@@ -53,7 +54,7 @@ function mapProjectSample(row: ProjectSampleRow): ProjectSample {
     id: row.id,
     projectId: row.project_id,
     classId: row.class_id,
-    filePath: row.file_path,
+    fileName: row.file_path,
     mimeType: row.mime_type,
     width: row.width != null ? Number(row.width) : null,
     height: row.height != null ? Number(row.height) : null,
@@ -111,7 +112,7 @@ export async function listProjectSamplePreviews(projectIds: string[]) {
   const db = getKysely()
   const rows = await db
     .selectFrom("samples")
-    .select(["id", "project_id", "file_path"])
+    .select(["id", "project_id", "class_id", "file_path"])
     .where("project_id", "in", projectIds)
     .orderBy("order", "asc")
     .orderBy("created_at", "asc")
@@ -133,7 +134,8 @@ export async function listProjectSamplePreviews(projectIds: string[]) {
     list.push({
       id: row.id,
       projectId: row.project_id,
-      filePath: row.file_path,
+      classId: row.class_id,
+      fileName: row.file_path,
     })
     previewMap.set(row.project_id, list)
   })
@@ -177,7 +179,7 @@ export async function createSample({
   id,
   projectId,
   classId,
-  filePath,
+  fileName,
   mimeType,
   width,
   height,
@@ -193,7 +195,7 @@ export async function createSample({
   id?: string
   projectId: string
   classId: string
-  filePath: string
+  fileName: string
   mimeType?: string | null
   width?: number | null
   height?: number | null
@@ -220,7 +222,7 @@ export async function createSample({
     id: id ?? crypto.randomUUID(),
     project_id: projectId,
     class_id: classId,
-    file_path: filePath,
+    file_path: fileName,
     mime_type: mimeType ?? null,
     width: width ?? null,
     height: height ?? null,

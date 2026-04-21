@@ -41,13 +41,7 @@ import {
   stringifyProjectSettings,
 } from '~/lib/project/settings';
 
-function getSampleIdFromFilePath(filePath: string) {
-  const fileName = filePath.split('/').pop();
-
-  if (!fileName) {
-    return null;
-  }
-
+function getSampleIdFromFileName(fileName: string) {
   const extensionIndex = fileName.lastIndexOf('.');
 
   if (extensionIndex <= 0) {
@@ -67,7 +61,7 @@ export type ProjectOneClass = Pick<
 type ProjectOneSampleDraft = Pick<
   ProjectSample,
   | 'classId'
-  | 'filePath'
+  | 'fileName'
   | 'mimeType'
   | 'width'
   | 'height'
@@ -342,11 +336,11 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
           optimisticSamples = nextSamples.map((sample, index) => ({
             id:
               sample.id ??
-              getSampleIdFromFilePath(sample.filePath) ??
+              getSampleIdFromFileName(sample.fileName) ??
               genSampleId(),
             projectId,
             classId,
-            filePath: sample.filePath,
+            fileName: sample.fileName,
             mimeType: sample.mimeType ?? null,
             width: sample.width ?? null,
             height: sample.height ?? null,

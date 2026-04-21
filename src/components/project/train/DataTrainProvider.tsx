@@ -19,6 +19,7 @@ import {
 import { t } from '~/lib/i18n';
 import { MOBILENET_ALPHA, MOBILENET_VERSION } from '~/lib/ml/mobilenet/model';
 import { trainProjectMobilenetModel } from '~/lib/ml/mobilenet/project-train';
+import { resolveSampleFilePath } from '~/lib/project/sample-path';
 
 type ActiveTrainSession = {
   datasetSnapshot: ModelTrainLogDatasetSnapshot;
@@ -255,11 +256,11 @@ function createPendingDatasetSnapshot(
 }
 
 function createDeterministicSampleOrder(sample: {
-  filePath: string;
+  fileName: string;
   id: string;
   originalFileName: string | null;
 }) {
-  return `${sample.id}:${sample.filePath}:${sample.originalFileName ?? ''}`;
+  return `${sample.id}:${sample.fileName}:${sample.originalFileName ?? ''}`;
 }
 
 function createPreviewSplitSnapshot({
@@ -572,7 +573,7 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
     trainSettings,
   } = useProjectOne();
   const queryClient = useQueryClient();
-  const { t, locale } = useAppProvider();
+  const { appSettings, t, locale } = useAppProvider();
   const [activeSession, setActiveSession] = useState<ActiveTrainSession | null>(
     null,
   );
@@ -631,7 +632,7 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
           id: item.id,
           name: item.name,
           samples: item.samples.map((sample) => ({
-            filePath: sample.filePath,
+            filePath: resolveSampleFilePath(appSettings.samplePathPattern, sample.projectId, sample.classId, sample.fileName),
             id: sample.id,
             originalFileName: sample.originalFileName,
           })),

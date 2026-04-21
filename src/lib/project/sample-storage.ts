@@ -1,6 +1,7 @@
 import { BaseDirectory, exists, mkdir, remove, writeFile } from "@tauri-apps/plugin-fs"
 import { CapturedFrame } from "~/components/camera/types"
 import { genSampleId } from "./id-generator"
+import { resolveSampleFilePath } from "./sample-path"
 
 function inferExtension(file: File) {
   const byName = file.name.split(".").pop()?.trim().toLowerCase()
@@ -103,6 +104,7 @@ async function saveSampleBlob({
   originalFileName = null,
   originalFilePath = null,
   lastModifiedAt = null,
+  pattern,
   projectId,
   sampleId,
 }: {
@@ -112,6 +114,7 @@ async function saveSampleBlob({
   originalFileName?: string | null
   originalFilePath?: string | null
   lastModifiedAt?: string | null
+  pattern: string
   projectId: string
   sampleId: string
 }) {
@@ -122,9 +125,9 @@ async function saveSampleBlob({
         type: mimeType ?? "",
       } as File)
     : inferExtensionFromMimeType(mimeType)
-  const directoryPath = `projects/${projectId}/samples/${classId}`
   const fileName = `${sampleId}.${extension}`
-  const filePath = `${directoryPath}/${fileName}`
+  const filePath = resolveSampleFilePath(pattern, projectId, classId, fileName)
+  const directoryPath = filePath.substring(0, filePath.lastIndexOf('/'))
   const bytes = new Uint8Array(await blob.arrayBuffer())
   const contentHash = await hashBytes(bytes)
   const dimensions = await readBlobImageDimensions(blob)
@@ -140,7 +143,6 @@ async function saveSampleBlob({
 
   return {
     fileName,
-    filePath,
     metadata: {
       mimeType,
       width: dimensions.width,
@@ -158,11 +160,13 @@ async function saveSampleBlob({
 export async function saveUploadedSampleFile({
   classId,
   file,
+  pattern,
   projectId,
   sampleId,
 }: {
   classId: string
   file: File
+  pattern: string
   projectId: string
   sampleId: string
 }) {
@@ -177,6 +181,7 @@ export async function saveUploadedSampleFile({
       "webkitRelativePath" in file && file.webkitRelativePath
         ? file.webkitRelativePath
         : null,
+    pattern,
     projectId,
     sampleId,
   })
@@ -185,19 +190,22 @@ export async function saveUploadedSampleFile({
 export async function saveCapturedSampleFrames({
   classId,
   frames,
+  pattern,
   projectId,
 }: {
   classId: string
   frames: CapturedFrame[]
+  pattern: string
   projectId: string
 }) {
   return Promise.all(
     frames.map(async (frame) => {
       const sampleId = genSampleId()
-      const { filePath, metadata } = await saveSampleBlob({
+      const { fileName, metadata } = await saveSampleBlob({
         blob: dataUrlToBlob(frame.dataUrl),
         classId,
         lastModifiedAt: new Date(frame.capturedAt).toISOString(),
+        pattern,
         projectId,
         sampleId,
       })
@@ -207,7 +215,7 @@ export async function saveCapturedSampleFrames({
         classId,
         createdAt: new Date(frame.capturedAt).toISOString(),
         extraMetadata: metadata.extraMetadata,
-        filePath,
+        fileName,
         fileSize: metadata.fileSize,
         height: metadata.height,
         lastModifiedAt: metadata.lastModifiedAt,

@@ -20,7 +20,7 @@ export interface ExportManifest {
   samples: Array<{
     id: string;
     classId: string;
-    filePath: string;
+    fileName: string;
     mimeType: string | null;
     source: string;
     order: number;
@@ -49,7 +49,7 @@ export async function exportProject(projectId: string): Promise<string> {
     samples: workspace.samples.map((s) => ({
       id: s.id,
       classId: s.classId,
-      filePath: s.filePath,
+      fileName: s.fileName,
       mimeType: s.mimeType,
       source: s.source,
       order: s.order,

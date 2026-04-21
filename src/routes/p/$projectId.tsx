@@ -48,6 +48,7 @@ import {
   createSamplePreviewUrl,
   revokeSamplePreviewUrl,
 } from '~/lib/project/sample-preview';
+import { resolveSampleFilePath } from '~/lib/project/sample-path';
 
 export const Route = createFileRoute('/p/$projectId')({
   component: ProjectPlayerRoute,
@@ -610,11 +611,13 @@ const ClassPreviewItem: FunctionComponent<{
   classId: string;
   name: string;
   samples: Array<{
-    filePath: string;
+    classId: string;
+    fileName: string;
     id: string;
+    projectId: string;
   }>;
 }> = ({ classId, name, samples }) => {
-  const { t } = useAppProvider();
+  const { appSettings, t } = useAppProvider();
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const previewSamples = useMemo(
     () => pickSeededSamples(samples, classId, 4),
@@ -631,7 +634,7 @@ const ClassPreviewItem: FunctionComponent<{
     }
 
     void Promise.all(
-      previewSamples.map((sample) => createSamplePreviewUrl(sample.filePath)),
+      previewSamples.map((sample) => createSamplePreviewUrl(resolveSampleFilePath(appSettings.samplePathPattern, sample.projectId, sample.classId, sample.fileName))),
     ).then((urls) => {
       if (cancelled) {
         urls.forEach((url) => revokeSamplePreviewUrl(url));

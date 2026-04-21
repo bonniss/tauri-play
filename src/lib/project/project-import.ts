@@ -63,14 +63,14 @@ export async function importProject(file: File): Promise<string> {
   for (const sample of manifest.samples) {
     const newClassId = classIdMap.get(sample.classId)!;
     const newSampleId = sampleIdMap.get(sample.id)!;
-    const ext = sample.filePath.split('/').pop()?.split('.').pop() ?? 'jpg';
-    const newFilePath = `projects/${newProjectId}/samples/${newClassId}/${newSampleId}.${ext}`;
+    const ext = sample.fileName.split('.').pop() ?? 'jpg';
+    const newFileName = `${newSampleId}.${ext}`;
 
     await createSample({
       id: newSampleId,
       projectId: newProjectId,
       classId: newClassId,
-      filePath: newFilePath,
+      fileName: newFileName,
       mimeType: sample.mimeType,
       source: sample.source as 'camera' | 'upload',
       order: sample.order,
