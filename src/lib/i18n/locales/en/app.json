@@ -194,7 +194,9 @@
         "deleteConfirm": "Delete this sample?",
         "confirm": "Confirm",
         "shuffle": "Shuffle",
-        "sortById": "Sort by date"
+        "shuffleTooltip": "Shuffle — randomize sample order",
+        "sortById": "Sort by date",
+        "sortByIdTooltip": "Sort by date — restore original capture order"
       },
       "addImages": {
         "title": "Add images for each class you want to recognize",

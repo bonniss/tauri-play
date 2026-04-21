@@ -194,7 +194,9 @@
         "deleteConfirm": "Xóa sample này?",
         "confirm": "Xác nhận",
         "shuffle": "Xáo trộn",
-        "sortById": "Sắp xếp theo ngày"
+        "shuffleTooltip": "Xáo trộn — đảo ngẫu nhiên thứ tự ảnh",
+        "sortById": "Sắp xếp theo ngày",
+        "sortByIdTooltip": "Sắp xếp theo ngày — khôi phục thứ tự chụp ban đầu"
       },
       "addImages": {
         "title": "Thêm ảnh cho từng class cần nhận diện",

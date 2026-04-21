@@ -7,6 +7,7 @@ import {
   Popover,
   Skeleton,
   Text,
+  Tooltip,
 } from '@mantine/core';
 import {
   IconArrowsShuffle,
@@ -767,22 +768,32 @@ function ProjectLabelPage() {
                       actions={
                         item.samples.length > 1 ? (
                           <>
-                            <ActionIcon
-                              size="xs"
-                              title={t('project.label.sampleGrid.shuffle')}
-                              variant="subtle"
-                              onClick={() => shuffleSamples(item.id)}
+                            <Tooltip
+                              label={t('project.label.sampleGrid.shuffleTooltip')}
+                              position="top"
+                              withArrow
                             >
-                              <IconArrowsShuffle size={14} stroke={1.8} />
-                            </ActionIcon>
-                            <ActionIcon
-                              size="xs"
-                              title={t('project.label.sampleGrid.sortById')}
-                              variant="subtle"
-                              onClick={() => sortSamplesById(item.id)}
+                              <ActionIcon
+                                size="xs"
+                                variant="subtle"
+                                onClick={() => shuffleSamples(item.id)}
+                              >
+                                <IconArrowsShuffle size={14} stroke={1.8} />
+                              </ActionIcon>
+                            </Tooltip>
+                            <Tooltip
+                              label={t('project.label.sampleGrid.sortByIdTooltip')}
+                              position="top"
+                              withArrow
                             >
-                              <IconSortAscending size={14} stroke={1.8} />
-                            </ActionIcon>
+                              <ActionIcon
+                                size="xs"
+                                variant="subtle"
+                                onClick={() => sortSamplesById(item.id)}
+                              >
+                                <IconSortAscending size={14} stroke={1.8} />
+                              </ActionIcon>
+                            </Tooltip>
                           </>
                         ) : undefined
                       }
