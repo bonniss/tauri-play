@@ -38,6 +38,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
     trainStatus,
     updateClassName,
     canPlay,
+    isReadyForTrain,
     refreshProject,
   } = useProjectOne();
   const pathname = useRouterState({
@@ -92,6 +93,7 @@ const ProjectOneLayout: FunctionComponent<ProjectOneLayoutProps> = () => {
             />
             <ProjectNavItem
               current={pathname === `/projects/${projectId}/train`}
+              disabled={!isReadyForTrain}
               icon={IconDataTrain}
               label={t('project.nav.train')}
               progress={trainNavProgress}

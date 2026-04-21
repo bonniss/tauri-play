@@ -38,7 +38,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import clsx from 'clsx';
 import { ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -118,6 +118,7 @@ function ProjectLabelPage() {
     getLabelSettingsFormValues,
     isApplyingLabelSettings,
     isReadyForTrain,
+    latestTrainLog,
     projectId,
     projectSettings,
     projectStatus,
@@ -191,6 +192,7 @@ function ProjectLabelPage() {
     [cameraTargetState, classes],
   );
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const deleteSampleMutation = useMutation({
     mutationFn: async ({
       resolvedFilePath,
@@ -518,10 +520,14 @@ function ProjectLabelPage() {
               <ProjectPlayButton />
             ) : isReadyForTrain ? (
               <Button
-                component={Link}
                 leftSection={<IconDataTrain className="size-4" />}
-                params={{ projectId } as never}
-                to="/projects/$projectId/train"
+                onClick={() => {
+                  void navigate({
+                    to: '/projects/$projectId/train',
+                    params: { projectId } as never,
+                    search: { autostart: !latestTrainLog },
+                  });
+                }}
                 variant="filled"
               >
                 {t('project.nav.train')}

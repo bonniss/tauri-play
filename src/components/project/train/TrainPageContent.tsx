@@ -1,5 +1,7 @@
+import { useEffect, useRef } from 'react';
 import { Alert, Button, Paper } from '@mantine/core';
 import { IconPlayerPlay, IconPlayerStop } from '@tabler/icons-react';
+import { useNavigate } from '@tanstack/react-router';
 import { useAppProvider } from '~/components/layout/AppProvider';
 import ProjectPlayButton from '~/components/project/ProjectPlayButton';
 import { useDataTrain } from '~/components/project/train/DataTrainProvider';
@@ -9,10 +11,15 @@ import TrainLogDrawer from '~/components/project/train/TrainLogDrawer';
 import TrainRunSummaryCard from '~/components/project/train/TrainRunSummaryCard';
 import TrainSettingsPopover from '~/components/project/train/TrainSettingsPopover';
 import TrainTimelinePanel from '~/components/project/train/TrainTimelinePanel';
+import { Route } from '~/routes/projects/$projectId/train';
 
 function TrainPageContent() {
   const { t } = useAppProvider();
   const { canPlay } = useProjectOne();
+  const navigate = useNavigate();
+  const params = Route.useParams();
+  const search = Route.useSearch();
+  const hasAutoStartedRef = useRef(false);
   const {
     displayedTrainLog,
     isReadyForTrain,
@@ -20,6 +27,35 @@ function TrainPageContent() {
     requestStopTraining,
     startTraining,
   } = useDataTrain();
+
+  useEffect(() => {
+    if (
+      !search.autostart ||
+      hasAutoStartedRef.current ||
+      !isReadyForTrain ||
+      isTraining ||
+      displayedTrainLog
+    ) {
+      return;
+    }
+
+    hasAutoStartedRef.current = true;
+    void navigate({
+      to: '/projects/$projectId/train',
+      params,
+      search: { autostart: false },
+      replace: true,
+    });
+    void startTraining();
+  }, [
+    displayedTrainLog,
+    isReadyForTrain,
+    isTraining,
+    navigate,
+    params,
+    search.autostart,
+    startTraining,
+  ]);
 
   return (
     <div className="space-y-4 p-4">
