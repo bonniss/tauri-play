@@ -50,7 +50,7 @@ const ProjectCard: FunctionComponent<ProjectCardProps> = ({
 
   return (
     <Paper
-      className="group cursor-pointer overflow-hidden p-5 transition duration-200 hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lg dark:hover:border-zinc-700"
+      className="group cursor-pointer overflow-hidden p-5 transition duration-200 hover:border-zinc-300 hover:shadow-lg dark:hover:border-zinc-700"
       onClick={onOpen}
       radius="lg"
       withBorder
@@ -81,14 +81,18 @@ const ProjectCard: FunctionComponent<ProjectCardProps> = ({
         >
           <Menu position="bottom-end" shadow="md" withinPortal>
             <Menu.Target>
-              <ActionIcon
-                aria-label={t('project.card.actions', {
-                  params: { name: project.name },
-                })}
-                variant="subtle"
-              >
-                <IconDots className="size-5" />
-              </ActionIcon>
+              <div className="-m-1 p-1">
+                <ActionIcon
+                  aria-label={t('project.card.actions', {
+                    params: { name: project.name },
+                  })}
+                  radius="xl"
+                  size="lg"
+                  variant="subtle"
+                >
+                  <IconDots className="size-5" />
+                </ActionIcon>
+              </div>
             </Menu.Target>
             <Menu.Dropdown>
               <Menu.Item
