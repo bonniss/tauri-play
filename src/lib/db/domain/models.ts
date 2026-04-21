@@ -379,6 +379,26 @@ export async function updateModelTrainLogDatasetSnapshot({
     .execute()
 }
 
+export async function syncModelTrainLogProgress({
+  datasetSnapshot,
+  events,
+  trainLogId,
+}: {
+  datasetSnapshot: ModelTrainLogDatasetSnapshot
+  events: ModelTrainLogEvent[]
+  trainLogId: string
+}) {
+  await getKysely()
+    .updateTable("model_train_logs")
+    .set({
+      dataset_snapshot: JSON.stringify(datasetSnapshot),
+      log_json: JSON.stringify(events),
+      updated_at: new Date().toISOString(),
+    })
+    .where("id", "=", trainLogId)
+    .execute()
+}
+
 export async function updateModelTrainLogStatus({
   modelId,
   status,

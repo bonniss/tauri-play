@@ -150,6 +150,8 @@ class TauriSqliteConnection implements DatabaseConnection {
 class TauriSqliteDriver implements Driver {
   private connection: DatabaseConnection | null = null
   private database: Database | null = null
+  private isConnectionInUse = false
+  private connectionWaiters: Array<() => void> = []
 
   async init(): Promise<void> {
     const database = await getDatabase()
@@ -162,6 +164,13 @@ class TauriSqliteDriver implements Driver {
       throw new Error("Kysely driver not initialized.")
     }
 
+    if (this.isConnectionInUse) {
+      await new Promise<void>((resolve) => {
+        this.connectionWaiters.push(resolve)
+      })
+    }
+
+    this.isConnectionInUse = true
     return this.connection
   }
 
@@ -189,11 +198,22 @@ class TauriSqliteDriver implements Driver {
     await this.database.execute("rollback")
   }
 
-  async releaseConnection(): Promise<void> {}
+  async releaseConnection(): Promise<void> {
+    const nextWaiter = this.connectionWaiters.shift()
+
+    if (nextWaiter) {
+      nextWaiter()
+      return
+    }
+
+    this.isConnectionInUse = false
+  }
 
   async destroy(): Promise<void> {
     this.connection = null
     this.database = null
+    this.isConnectionInUse = false
+    this.connectionWaiters = []
   }
 
   async beginTransactionSettings(

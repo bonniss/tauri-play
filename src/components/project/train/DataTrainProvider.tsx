@@ -7,12 +7,11 @@ import { useProjectOne } from '~/components/project/ProjectOneProvider';
 import { colorFromString } from '~/lib/project/class-color';
 import { parseClassSettings } from '~/lib/project/class-settings';
 import {
-  appendModelTrainLogEvent,
   createModelTrainLog,
   ModelTrainLogDatasetSnapshot,
   ModelTrainLogEvent,
   ModelTrainLogSummary,
-  updateModelTrainLogDatasetSnapshot,
+  syncModelTrainLogProgress,
   updateModelTrainLogStatus,
   upsertProjectModel,
 } from '~/lib/db/domain/models';
@@ -61,6 +60,8 @@ type FixedTimelineStep = {
   label: string;
   status: 'completed' | 'failed' | 'in_progress' | 'pending';
 };
+
+const TRAIN_LOG_FLUSH_DELAY_MS = 800;
 
 const FIXED_TIMELINE_STEP_ORDER: FixedTimelineStepId[] = [
   'tfjs',
@@ -582,11 +583,131 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
   const [inspectDataOpened, setInspectDataOpened] = useState(false);
   const [trainDataView, setTrainDataView] = useState<TrainDataView>('train');
   const [trainSettingsOpened, setTrainSettingsOpened] = useState(false);
+  const activeSessionRef = useRef<ActiveTrainSession | null>(null);
   const activeTrainLogIdRef = useRef<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const trainDbWriteQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const trainLogFlushTimerRef = useRef<number | null>(null);
+  const isTrainLogDirtyRef = useRef(false);
+  const isTrainLogFlushInFlightRef = useRef(false);
+
+  function enqueueTrainDbWrite(task: () => Promise<void>) {
+    const nextTask = trainDbWriteQueueRef.current.then(task, task);
+    trainDbWriteQueueRef.current = nextTask.catch(() => {});
+    return nextTask;
+  }
+
+  async function flushTrainDbWrites() {
+    await trainDbWriteQueueRef.current;
+  }
+
+  function clearTrainLogFlushTimer() {
+    if (trainLogFlushTimerRef.current == null) {
+      return;
+    }
+
+    window.clearTimeout(trainLogFlushTimerRef.current);
+    trainLogFlushTimerRef.current = null;
+  }
+
+  function setActiveTrainSession(nextSession: ActiveTrainSession | null) {
+    activeSessionRef.current = nextSession;
+    setActiveSession(nextSession);
+  }
+
+  function updateActiveTrainSession(
+    updater: (current: ActiveTrainSession) => ActiveTrainSession,
+  ) {
+    setActiveSession((current) => {
+      if (!current) {
+        activeSessionRef.current = current;
+        return current;
+      }
+
+      const nextSession = updater(current);
+      activeSessionRef.current = nextSession;
+      return nextSession;
+    });
+  }
+
+  async function flushBufferedTrainLog() {
+    clearTrainLogFlushTimer();
+
+    const currentSession = activeSessionRef.current;
+    const trainLogId = activeTrainLogIdRef.current;
+
+    if (
+      !currentSession ||
+      !trainLogId ||
+      !isTrainLogDirtyRef.current ||
+      isTrainLogFlushInFlightRef.current
+    ) {
+      return;
+    }
+
+    isTrainLogDirtyRef.current = false;
+    isTrainLogFlushInFlightRef.current = true;
+
+    try {
+      await enqueueTrainDbWrite(() =>
+        syncModelTrainLogProgress({
+          datasetSnapshot: currentSession.datasetSnapshot,
+          events: currentSession.events,
+          trainLogId,
+        }),
+      );
+      await flushTrainDbWrites();
+    } finally {
+      isTrainLogFlushInFlightRef.current = false;
+
+      if (isTrainLogDirtyRef.current) {
+        scheduleTrainLogFlush();
+      }
+    }
+  }
+
+  function scheduleTrainLogFlush(delay = TRAIN_LOG_FLUSH_DELAY_MS) {
+    if (trainLogFlushTimerRef.current != null) {
+      return;
+    }
+
+    trainLogFlushTimerRef.current = window.setTimeout(() => {
+      trainLogFlushTimerRef.current = null;
+      void flushBufferedTrainLog();
+    }, delay);
+  }
+
+  function markTrainLogDirty() {
+    isTrainLogDirtyRef.current = true;
+    scheduleTrainLogFlush();
+  }
+
+  async function flushBufferedTrainLogNow() {
+    clearTrainLogFlushTimer();
+
+    while (isTrainLogDirtyRef.current || isTrainLogFlushInFlightRef.current) {
+      if (isTrainLogFlushInFlightRef.current) {
+        await flushTrainDbWrites();
+        continue;
+      }
+
+      await flushBufferedTrainLog();
+    }
+  }
+
+  useEffect(
+    () => () => {
+      clearTrainLogFlushTimer();
+    },
+    [],
+  );
 
   const trainMutation = useMutation({
     mutationFn: async () => {
+      trainDbWriteQueueRef.current = Promise.resolve();
+      clearTrainLogFlushTimer();
+      isTrainLogDirtyRef.current = false;
+      isTrainLogFlushInFlightRef.current = false;
       const abortController = new AbortController();
       abortControllerRef.current = abortController;
       const pendingSnapshot = createPendingDatasetSnapshot(classes);
@@ -605,7 +726,7 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
         startedAt,
       });
 
-      setActiveSession({
+      setActiveTrainSession({
         datasetSnapshot: pendingSnapshot,
         endedAt: null,
         events: [
@@ -659,43 +780,30 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
               samplesPerClass: latestDatasetSnapshot.samplesPerClass,
             };
             latestDatasetSnapshot = nextSnapshot;
-            await updateModelTrainLogDatasetSnapshot({
-              datasetSnapshot: nextSnapshot,
-              trainLogId,
-            });
           }
 
-          await appendModelTrainLogEvent(trainLogId, event);
-          setActiveSession((current) =>
-            current
-              ? {
-                  ...current,
-                  datasetSnapshot:
-                    event.type === 'split'
-                      ? latestDatasetSnapshot
-                      : current.datasetSnapshot,
-                  events: [...current.events, event],
-                  summary:
-                    event.type === 'epoch'
-                      ? {
-                          accuracy:
-                            event.acc ?? current.summary?.accuracy ?? null,
-                          durationMs: current.summary?.durationMs ?? null,
-                          endedAt: current.summary?.endedAt ?? '',
-                          loss: event.loss,
-                          validationAccuracy:
-                            event.valAcc ??
-                            current.summary?.validationAccuracy ??
-                            null,
-                          validationLoss:
-                            event.valLoss ??
-                            current.summary?.validationLoss ??
-                            null,
-                        }
-                      : current.summary,
-                }
-              : current,
-          );
+          updateActiveTrainSession((current) => ({
+            ...current,
+            datasetSnapshot:
+              event.type === 'split'
+                ? latestDatasetSnapshot
+                : current.datasetSnapshot,
+            events: [...current.events, event],
+            summary:
+              event.type === 'epoch'
+                ? {
+                    accuracy: event.acc ?? current.summary?.accuracy ?? null,
+                    durationMs: current.summary?.durationMs ?? null,
+                    endedAt: current.summary?.endedAt ?? '',
+                    loss: event.loss,
+                    validationAccuracy:
+                      event.valAcc ?? current.summary?.validationAccuracy ?? null,
+                    validationLoss:
+                      event.valLoss ?? current.summary?.validationLoss ?? null,
+                  }
+                : current.summary,
+          }));
+          markTrainLogDirty();
         },
         projectId,
         signal: abortController.signal,
@@ -703,10 +811,12 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
       });
 
       latestDatasetSnapshot = result.datasetSnapshot;
-      await updateModelTrainLogDatasetSnapshot({
+      updateActiveTrainSession((current) => ({
+        ...current,
         datasetSnapshot: result.datasetSnapshot,
-        trainLogId,
-      });
+      }));
+      markTrainLogDirty();
+      await flushBufferedTrainLogNow();
 
       const modelId = await upsertProjectModel({
         accuracy: result.summary.accuracy,
@@ -729,24 +839,23 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
         validationLoss: result.summary.validationLoss,
       };
 
-      await updateModelTrainLogStatus({
-        modelId,
+      updateActiveTrainSession((current) => ({
+        ...current,
+        datasetSnapshot: result.datasetSnapshot,
+        endedAt: summary.endedAt,
         status: 'completed',
         summary,
-        trainLogId,
-      });
+      }));
 
-      setActiveSession((current) =>
-        current
-          ? {
-              ...current,
-              datasetSnapshot: result.datasetSnapshot,
-              endedAt: summary.endedAt,
-              status: 'completed',
-              summary,
-            }
-          : current,
+      await enqueueTrainDbWrite(() =>
+        updateModelTrainLogStatus({
+          modelId,
+          status: 'completed',
+          summary,
+          trainLogId,
+        }),
       );
+      await flushTrainDbWrites();
     },
     onError: async (error) => {
       const isCancelled =
@@ -764,38 +873,37 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
       };
 
       if (activeTrainLogIdRef.current) {
-        await appendModelTrainLogEvent(activeTrainLogIdRef.current, {
-          at: endedAt,
-          message: errorMessage,
-          type: 'phase',
-        });
-        await updateModelTrainLogStatus({
+        updateActiveTrainSession((current) => ({
+          ...current,
+          endedAt,
+          events: [
+            ...current.events,
+            {
+              at: endedAt,
+              message: errorMessage,
+              type: 'phase',
+            },
+          ],
           status: isCancelled ? 'cancelled' : 'failed',
           summary,
-          trainLogId: activeTrainLogIdRef.current,
-        });
+        }));
+        markTrainLogDirty();
+        await flushBufferedTrainLogNow();
+        await enqueueTrainDbWrite(() =>
+          updateModelTrainLogStatus({
+            status: isCancelled ? 'cancelled' : 'failed',
+            summary,
+            trainLogId: activeTrainLogIdRef.current!,
+          }),
+        );
+        await flushTrainDbWrites();
       }
 
-      setActiveSession((current) =>
-        current
-          ? {
-              ...current,
-              endedAt,
-              events: [
-                ...current.events,
-                {
-                  at: endedAt,
-                  message: errorMessage,
-                  type: 'phase',
-                },
-              ],
-              status: isCancelled ? 'cancelled' : 'failed',
-              summary,
-            }
-          : current,
-      );
       activeTrainLogIdRef.current = null;
       abortControllerRef.current = null;
+      clearTrainLogFlushTimer();
+      isTrainLogDirtyRef.current = false;
+      isTrainLogFlushInFlightRef.current = false;
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ['project-model', projectId],
@@ -815,6 +923,9 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
     onSuccess: async () => {
       activeTrainLogIdRef.current = null;
       abortControllerRef.current = null;
+      clearTrainLogFlushTimer();
+      isTrainLogDirtyRef.current = false;
+      isTrainLogFlushInFlightRef.current = false;
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ['project-model', projectId],
