@@ -17,6 +17,7 @@ import {
   IconFocusCentered,
   IconScale,
   IconSettings,
+  IconSortAscending,
   IconTrash,
 } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -103,11 +104,30 @@ function ProjectLabelPage() {
     projectStatus,
     removeClass,
     removeSamplesFromClass,
+    reorderSamplesInClass,
     seedClass,
     setProjectStatus,
     updateClassName,
   } = useProjectOne();
   const hasClasses = classes.length > 0;
+
+  function shuffleSamples(classId: string) {
+    const cls = classes.find((c) => c.id === classId);
+    if (!cls || cls.samples.length < 2) return;
+    const ids = cls.samples.map((s) => s.id);
+    for (let i = ids.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [ids[i], ids[j]] = [ids[j]!, ids[i]!];
+    }
+    void reorderSamplesInClass(classId, ids);
+  }
+
+  function sortSamplesById(classId: string) {
+    const cls = classes.find((c) => c.id === classId);
+    if (!cls) return;
+    const ids = [...cls.samples].sort((a, b) => a.id.localeCompare(b.id)).map((s) => s.id);
+    void reorderSamplesInClass(classId, ids);
+  }
   const [openClassMap, setOpenClassMap] = useState<Record<string, boolean>>({});
   const [cameraTargetState, setCameraTargetState] =
     useState<CameraTargetState | null>(null);
@@ -744,6 +764,28 @@ function ProjectLabelPage() {
                       </div>
                     ) : null}
                     <SampleGrid
+                      actions={
+                        item.samples.length > 1 ? (
+                          <>
+                            <ActionIcon
+                              size="xs"
+                              title={t('project.label.sampleGrid.shuffle')}
+                              variant="subtle"
+                              onClick={() => shuffleSamples(item.id)}
+                            >
+                              <IconArrowsShuffle size={14} stroke={1.8} />
+                            </ActionIcon>
+                            <ActionIcon
+                              size="xs"
+                              title={t('project.label.sampleGrid.sortById')}
+                              variant="subtle"
+                              onClick={() => sortSamplesById(item.id)}
+                            >
+                              <IconSortAscending size={14} stroke={1.8} />
+                            </ActionIcon>
+                          </>
+                        ) : undefined
+                      }
                       loading={uploadingClassMap[item.id]?.isPending ?? false}
                       onDeleteSample={handleDeleteSample}
                       onDeleteSamples={handleDeleteSamples}

@@ -24,6 +24,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useAppProvider } from '~/components/layout/AppProvider';
 import { ProjectSample } from '~/lib/db/domain/samples';
 import { colorFromString } from '~/lib/project/class-color';
 import {
@@ -32,6 +33,7 @@ import {
 } from '~/lib/project/sample-preview';
 
 interface SampleGridProps {
+  actions?: ReactNode;
   activeSampleId?: string;
   classColorMap?: Record<string, string>;
   classIndexMap?: Record<string, number>;
@@ -49,6 +51,7 @@ const GRID_GAP_PX = 12;
 const SAMPLE_PAGE_SIZE = 60;
 
 const SampleGrid: FunctionComponent<SampleGridProps> = ({
+  actions,
   activeSampleId,
   classColorMap,
   classIndexMap,
@@ -61,6 +64,7 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
   onDeleteSamples,
   samples,
 }) => {
+  const { t } = useAppProvider();
   const isActiveControlled = activeSampleId !== undefined;
   const [internalActiveSampleId, setInternalActiveSampleId] = useState<
     string | null
@@ -474,16 +478,18 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
 
   return (
     <>
-      {onDeleteSamples && (
+      {(onDeleteSamples || actions) && (
         <div className="mb-2 flex min-h-7 items-center justify-between gap-2">
           {isSelectMode ? (
             <>
               <div className="flex items-center gap-3">
                 <Button size="xs" variant="subtle" onClick={toggleSelectMode}>
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
                 <Text c="dimmed" size="xs">
-                  {selectedIds.size} selected
+                  {t('project.label.sampleGrid.selected', {
+                    params: { count: selectedIds.size },
+                  })}
                 </Text>
               </div>
               <div className="flex items-center gap-2">
@@ -494,7 +500,7 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
                     setSelectedIds(new Set(visibleSamples.map((s) => s.id)))
                   }
                 >
-                  Select all
+                  {t('project.label.sampleGrid.selectAll')}
                 </Button>
                 {selectedIds.size > 0 && (
                   <Button
@@ -505,15 +511,26 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
                     variant="light"
                     onClick={() => void handleBatchDelete()}
                   >
-                    Delete {selectedIds.size}
+                    {t('project.label.sampleGrid.deleteSelected', {
+                      params: { count: selectedIds.size },
+                    })}
                   </Button>
                 )}
               </div>
             </>
           ) : (
-            <Button size="xs" variant="subtle" onClick={toggleSelectMode}>
-              Select
-            </Button>
+            <>
+              {onDeleteSamples ? (
+                <Button size="xs" variant="subtle" onClick={toggleSelectMode}>
+                  {t('project.label.sampleGrid.select')}
+                </Button>
+              ) : (
+                <span />
+              )}
+              {actions ? (
+                <div className="flex items-center gap-1">{actions}</div>
+              ) : null}
+            </>
           )}
         </div>
       )}
@@ -657,15 +674,22 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
         {hasMoreSamples ? (
           <div className="flex items-center justify-between gap-3 px-1 py-4">
             <Text c="dimmed" size="sm">
-              Showing {visibleSamples.length} / {samples.length} samples
+              {t('project.label.sampleGrid.showing', {
+                params: {
+                  visible: visibleSamples.length,
+                  total: samples.length,
+                },
+              })}
             </Text>
             <Button onClick={loadMoreSamples} size="xs" variant="light">
-              Load{' '}
-              {Math.min(
-                SAMPLE_PAGE_SIZE,
-                samples.length - visibleSamples.length,
-              )}{' '}
-              more
+              {t('project.label.sampleGrid.loadMore', {
+                params: {
+                  count: Math.min(
+                    SAMPLE_PAGE_SIZE,
+                    samples.length - visibleSamples.length,
+                  ),
+                },
+              })}
             </Button>
           </div>
         ) : null}
@@ -801,11 +825,13 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
                 }}
                 variant="default"
               >
-                {showMetadata ? 'Hide Meta' : 'Show Meta'}
+                {showMetadata
+                  ? t('project.label.sampleGrid.hideMeta')
+                  : t('project.label.sampleGrid.showMeta')}
               </Button>
               <div className="flex items-center gap-2">
                 <Button onClick={closeLightbox} variant="default">
-                  Close
+                  {t('common.close')}
                 </Button>
                 {onDeleteSample ? (
                   <Popover
@@ -827,12 +853,14 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
                         }}
                         variant="light"
                       >
-                        Delete
+                        {t('common.delete')}
                       </Button>
                     </Popover.Target>
                     <Popover.Dropdown>
                       <div className="w-56 space-y-3">
-                        <Text size="sm">Delete this sample?</Text>
+                        <Text size="sm">
+                          {t('project.label.sampleGrid.deleteConfirm')}
+                        </Text>
                         <div className="flex justify-end gap-2">
                           <Button
                             onClick={() => {
@@ -841,7 +869,7 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
                             size="xs"
                             variant="default"
                           >
-                            Cancel
+                            {t('common.cancel')}
                           </Button>
                           <Button
                             color="red"
@@ -854,7 +882,7 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
                             }}
                             size="xs"
                           >
-                            Confirm
+                            {t('project.label.sampleGrid.confirm')}
                           </Button>
                         </div>
                       </div>

@@ -16,7 +16,10 @@ import {
   ProjectRecord,
   updateProject,
 } from '~/lib/db/domain/projects';
-import { ProjectSample } from '~/lib/db/domain/samples';
+import {
+  ProjectSample,
+  reorderClassSamples,
+} from '~/lib/db/domain/samples';
 import { colorFromString, getNextClassColor } from '~/lib/project/class-color';
 import {
   parseClassSettings,
@@ -466,6 +469,28 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       cycleColorTimers.current.set(classId, timer);
     };
 
+    const reorderSamplesInClass = async (
+      classId: string,
+      orderedIds: string[],
+    ) => {
+      const orderMap = new Map(orderedIds.map((id, i) => [id, i]));
+      setClasses((prev) =>
+        prev.map((cls) =>
+          cls.id !== classId
+            ? cls
+            : {
+                ...cls,
+                samples: [...cls.samples].sort(
+                  (a, b) =>
+                    (orderMap.get(a.id) ?? a.order) -
+                    (orderMap.get(b.id) ?? b.order),
+                ),
+              },
+        ),
+      );
+      await reorderClassSamples(classId, orderedIds);
+    };
+
     const refreshProject = async () => {
       const workspace = await getProjectWorkspace(projectId);
       setProject(workspace.project);
@@ -655,6 +680,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       removeClass,
       addSamplesToClass,
       removeSamplesFromClass,
+      reorderSamplesInClass,
       setProjectStatus,
       updateClassName,
       cycleClassColor,

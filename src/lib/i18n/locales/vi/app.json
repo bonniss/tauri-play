@@ -182,6 +182,20 @@
         "description": "Xóa \"{{name}}\" và toàn bộ ảnh trong class? Thao tác này không thể hoàn tác.",
         "confirm": "Xóa"
       },
+      "sampleGrid": {
+        "select": "Chọn",
+        "selected": "{{count}} đã chọn",
+        "selectAll": "Chọn tất cả",
+        "deleteSelected": "Xóa {{count}}",
+        "showing": "Hiển thị {{visible}} / {{total}}",
+        "loadMore": "Tải thêm {{count}}",
+        "showMeta": "Xem metadata",
+        "hideMeta": "Ẩn metadata",
+        "deleteConfirm": "Xóa sample này?",
+        "confirm": "Xác nhận",
+        "shuffle": "Xáo trộn",
+        "sortById": "Sắp xếp theo ngày"
+      },
       "addImages": {
         "title": "Thêm ảnh cho từng class cần nhận diện",
         "subtitle": "Ảnh càng đa dạng trong mỗi class, model càng tổng quát hóa tốt hơn.",

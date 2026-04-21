@@ -182,6 +182,20 @@
         "description": "Delete \"{{name}}\" and all of its samples? This cannot be undone.",
         "confirm": "Delete"
       },
+      "sampleGrid": {
+        "select": "Select",
+        "selected": "{{count}} selected",
+        "selectAll": "Select all",
+        "deleteSelected": "Delete {{count}}",
+        "showing": "Showing {{visible}} / {{total}}",
+        "loadMore": "Load {{count}} more",
+        "showMeta": "Show metadata",
+        "hideMeta": "Hide metadata",
+        "deleteConfirm": "Delete this sample?",
+        "confirm": "Confirm",
+        "shuffle": "Shuffle",
+        "sortById": "Sort by date"
+      },
       "addImages": {
         "title": "Add images for each class you want to recognize",
         "subtitle": "Variety within each class helps the model generalize to images it has never seen.",

@@ -264,6 +264,23 @@ export async function moveSampleToClass({
     .execute()
 }
 
+export async function reorderClassSamples(
+  classId: string,
+  orderedIds: string[],
+) {
+  const db = getKysely()
+  await db.transaction().execute(async (trx) => {
+    for (let i = 0; i < orderedIds.length; i++) {
+      await trx
+        .updateTable("samples")
+        .set({ order: i })
+        .where("id", "=", orderedIds[i]!)
+        .where("class_id", "=", classId)
+        .execute()
+    }
+  })
+}
+
 export async function deleteSample(sampleId: string) {
   const db = getKysely()
   await db.deleteFrom("samples").where("id", "=", sampleId).execute()
