@@ -46,7 +46,7 @@ const ProjectCard: FunctionComponent<ProjectCardProps> = ({
   project,
   sampleFilePaths,
 }) => {
-  const { t } = useAppProvider();
+  const { locale, t } = useAppProvider();
 
   return (
     <Paper
@@ -82,7 +82,9 @@ const ProjectCard: FunctionComponent<ProjectCardProps> = ({
           <Menu position="bottom-end" shadow="md" withinPortal>
             <Menu.Target>
               <ActionIcon
-                aria-label={`Actions for ${project.name}`}
+                aria-label={t('project.card.actions', {
+                  params: { name: project.name },
+                })}
                 variant="subtle"
               >
                 <IconDots className="size-5" />
@@ -95,7 +97,7 @@ const ProjectCard: FunctionComponent<ProjectCardProps> = ({
                 params={{ projectId: project.id } as never}
                 to="/projects/$projectId/label"
               >
-                Open
+                {t('project.card.open')}
               </Menu.Item>
               <Menu.Item
                 component={Link}
@@ -104,7 +106,7 @@ const ProjectCard: FunctionComponent<ProjectCardProps> = ({
                 params={{ projectId: project.id } as never}
                 to="/projects/$projectId/train"
               >
-                Train
+                {t('project.card.train')}
               </Menu.Item>
               <Menu.Item
                 component={Link}
@@ -113,7 +115,7 @@ const ProjectCard: FunctionComponent<ProjectCardProps> = ({
                 params={{ projectId: project.id } as never}
                 to="/projects/$projectId/play"
               >
-                Play
+                {t('project.card.play')}
               </Menu.Item>
               <Menu.Divider />
               <Menu.Item
@@ -121,14 +123,16 @@ const ProjectCard: FunctionComponent<ProjectCardProps> = ({
                 leftSection={<IconDownload className="size-4" />}
                 onClick={onExport}
               >
-                {isExporting ? 'Exporting…' : 'Export'}
+                {isExporting
+                  ? t('project.card.exporting')
+                  : t('common.export')}
               </Menu.Item>
               <Menu.Item
                 color="red"
                 leftSection={<IconTrash className="size-4" />}
                 onClick={onDelete}
               >
-                Delete
+                {t('common.delete')}
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
@@ -149,7 +153,7 @@ const ProjectCard: FunctionComponent<ProjectCardProps> = ({
         {project.trainedAt ? (
           <Text c="dimmed" size="sm">
             {t('project.lastTrained', {
-              params: { ts: formatRelativeTime(project.trainedAt) },
+              params: { ts: formatRelativeTime(project.trainedAt, locale) },
             })}
           </Text>
         ) : (
@@ -177,6 +181,7 @@ function ProjectCardPreview({
   projectId: string;
   sampleFilePaths: string[];
 }) {
+  const { t } = useAppProvider();
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const seededSamplePaths = useMemo(
     () =>
@@ -219,7 +224,11 @@ function ProjectCardPreview({
 
   const btnFavorite = (
     <ActionIcon
-      aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+      aria-label={
+        isFavorite
+          ? t('project.card.removeFavorite')
+          : t('project.card.addFavorite')
+      }
       loading={isUpdatingFavorite}
       onClick={(event) => {
         event.stopPropagation();
@@ -276,7 +285,9 @@ function ProjectCardPreview({
               }}
             >
               <img
-                alt={`Project preview ${index + 1}`}
+                alt={t('project.card.previewAlt', {
+                  params: { index: index + 1 },
+                })}
                 className="size-full object-cover"
                 src={url}
               />
@@ -300,12 +311,12 @@ function seededSampleScore(projectId: string, samplePath: string) {
   return hash >>> 0;
 }
 
-function formatRelativeTime(input: string) {
+function formatRelativeTime(input: string, locale: string) {
   const now = Date.now();
   const target = new Date(input).getTime();
   const diffMs = target - now;
   const absMs = Math.abs(diffMs);
-  const formatter = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+  const formatter = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
 
   if (absMs < 60_000) {
     return formatter.format(Math.round(diffMs / 1000), 'second');

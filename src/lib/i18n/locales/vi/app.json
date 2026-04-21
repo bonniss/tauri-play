@@ -121,6 +121,16 @@
     "edit": {
       "title": "Chỉnh sửa dự án"
     },
+    "card": {
+      "actions": "Thao tác cho {{name}}",
+      "open": "Mở",
+      "train": "Huấn luyện",
+      "play": "Thử nghiệm",
+      "exporting": "Đang xuất...",
+      "addFavorite": "Thêm vào yêu thích",
+      "removeFavorite": "Bỏ khỏi yêu thích",
+      "previewAlt": "Xem trước dự án {{index}}"
+    },
     "confirmDelete": "Gõ \"{{name}}\" để xác nhận xóa. Thao tác này sẽ xóa hết dữ liệu dự án và không thể hoàn tác.",
     "errors": {
       "notFound": "Không tìm thấy dự án.",

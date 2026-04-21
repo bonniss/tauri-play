@@ -121,6 +121,16 @@
     "edit": {
       "title": "Edit Project"
     },
+    "card": {
+      "actions": "Actions for {{name}}",
+      "open": "Open",
+      "train": "Train",
+      "play": "Play",
+      "exporting": "Exporting...",
+      "addFavorite": "Add to favorites",
+      "removeFavorite": "Remove from favorites",
+      "previewAlt": "Project preview {{index}}"
+    },
     "confirmDelete": "Type \"${name}\" to confirm deletion. This will remove the all project data and cannot be undone.",
     "errors": {
       "notFound": "Project not found.",
