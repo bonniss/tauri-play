@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import {
   ProjectClass,
   renameClass,
+  reorderProjectClasses,
   updateClassSettings,
 } from '~/lib/db/domain/classes';
 import {
@@ -469,6 +470,16 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       cycleColorTimers.current.set(classId, timer);
     };
 
+    const reorderClasses = async (orderedIds: string[]) => {
+      const orderMap = new Map(orderedIds.map((id, i) => [id, i]));
+      setClasses((prev) =>
+        [...prev].sort(
+          (a, b) => (orderMap.get(a.id) ?? a.order) - (orderMap.get(b.id) ?? b.order),
+        ),
+      );
+      await reorderProjectClasses(projectId, orderedIds);
+    };
+
     const reorderSamplesInClass = async (
       classId: string,
       orderedIds: string[],
@@ -680,6 +691,7 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       removeClass,
       addSamplesToClass,
       removeSamplesFromClass,
+      reorderClasses,
       reorderSamplesInClass,
       setProjectStatus,
       updateClassName,

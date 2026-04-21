@@ -16,15 +16,31 @@ import {
   IconDots,
   IconDownload,
   IconFocusCentered,
+  IconGripVertical,
   IconScale,
   IconSettings,
   IconSortAscending,
   IconTrash,
 } from '@tabler/icons-react';
+import {
+  DndContext,
+  DragEndEvent,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import clsx from 'clsx';
-import { useEffect, useMemo, useState } from 'react';
+import { ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import CameraUI from '~/components/camera/CameraUI';
 import { CaptureSession } from '~/components/camera/types';
@@ -105,11 +121,26 @@ function ProjectLabelPage() {
     projectStatus,
     removeClass,
     removeSamplesFromClass,
+    reorderClasses,
     reorderSamplesInClass,
     seedClass,
     setProjectStatus,
     updateClassName,
   } = useProjectOne();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+  );
+
+  function handleClassDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = visibleClasses.findIndex((c) => c.id === active.id);
+    const newIndex = visibleClasses.findIndex((c) => c.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const reordered = arrayMove(visibleClasses, oldIndex, newIndex);
+    void reorderClasses(reordered.map((c) => c.id));
+  }
   const hasClasses = classes.length > 0;
 
   function shuffleSamples(classId: string) {
@@ -634,12 +665,22 @@ function ProjectLabelPage() {
       ) : null}
 
       {hasClasses ? (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleClassDragEnd}
+        >
+          <SortableContext
+            items={visibleClasses.map((c) => c.id)}
+            strategy={verticalListSortingStrategy}
+          >
         <div className="mt-4 divide-y divide-zinc-200 overflow-hidden rounded-md border border-zinc-200 dark:divide-zinc-700 dark:border-zinc-700">
           {visibleClasses.map((item, classIdx) => {
             return (
-              <div key={item.id}>
+              <SortableClassRow key={item.id} id={item.id}>
                 <div className="flex items-center justify-between gap-3 px-3 py-2.5">
                   <div className="flex min-w-0 items-center gap-1.5">
+                    <DragHandle />
                     <ActionIcon
                       aria-label={
                         openClassMap[item.id]
@@ -815,10 +856,12 @@ function ProjectLabelPage() {
                     ))}
                   </div>
                 ) : null}
-              </div>
+            </SortableClassRow>
             );
           })}
         </div>
+          </SortableContext>
+        </DndContext>
       ) : null}
 
       <Modal
@@ -853,6 +896,52 @@ function ProjectLabelPage() {
         </div>
       </Modal>
     </div>
+  );
+}
+
+type DragHandleCtx = {
+  setActivatorNodeRef: (el: HTMLElement | null) => void;
+  listeners: ReturnType<typeof useSortable>['listeners'];
+};
+
+const DragHandleContext = createContext<DragHandleCtx | null>(null);
+
+function SortableClassRow({
+  id,
+  children,
+}: {
+  id: string;
+  children: ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
+    useSortable({ id });
+  return (
+    <DragHandleContext.Provider value={{ setActivatorNodeRef, listeners }}>
+      <div
+        ref={setNodeRef}
+        style={{ transform: CSS.Transform.toString(transform), transition }}
+        className={isDragging ? 'relative z-10 opacity-50' : undefined}
+        {...attributes}
+      >
+        {children}
+      </div>
+    </DragHandleContext.Provider>
+  );
+}
+
+function DragHandle() {
+  const ctx = useContext(DragHandleContext);
+  return (
+    <button
+      ref={ctx?.setActivatorNodeRef}
+      {...ctx?.listeners}
+      className="cursor-grab touch-none text-zinc-300 hover:text-zinc-500 dark:text-zinc-600 dark:hover:text-zinc-400 active:cursor-grabbing"
+      tabIndex={-1}
+      type="button"
+      aria-label="Drag to reorder"
+    >
+      <IconGripVertical size={14} stroke={1.8} />
+    </button>
   );
 }
 

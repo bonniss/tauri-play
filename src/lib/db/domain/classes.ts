@@ -192,6 +192,23 @@ export async function updateClassSettings(classId: string, settings: string) {
     .execute();
 }
 
+export async function reorderProjectClasses(
+  projectId: string,
+  orderedIds: string[],
+) {
+  const db = getKysely();
+  await db.transaction().execute(async (trx) => {
+    for (let i = 0; i < orderedIds.length; i++) {
+      await trx
+        .updateTable('classes')
+        .set({ order: i })
+        .where('id', '=', orderedIds[i]!)
+        .where('project_id', '=', projectId)
+        .execute();
+    }
+  });
+}
+
 export async function deleteClass(classId: string) {
   const db = getKysely();
   await db.deleteFrom('classes').where('id', '=', classId).execute();
