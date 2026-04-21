@@ -14,8 +14,8 @@
   },
   "home": {
     "hero": {
-      "title": "Dạy máy tính nhận diện hình ảnh.",
-      "description": "Thu thập ảnh cho từng nhóm, huấn luyện model và thử nghiệm trực tiếp — tất cả chạy ngay trên máy của bạn.",
+      "title": "Dạy máy tính nhìn thế giới.",
+      "description": "Dễ như trồng cây. Thu thập ảnh, huấn luyện vài giây, dự đoán ngay — không cần code, không cần mạng.",
       "cta": "Dự án mới"
     },
     "features": {

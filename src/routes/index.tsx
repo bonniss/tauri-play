@@ -14,10 +14,10 @@ function HomePage() {
   return (
     <div className="flex flex-col gap-16 pb-24">
       <HomeHero />
+      <HomeHowItWorks />
       <HomeIntro />
       <HomePlatform />
       <HomeFeatures />
-      <HomeHowItWorks />
       <HomeCtaFooter />
     </div>
   )

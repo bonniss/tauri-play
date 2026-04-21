@@ -1,7 +1,7 @@
 [package]
 name = "plant-ml"
 version = "0.1.0"
-description = "Teach computer to see in minutes, no coding, no internet required."
+description = "Teach your computer to see in minutes. No code, no cloud."
 authors = ["you"]
 edition = "2021"
 
