@@ -29,18 +29,22 @@ const AppHeader: FunctionComponent<AppHeaderProps> = () => {
       }}
     >
       <div className="mx-auto flex h-full max-w-6xl items-center justify-center px-4">
-        <div className="flex items-center gap-2">
-          <Button component={Link} size="compact-sm" to="/" variant="subtle">
-            {t('header.home')}
-          </Button>
+        <div className="flex items-center gap-4">
           <Button
             component={Link}
             size="compact-sm"
-            to="/projects"
             variant="subtle"
+            to="/projects"
           >
             {t('header.projects')}
           </Button>
+          <Link to="/" title={t('header.home')}>
+            <img
+              alt="Logo"
+              className={clsx('transition-all', isTop ? 'size-14' : 'size-10')}
+              src="/logo.svg"
+            />
+          </Link>
           <AppSettings />
         </div>
       </div>
