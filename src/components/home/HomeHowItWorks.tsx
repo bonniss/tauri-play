@@ -192,8 +192,19 @@ function DemoVisual({ class1, class2 }: { class1: string; class2: string }) {
                 <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
                   {label}
                 </span>
-                <span className={`font-mono text-xs font-medium ${r.textColor}`}>
-                  {r.pct}%
+                <span
+                  className={`relative inline-flex h-[1em] w-[3.25ch] justify-end overflow-hidden font-mono text-xs font-medium leading-none tabular-nums ${r.textColor}`}
+                >
+                  <span
+                    className={`flex flex-col items-end transition-transform duration-700 ease-out group-hover:-translate-y-[1em] ${r.delay}`}
+                  >
+                    <span className="flex h-[1em] items-center justify-end text-right">
+                      0%
+                    </span>
+                    <span className="flex h-[1em] items-center justify-end text-right">
+                      {r.pct}%
+                    </span>
+                  </span>
                 </span>
               </div>
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
