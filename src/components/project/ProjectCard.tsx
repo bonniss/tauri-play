@@ -79,7 +79,13 @@ const ProjectCard: FunctionComponent<ProjectCardProps> = ({
             event.stopPropagation();
           }}
         >
-          <Menu position="bottom-end" shadow="md" withinPortal>
+          <Menu
+            withArrow
+            withinPortal
+            position="bottom-start"
+            shadow="md"
+            trigger="click-hover"
+          >
             <Menu.Target>
               <div className="-m-1 p-1">
                 <ActionIcon
@@ -87,7 +93,7 @@ const ProjectCard: FunctionComponent<ProjectCardProps> = ({
                     params: { name: project.name },
                   })}
                   radius="xl"
-                  size="lg"
+                  size="md"
                   variant="subtle"
                 >
                   <IconDots className="size-5" />
@@ -128,9 +134,7 @@ const ProjectCard: FunctionComponent<ProjectCardProps> = ({
                 leftSection={<IconDownload className="size-4" />}
                 onClick={onExport}
               >
-                {isExporting
-                  ? t('project.card.exporting')
-                  : t('common.export')}
+                {isExporting ? t('project.card.exporting') : t('common.export')}
               </Menu.Item>
               <Menu.Item
                 color="red"
