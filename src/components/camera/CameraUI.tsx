@@ -23,6 +23,8 @@ interface CameraUIProps {
   showModeControls?: boolean
   showSettings?: boolean
   showShutter?: boolean
+  isFullscreen?: boolean
+  onToggleFullscreen?: () => void
   onCapture?: (frame: CapturedFrame) => void
   onCaptureSession?: (session: CaptureSession) => void
   children?: (frames: CapturedFrame[]) => React.ReactNode
@@ -48,6 +50,8 @@ const CameraUI: FunctionComponent<CameraUIProps> = ({
   showModeControls = true,
   showSettings = true,
   showShutter = true,
+  isFullscreen,
+  onToggleFullscreen,
   onCapture,
   onCaptureSession,
   children,
@@ -69,6 +73,8 @@ const CameraUI: FunctionComponent<CameraUIProps> = ({
           showModeControls={showModeControls}
           showSettings={showSettings}
           showShutter={showShutter}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={onToggleFullscreen}
           viewportOverlay={viewportOverlay}
         >
           {children}
@@ -87,6 +93,8 @@ interface CameraUIInnerProps {
   showModeControls?: boolean
   showSettings?: boolean
   showShutter?: boolean
+  isFullscreen?: boolean
+  onToggleFullscreen?: () => void
   viewportOverlay?: (context: CameraCaptureContext) => React.ReactNode
 }
 
@@ -136,6 +144,8 @@ const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
   showModeControls = true,
   showSettings = true,
   showShutter = true,
+  isFullscreen,
+  onToggleFullscreen,
   viewportOverlay,
 }) => {
   const {
@@ -382,7 +392,7 @@ const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
           </div>
         ) : null}
 
-        {isReady && (showModeControls || showSettings) ? (
+        {isReady && (showModeControls || showSettings || onToggleFullscreen) ? (
           <div className="absolute left-0 right-0 top-0 z-[5] p-3">
             <div className="flex items-start justify-between gap-2">
               <div className="flex flex-wrap items-center gap-1.5">
@@ -407,6 +417,7 @@ const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
 
                 {devices.length > 1 ? (
                   <select
+                    aria-label="Select camera"
                     value={activeDeviceId ?? ""}
                     onChange={(event) => connect(event.target.value)}
                     className="cursor-pointer rounded-lg border border-white/10 bg-black/40 px-2 py-1 text-xs text-white/70 outline-none backdrop-blur-sm"
@@ -422,7 +433,9 @@ const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
                     ))}
                   </select>
                 ) : null}
+              </div>
 
+              <div className="flex min-w-0 shrink-0 items-start gap-1.5">
                 <button
                   type="button"
                   onClick={() =>
@@ -463,9 +476,18 @@ const CameraUIInner: FunctionComponent<CameraUIInnerProps> = ({
                     crop
                   </span>
                 </button>
-              </div>
 
-              <div className="min-w-0 shrink-0">
+                {onToggleFullscreen ? (
+                  <button
+                    type="button"
+                    aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                    onClick={onToggleFullscreen}
+                    className="rounded-full border border-white/10 bg-black/40 p-1.5 text-white/70 backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white"
+                  >
+                    {isFullscreen ? <MinimizeIcon /> : <MaximizeIcon />}
+                  </button>
+                ) : null}
+
                 {showSettings && settingsOpen ? (
                   <SettingsPanel
                     mode={mode}
@@ -712,6 +734,46 @@ const CropGuide: FunctionComponent<CropGuideProps> = ({ cropRect }) => {
         </div>
       </div>
     </div>
+  )
+}
+
+function MaximizeIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+      <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+      <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+      <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+    </svg>
+  )
+}
+
+function MinimizeIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M8 3v3a2 2 0 0 1-2 2H3" />
+      <path d="M21 8h-3a2 2 0 0 1-2-2V3" />
+      <path d="M3 16h3a2 2 0 0 1 2 2v3" />
+      <path d="M16 21v-3a2 2 0 0 1 2-2h3" />
+    </svg>
   )
 }
 

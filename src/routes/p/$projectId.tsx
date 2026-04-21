@@ -13,8 +13,6 @@ import { Dropzone, IMAGE_MIME_TYPE } from '@mantine/dropzone';
 import { useFullscreenElement } from '@mantine/hooks';
 import {
   IconArrowLeft,
-  IconMaximize,
-  IconMinimize,
   IconPhoto,
   IconUpload,
   IconX,
@@ -390,6 +388,8 @@ const CameraPlayExperience: FunctionComponent = () => {
             showModeControls={false}
             showSettings={false}
             showShutter={false}
+            isFullscreen={isFullscreen}
+            onToggleFullscreen={toggleFullscreen}
             viewportOverlay={(context) => {
               videoRef.current = context.videoRef.current;
 
@@ -407,22 +407,6 @@ const CameraPlayExperience: FunctionComponent = () => {
                           {t('project.play.demo.waitingCamera')}
                         </div>
                       )}
-                      <button
-                        type="button"
-                        onClick={toggleFullscreen}
-                        className="pointer-events-auto rounded-full border border-white/10 bg-black/40 p-1.5 text-white/70 backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white"
-                        aria-label={
-                          isFullscreen
-                            ? t('project.play.demo.exitFullscreen')
-                            : t('project.play.demo.enterFullscreen')
-                        }
-                      >
-                        {isFullscreen ? (
-                          <IconMinimize className="size-3.5" />
-                        ) : (
-                          <IconMaximize className="size-3.5" />
-                        )}
-                      </button>
                     </div>
                   </div>
 

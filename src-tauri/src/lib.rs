@@ -51,6 +51,57 @@ async fn export_project(
     Ok(zip_path.to_string_lossy().to_string())
 }
 
+#[tauri::command]
+async fn export_class_samples(
+    app: tauri::AppHandle,
+    class_id: String,
+    class_name: String,
+    sample_paths: Vec<String>,
+) -> Result<String, String> {
+    let app_data_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    let download_dir = app.path().download_dir().map_err(|e| e.to_string())?;
+
+    let safe_name: String = class_name
+        .chars()
+        .map(|c| if c.is_alphanumeric() || c == '-' || c == '_' { c } else { '-' })
+        .collect::<String>()
+        .trim_matches('-')
+        .to_string();
+    let base_name = if safe_name.is_empty() { "class" } else { &safe_name };
+    let zip_filename = format!("{}-{}.zip", base_name, class_id);
+    let zip_path = download_dir.join(&zip_filename);
+
+    let zip_file = fs::File::create(&zip_path).map_err(|e| e.to_string())?;
+    let mut zip = zip::ZipWriter::new(zip_file);
+    let options = SimpleFileOptions::default();
+
+    for sample_path in sample_paths {
+        let full_path = app_data_dir.join(&sample_path);
+        if !full_path.exists() || !full_path.is_file() {
+            continue;
+        }
+
+        let entry_name = std::path::Path::new(&sample_path)
+            .file_name()
+            .and_then(|name| name.to_str())
+            .ok_or_else(|| "Invalid sample file name.".to_string())?
+            .to_string();
+
+        zip.start_file(&entry_name, options)
+            .map_err(|e| e.to_string())?;
+        let mut buf = Vec::new();
+        fs::File::open(&full_path)
+            .map_err(|e| e.to_string())?
+            .read_to_end(&mut buf)
+            .map_err(|e| e.to_string())?;
+        zip.write_all(&buf).map_err(|e| e.to_string())?;
+    }
+
+    zip.finish().map_err(|e| e.to_string())?;
+
+    Ok(zip_path.to_string_lossy().to_string())
+}
+
 fn add_dir_to_zip(
     zip: &mut zip::ZipWriter<fs::File>,
     base_dir: &std::path::Path,
@@ -216,7 +267,13 @@ pub fn run() {
                 .add_migrations(db_url, migrations)
                 .build(),
         )
-        .invoke_handler(tauri::generate_handler![greet, export_project, get_import_manifest, extract_import_samples])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            export_project,
+            export_class_samples,
+            get_import_manifest,
+            extract_import_samples
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

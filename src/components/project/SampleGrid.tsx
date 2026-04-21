@@ -1,3 +1,4 @@
+import { invoke } from '@tauri-apps/api/core';
 import {
   ActionIcon,
   Badge,
@@ -24,6 +25,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { toast } from 'sonner';
 import { useAppProvider } from '~/components/layout/AppProvider';
 import { ProjectSample } from '~/lib/db/domain/samples';
 import { colorFromString } from '~/lib/project/class-color';
@@ -89,6 +91,7 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
     null,
   );
   const [isDeletingBatch, setIsDeletingBatch] = useState(false);
+  const [isDownloadingClassZip, setIsDownloadingClassZip] = useState(false);
   const [newSampleIds, setNewSampleIds] = useState<Set<string>>(new Set());
   const gridRef = useRef<HTMLDivElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
@@ -110,6 +113,30 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
   );
   const lightboxSample =
     lightboxSampleIndex >= 0 ? samples[lightboxSampleIndex] : null;
+  const singleClassInfo = useMemo(() => {
+    if (!samples.length) {
+      return null;
+    }
+
+    const firstSample = samples[0];
+
+    if (!firstSample) {
+      return null;
+    }
+
+    const isSingleClass = samples.every(
+      (sample) => sample.classId === firstSample.classId,
+    );
+
+    if (!isSingleClass) {
+      return null;
+    }
+
+    return {
+      classId: firstSample.classId,
+      className: firstSample.className ?? firstSample.classId,
+    };
+  }, [samples]);
 
   function setResolvedActiveSampleId(sampleId: string | null) {
     if (!isActiveControlled) {
@@ -123,6 +150,43 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
     setVisibleCount((current) =>
       Math.min(current + SAMPLE_PAGE_SIZE, samples.length),
     );
+  }
+
+  function resolveSampleStoragePath(sample: ProjectSample) {
+    return sample.fileName.includes('/')
+      ? sample.fileName
+      : resolveSampleFilePath(
+          samplePathPattern,
+          sample.projectId,
+          sample.classId,
+          sample.fileName,
+        );
+  }
+
+  async function handleDownloadClassZip() {
+    if (!singleClassInfo || isDownloadingClassZip) {
+      return;
+    }
+
+    setIsDownloadingClassZip(true);
+
+    try {
+      await invoke<string>('export_class_samples', {
+        classId: singleClassInfo.classId,
+        className: singleClassInfo.className,
+        samplePaths: samples.map((sample) => resolveSampleStoragePath(sample)),
+      });
+    } catch (error) {
+      toast.error(
+        t('project.label.sampleGrid.downloadError', {
+          params: {
+            message: error instanceof Error ? error.message : String(error),
+          },
+        }),
+      );
+    } finally {
+      setIsDownloadingClassZip(false);
+    }
   }
 
   useEffect(() => {
@@ -530,8 +594,22 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
               ) : (
                 <span />
               )}
-              {actions ? (
-                <div className="flex items-center gap-1">{actions}</div>
+              {actions || singleClassInfo ? (
+                <div className="flex items-center gap-1">
+                  {singleClassInfo ? (
+                    <Button
+                      loading={isDownloadingClassZip}
+                      onClick={() => {
+                        void handleDownloadClassZip();
+                      }}
+                      size="xs"
+                      variant="subtle"
+                    >
+                      {t('common.download')}
+                    </Button>
+                  ) : null}
+                  {actions}
+                </div>
               ) : null}
             </>
           )}

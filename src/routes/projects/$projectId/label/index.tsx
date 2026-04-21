@@ -37,10 +37,11 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useFullscreenElement } from '@mantine/hooks';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import clsx from 'clsx';
-import { ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { ReactNode, createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import CameraUI from '~/components/camera/CameraUI';
 import { CaptureSession } from '~/components/camera/types';
@@ -967,15 +968,46 @@ function CameraCapturePanel({
   onCaptureSession: (session: CaptureSession) => Promise<void>;
   onRenameClass: (indexOrClassId: number | string, name: string) => void;
 }) {
+  const isWindows = useMemo(() => /windows/i.test(navigator.userAgent), []);
+  const { ref: nativeFsRef, toggle: nativeFsToggle, fullscreen: nativeFsActive } =
+    useFullscreenElement<HTMLDivElement>();
+  const cssRef = useRef<HTMLDivElement>(null);
+  const [cssFullscreen, setCssFullscreen] = useState(false);
+
+  const containerRef = isWindows ? nativeFsRef : cssRef;
+  const isFullscreen = isWindows ? nativeFsActive : cssFullscreen;
+  const toggleFullscreen = isWindows
+    ? nativeFsToggle
+    : () => setCssFullscreen((v) => !v);
+
+  useEffect(() => {
+    if (!cssFullscreen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setCssFullscreen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [cssFullscreen]);
+
   if (!currentCameraClass) {
     return null;
   }
 
   return (
-    <div>
+    <div
+      ref={containerRef}
+      className={clsx(
+        'bg-zinc-950',
+        isFullscreen
+          ? 'fixed inset-0 z-[9999] flex items-center justify-center rounded-none'
+          : 'overflow-hidden rounded-2xl',
+      )}
+    >
       <CameraUI
         autoConnect
-        className="w-full"
+        className={isFullscreen ? 'w-full max-h-screen' : 'w-full'}
+        isFullscreen={isFullscreen}
+        onToggleFullscreen={toggleFullscreen}
         onCaptureSession={(session) => {
           void onCaptureSession(session);
         }}
