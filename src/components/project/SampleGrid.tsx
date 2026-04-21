@@ -2,7 +2,6 @@ import {
   ActionIcon,
   Badge,
   Button,
-  Loader,
   Modal,
   Popover,
   ScrollArea,
@@ -83,11 +82,13 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
     null,
   );
   const [isDeletingBatch, setIsDeletingBatch] = useState(false);
+  const [newSampleIds, setNewSampleIds] = useState<Set<string>>(new Set());
   const gridRef = useRef<HTMLDivElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const thumbnailRefMap = useRef<Record<string, HTMLButtonElement | null>>({});
   const shouldFocusActiveRef = useRef(false);
   const previousSamplesRef = useRef<ProjectSample[]>(samples);
+  const knownSampleIdsRef = useRef<Set<string>>(new Set(samples.map((s) => s.id)));
   const resolvedActiveSampleId = isActiveControlled
     ? (activeSampleId ?? null)
     : internalActiveSampleId;
@@ -251,6 +252,26 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
     thumbnailRefMap.current[resolvedActiveSampleId]?.focus();
     shouldFocusActiveRef.current = false;
   }, [resolvedActiveSampleId]);
+
+  useEffect(() => {
+    const knownIds = knownSampleIdsRef.current;
+    const addedIds = samples.filter((s) => !knownIds.has(s.id)).map((s) => s.id);
+    knownSampleIdsRef.current = new Set(samples.map((s) => s.id));
+
+    if (addedIds.length === 0) return;
+
+    setNewSampleIds((prev) => new Set([...prev, ...addedIds]));
+
+    const timer = setTimeout(() => {
+      setNewSampleIds((prev) => {
+        const next = new Set(prev);
+        addedIds.forEach((id) => next.delete(id));
+        return next;
+      });
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [samples]);
 
   useEffect(() => {
     if (!lightboxSample) {
@@ -540,6 +561,7 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
                 aria-pressed={isSelectMode ? isSelected : isActive}
                 className={clsx(
                   'relative aspect-square overflow-hidden rounded-md border bg-zinc-50 transition',
+                  newSampleIds.has(sample.id) && 'motion-preset-pop motion-duration-300',
                   isSelectMode && isSelected
                     ? 'border-blue-500 ring-2 ring-blue-200 dark:border-blue-400 dark:ring-blue-900'
                     : isActive && !isSelectMode
@@ -581,9 +603,7 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
                     src={previewMap[sample.id]}
                   />
                 ) : (
-                  <div className="flex size-full items-center justify-center">
-                    <Loader size="sm" />
-                  </div>
+                  <Skeleton className="size-full" radius={0} animate />
                 )}
 
                 {isSelectMode && (
@@ -718,7 +738,7 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
                   src={previewMap[lightboxSample.id]}
                 />
               ) : (
-                <Loader size="sm" />
+                <Skeleton className="size-full" radius="md" animate />
               )}
             </div>
 

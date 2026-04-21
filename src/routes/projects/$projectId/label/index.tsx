@@ -5,6 +5,7 @@ import {
   Menu,
   Modal,
   Popover,
+  Skeleton,
   Text,
 } from '@mantine/core';
 import {
@@ -753,6 +754,12 @@ function ProjectLabelPage() {
                         {t('project.label.noImages')}
                       </Text>
                     ) : null}
+                  </div>
+                ) : uploadingClassMap[item.id]?.isPending ? (
+                  <div className="grid gap-2 border-t border-zinc-200 px-3 py-3 dark:border-zinc-700" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))' }}>
+                    {Array.from({ length: uploadingClassMap[item.id].fileCount }, (_, i) => (
+                      <Skeleton key={i} className="aspect-square rounded-md" animate />
+                    ))}
                   </div>
                 ) : null}
               </div>

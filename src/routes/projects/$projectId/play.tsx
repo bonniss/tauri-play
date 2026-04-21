@@ -1,18 +1,18 @@
-import { Alert, Button, Paper, Stack, Text } from '@mantine/core';
-import { IconPlayerPlay } from '@tabler/icons-react';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useMemo } from 'react';
-import { Form, defineConfig } from '~/components/form';
-import { useAppProvider } from '~/components/layout/AppProvider';
-import { useProjectOne } from '~/components/project/ProjectOneProvider';
-import { ProjectPlaySettingsFormValues } from '~/lib/project/settings';
+import { Alert, Button, Paper, Stack, Text } from "@mantine/core"
+import { IconPlayerPlay } from "@tabler/icons-react"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { useMemo } from "react"
+import { Form, defineConfig } from "~/components/form"
+import { useAppProvider } from "~/components/layout/AppProvider"
+import { useProjectOne } from "~/components/project/ProjectOneProvider"
+import { ProjectPlaySettingsFormValues } from "~/lib/project/settings"
 
-export const Route = createFileRoute('/projects/$projectId/play')({
+export const Route = createFileRoute("/projects/$projectId/play")({
   component: ProjectPlayPage,
-});
+})
 
 function ProjectPlayPage() {
-  const { t, locale } = useAppProvider();
+  const { t, locale } = useAppProvider()
   const {
     applyPlaySettings,
     canPlay,
@@ -20,65 +20,64 @@ function ProjectPlayPage() {
     isApplyingPlaySettings,
     playGuardDescription,
     playGuardTitle,
-    playSettings,
     projectId,
     projectName,
-  } = useProjectOne();
-  const navigate = useNavigate();
+  } = useProjectOne()
+  const navigate = useNavigate()
 
   const playSettingsForm = useMemo(
     () =>
       defineConfig<ProjectPlaySettingsFormValues>({
         mode: {
-          type: 'radio',
-          label: 'project.play.form.mode',
+          type: "radio",
+          label: "project.play.form.mode",
           props: {
-            className: 'col-span-full',
-            orientation: 'horizontal',
+            className: "col-span-full",
+            orientation: "horizontal",
             gap: 6,
             options: [
               {
-                label: t('project.play.form.modeUploadLabel'),
-                value: 'upload',
-                description: t('project.play.form.modeUploadDescription'),
+                label: t("project.play.form.modeUploadLabel"),
+                value: "upload",
+                description: t("project.play.form.modeUploadDescription"),
               },
               {
-                label: t('project.play.form.modeLiveLabel'),
-                value: 'camera',
-                description: t('project.play.form.modeLiveDescription'),
+                label: t("project.play.form.modeLiveLabel"),
+                value: "camera",
+                description: t("project.play.form.modeLiveDescription"),
               },
             ],
           },
         },
         autoPredictOnUpload: {
-          type: 'switch',
-          label: 'project.play.form.autoPredictOnUpload',
-          description: 'project.play.form.autoPredictOnUploadDescription',
+          type: "switch",
+          label: "project.play.form.autoPredictOnUpload",
+          description: "project.play.form.autoPredictOnUploadDescription",
         },
         showConfidenceScores: {
-          type: 'switch',
-          label: 'project.play.form.showConfidenceScores',
-          description: 'project.play.form.showConfidenceScoresDescription',
+          type: "switch",
+          label: "project.play.form.showConfidenceScores",
+          description: "project.play.form.showConfidenceScoresDescription",
         },
         showAllClasses: {
-          type: 'switch',
-          label: 'project.play.form.showAllClasses',
-          description: 'project.play.form.showAllClassesDescription',
+          type: "switch",
+          label: "project.play.form.showAllClasses",
+          description: "project.play.form.showAllClassesDescription",
         },
         topK: {
-          type: 'numeric',
-          label: 'project.play.form.topK',
-          description: 'project.play.form.topKDescription',
+          type: "numeric",
+          label: "project.play.form.topK",
+          description: "project.play.form.topKDescription",
           props: {
-            className: 'col-start-1',
+            className: "col-start-1",
             allowDecimal: false,
             min: 1,
           },
         },
         confidenceThreshold: {
-          type: 'numeric',
-          label: 'project.play.form.confidenceThreshold',
-          description: 'project.play.form.confidenceThresholdDescription',
+          type: "numeric",
+          label: "project.play.form.confidenceThreshold",
+          description: "project.play.form.confidenceThresholdDescription",
           props: {
             allowDecimal: true,
             decimalScale: 2,
@@ -87,46 +86,66 @@ function ProjectPlayPage() {
             step: 0.05,
           },
         },
-        liveAspectRatio: {
-          type: 'radio',
-          label: 'project.play.form.liveAspectRatio',
-          description: 'project.play.form.liveAspectRatioDescription',
+        __liveSection: {
+          type: "section",
+          label: "",
+          visible: (formData) => formData.mode === "camera",
+          render: ({ children }) => children,
           props: {
-            className: 'col-span-full',
-            orientation: 'horizontal',
-            gap: 4,
-            options: [
-              { label: t('project.play.form.liveAspectRatio169'), value: '16:9' },
-              { label: t('project.play.form.liveAspectRatio43'), value: '4:3' },
-              { label: t('project.play.form.liveAspectRatio11'), value: '1:1' },
-            ],
-          },
-        },
-        livePredictInterval: {
-          type: 'numeric',
-          label: 'project.play.form.livePredictInterval',
-          description: 'project.play.form.livePredictIntervalDescription',
-          props: {
-            className: 'col-start-1',
-            allowDecimal: false,
-            min: 100,
-            max: 5000,
-            step: 100,
+            nested: false,
+            config: defineConfig<ProjectPlaySettingsFormValues>({
+              liveAspectRatio: {
+                type: "radio",
+                label: "project.play.form.liveAspectRatio",
+                description: "project.play.form.liveAspectRatioDescription",
+                props: {
+                  className: "col-span-full",
+                  orientation: "vertical",
+                  gap: 4,
+                  options: [
+                    {
+                      label: t("project.play.form.liveAspectRatio169"),
+                      value: "16:9",
+                    },
+                    {
+                      label: t("project.play.form.liveAspectRatio43"),
+                      value: "4:3",
+                    },
+                    {
+                      label: t("project.play.form.liveAspectRatio11"),
+                      value: "1:1",
+                    },
+                  ],
+                },
+              },
+              livePredictInterval: {
+                type: "numeric",
+                label: "project.play.form.livePredictInterval",
+                description: "project.play.form.livePredictIntervalDescription",
+                props: {
+                  className: "col-start-1",
+                  allowDecimal: false,
+                  min: 100,
+                  max: 5000,
+                  step: 100,
+                },
+              },
+            }),
           },
         },
       }),
     [locale],
-  );
+  )
 
   return (
     <Paper className="p-4">
       <Stack gap="lg">
         <div className="space-y-2">
           <h2 className="text-2xl font-semibold tracking-tight">
-            {t('project.play.title')}
+            {t("project.play.title")}
           </h2>
           <Text c="dimmed" size="sm">
-            {t('project.play.description', { params: { name: projectName } })}
+            {t("project.play.description", { params: { name: projectName } })}
           </Text>
         </div>
 
@@ -146,28 +165,23 @@ function ProjectPlayPage() {
           config={playSettingsForm}
           defaultValues={getPlaySettingsFormValues()}
           onSubmit={async (values) => {
-            await applyPlaySettings(values);
+            await applyPlaySettings(values)
             await navigate({
-              to: '/p/$projectId',
+              to: "/p/$projectId",
               params: { projectId },
-            });
+            })
           }}
           renderRoot={({ children, onSubmit }) => (
             <form className="grid grid-cols-2 gap-4" onSubmit={onSubmit}>
               {children}
-              <div className="col-span-full flex justify-between">
-                <Text c="dimmed" size="sm">
-                  {t('project.play.currentMode', {
-                    params: { mode: playSettings.mode },
-                  })}
-                </Text>
+              <div className="col-span-full flex justify-end">
                 <Button
                   disabled={!canPlay}
                   leftSection={<IconPlayerPlay className="size-4" />}
                   loading={isApplyingPlaySettings}
                   type="submit"
                 >
-                  {t('project.play.start')}
+                  {t("project.play.start")}
                 </Button>
               </div>
             </form>
@@ -175,5 +189,5 @@ function ProjectPlayPage() {
         />
       </Stack>
     </Paper>
-  );
+  )
 }
