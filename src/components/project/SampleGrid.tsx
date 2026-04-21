@@ -45,6 +45,7 @@ interface SampleGridProps {
   onActiveSampleChange?: (sampleId: string | null) => void;
   onDeleteSample?: (sample: ProjectSample) => Promise<void> | void;
   onDeleteSamples?: (samples: ProjectSample[]) => Promise<void>;
+  samplePathPattern: string;
   samples: ProjectSample[];
 }
 
@@ -63,9 +64,10 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
   onActiveSampleChange,
   onDeleteSample,
   onDeleteSamples,
+  samplePathPattern,
   samples,
 }) => {
-  const { appSettings, t } = useAppProvider();
+  const { t } = useAppProvider();
   const isActiveControlled = activeSampleId !== undefined;
   const [internalActiveSampleId, setInternalActiveSampleId] = useState<
     string | null
@@ -158,7 +160,7 @@ const SampleGrid: FunctionComponent<SampleGridProps> = ({
     void Promise.all(
       visibleSamples.map(
         async (sample) =>
-          [sample.id, await createSamplePreviewUrl(resolveSampleFilePath(appSettings.samplePathPattern, sample.projectId, sample.classId, sample.fileName))] as const,
+          [sample.id, await createSamplePreviewUrl(resolveSampleFilePath(samplePathPattern, sample.projectId, sample.classId, sample.fileName))] as const,
       ),
     )
       .then((entries) => {

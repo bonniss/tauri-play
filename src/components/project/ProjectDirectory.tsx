@@ -154,6 +154,7 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
         settings: stringifyProjectSettings({
           ...DEFAULT_PROJECT_SETTINGS,
           icon,
+          samplePathPattern: appSettings.samplePathPattern,
         }),
         status: 'draft',
       });
@@ -278,18 +279,23 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
     },
   });
   const exportProjectMutation = useMutation({
-    mutationFn: async (projectId: string) => exportProject(projectId),
-    onSuccess: (zipPath) => {
-      toast.success(t('project.directory.export.success', { params: { zipPath } }));
-    },
-    onError: (error) => {
-      toast.error(
-        t('project.directory.export.error', {
-          params: {
-            message: error instanceof Error ? error.message : String(error),
-          },
-        }),
-      );
+    mutationFn: async (projectId: string) => {
+      const toastId = toast.loading(t('project.directory.export.loading'));
+      try {
+        const zipPath = await exportProject(projectId);
+        toast.success(t('project.directory.export.success', { params: { zipPath } }), { id: toastId });
+        return zipPath;
+      } catch (error) {
+        toast.error(
+          t('project.directory.export.error', {
+            params: {
+              message: error instanceof Error ? error.message : String(error),
+            },
+          }),
+          { id: toastId },
+        );
+        throw error;
+      }
     },
   });
   const updateProjectSettingsMutation = useMutation({
@@ -580,7 +586,7 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
                   sampleFilePaths={
                     projectPreviewSampleMap
                       .get(project.id)
-                      ?.map((item) => resolveSampleFilePath(appSettings.samplePathPattern, item.projectId, item.classId, item.fileName)) ?? []
+                      ?.map((item) => resolveSampleFilePath(parseProjectSettings(project.settings).samplePathPattern, item.projectId, item.classId, item.fileName)) ?? []
                   }
                 />
               );

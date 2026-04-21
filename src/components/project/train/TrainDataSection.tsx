@@ -1,8 +1,10 @@
 import { Drawer, SegmentedControl } from '@mantine/core';
 import SampleGrid from '~/components/project/SampleGrid';
 import { useDataTrain } from '~/components/project/train/DataTrainProvider';
+import { useProjectOne } from '~/components/project/ProjectOneProvider';
 
 function TrainDataSection() {
+  const { projectSettings } = useProjectOne();
   const {
     displayedSplitSamples,
     inspectDataOpened,
@@ -37,6 +39,7 @@ function TrainDataSection() {
         <SampleGrid
           classColorMap={splitClassColorMap}
           classIndexMap={splitClassIndexMap}
+          samplePathPattern={projectSettings.samplePathPattern}
           samples={displayedSplitSamples}
         />
       </div>

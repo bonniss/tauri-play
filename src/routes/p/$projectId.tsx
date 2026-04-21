@@ -479,7 +479,7 @@ const PlayExperienceShell: FunctionComponent<{
   trainedAt: string;
 }> = ({ children, trainedAt }) => {
   const { t, locale } = useAppProvider();
-  const { classes, projectDescription } = useProjectOne();
+  const { classes, projectDescription, projectSettings } = useProjectOne();
 
   return (
     <div className="grid gap-8 lg:grid-cols-[320px_minmax(0,1fr)]">
@@ -505,6 +505,7 @@ const PlayExperienceShell: FunctionComponent<{
                 classId={projectClass.id}
                 key={projectClass.id}
                 name={projectClass.name}
+                samplePathPattern={projectSettings.samplePathPattern}
                 samples={projectClass.samples}
               />
             ))}
@@ -610,14 +611,15 @@ const PredictionPanel: FunctionComponent = () => {
 const ClassPreviewItem: FunctionComponent<{
   classId: string;
   name: string;
+  samplePathPattern: string;
   samples: Array<{
     classId: string;
     fileName: string;
     id: string;
     projectId: string;
   }>;
-}> = ({ classId, name, samples }) => {
-  const { appSettings, t } = useAppProvider();
+}> = ({ classId, name, samplePathPattern, samples }) => {
+  const { t } = useAppProvider();
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const previewSamples = useMemo(
     () => pickSeededSamples(samples, classId, 4),
@@ -634,7 +636,7 @@ const ClassPreviewItem: FunctionComponent<{
     }
 
     void Promise.all(
-      previewSamples.map((sample) => createSamplePreviewUrl(resolveSampleFilePath(appSettings.samplePathPattern, sample.projectId, sample.classId, sample.fileName))),
+      previewSamples.map((sample) => createSamplePreviewUrl(resolveSampleFilePath(samplePathPattern, sample.projectId, sample.classId, sample.fileName))),
     ).then((urls) => {
       if (cancelled) {
         urls.forEach((url) => revokeSamplePreviewUrl(url));

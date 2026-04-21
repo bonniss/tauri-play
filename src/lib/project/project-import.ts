@@ -3,6 +3,11 @@ import { createClass } from '~/lib/db/domain/classes';
 import { createProject } from '~/lib/db/domain/projects';
 import { createSample } from '~/lib/db/domain/samples';
 import { genClassId, genProjectId, genSampleId } from './id-generator';
+import { DEFAULT_SAMPLE_PATH_PATTERN } from './sample-path';
+import {
+  parseProjectSettings,
+  stringifyProjectSettings,
+} from './settings';
 import type { ExportManifest } from './project-export';
 
 export async function importProject(file: File): Promise<string> {
@@ -40,11 +45,16 @@ export async function importProject(file: File): Promise<string> {
     pathMap,
   });
 
+  // Force default pattern: the Rust extractor always writes to the default path structure.
+  const importedSettings = parseProjectSettings(manifest.project.settings);
   await createProject({
     id: newProjectId,
     name: manifest.project.name,
     description: manifest.project.description,
-    settings: manifest.project.settings,
+    settings: stringifyProjectSettings({
+      ...importedSettings,
+      samplePathPattern: DEFAULT_SAMPLE_PATH_PATTERN,
+    }),
     status: 'draft',
     taskType: manifest.project.taskType,
   });

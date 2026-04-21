@@ -147,6 +147,7 @@
         "error": "Nhập dự án thất bại: {{message}}"
       },
       "export": {
+        "loading": "Đang xuất dự án…",
         "success": "Đã lưu tại: {{zipPath}}",
         "error": "Xuất dự án thất bại: {{message}}"
       },

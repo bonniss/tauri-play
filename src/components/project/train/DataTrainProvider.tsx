@@ -573,7 +573,7 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
     trainSettings,
   } = useProjectOne();
   const queryClient = useQueryClient();
-  const { appSettings, t, locale } = useAppProvider();
+  const { t, locale } = useAppProvider();
   const [activeSession, setActiveSession] = useState<ActiveTrainSession | null>(
     null,
   );
@@ -632,7 +632,7 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
           id: item.id,
           name: item.name,
           samples: item.samples.map((sample) => ({
-            filePath: resolveSampleFilePath(appSettings.samplePathPattern, sample.projectId, sample.classId, sample.fileName),
+            filePath: resolveSampleFilePath(projectSettings.samplePathPattern, sample.projectId, sample.classId, sample.fileName),
             id: sample.id,
             originalFileName: sample.originalFileName,
           })),

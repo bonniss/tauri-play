@@ -1,4 +1,5 @@
 import { type } from "arktype"
+import { DEFAULT_SAMPLE_PATH_PATTERN } from "./sample-path"
 
 export interface ProjectLabelSettings {
   maxClasses: number | null
@@ -36,6 +37,7 @@ export interface ProjectSettings {
   icon: string
   label: ProjectLabelSettings
   play: ProjectPlaySettings
+  samplePathPattern: string
   train: ProjectTrainSettings
 }
 
@@ -100,6 +102,7 @@ export const DEFAULT_PROJECT_SETTINGS: ProjectSettings = {
   icon: "🦊",
   label: DEFAULT_PROJECT_LABEL_SETTINGS,
   play: DEFAULT_PROJECT_PLAY_SETTINGS,
+  samplePathPattern: DEFAULT_SAMPLE_PATH_PATTERN,
   train: DEFAULT_PROJECT_TRAIN_SETTINGS,
 }
 
@@ -136,6 +139,7 @@ const projectSettingsInputSchema = type({
   icon: "string | undefined",
   label: labelSettingsInputSchema.or("undefined"),
   play: playSettingsInputSchema.or("undefined"),
+  samplePathPattern: "string > 0 | undefined",
   train: trainSettingsInputSchema.or("undefined"),
 })
 
@@ -185,6 +189,7 @@ export function normalizeProjectSettings(
     icon: undefined,
     label: undefined,
     play: undefined,
+    samplePathPattern: undefined,
     train: undefined,
   }
 
@@ -193,6 +198,7 @@ export function normalizeProjectSettings(
     icon: source.icon?.trim() || DEFAULT_PROJECT_SETTINGS.icon,
     label: normalizeProjectLabelSettings(source.label),
     play: normalizeProjectPlaySettings(source.play),
+    samplePathPattern: source.samplePathPattern ?? DEFAULT_PROJECT_SETTINGS.samplePathPattern,
     train: normalizeProjectTrainSettings(source.train),
   }
 }

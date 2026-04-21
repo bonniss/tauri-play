@@ -75,7 +75,7 @@ type CameraTargetState = {
 };
 
 function ProjectLabelPage() {
-  const { appSettings, t } = useAppProvider();
+  const { t } = useAppProvider();
   const labelSettingsForm = useMemo(
     () =>
       defineConfig<ProjectLabelSettingsFormValues>({
@@ -119,6 +119,7 @@ function ProjectLabelPage() {
     isApplyingLabelSettings,
     isReadyForTrain,
     projectId,
+    projectSettings,
     projectStatus,
     removeClass,
     removeSamplesFromClass,
@@ -128,6 +129,7 @@ function ProjectLabelPage() {
     setProjectStatus,
     updateClassName,
   } = useProjectOne();
+  const { samplePathPattern } = projectSettings;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -240,7 +242,7 @@ function ProjectLabelPage() {
 
     try {
       await deleteSampleMutation.mutateAsync({
-        resolvedFilePath: resolveSampleFilePath(appSettings.samplePathPattern, sample.projectId, sample.classId, sample.fileName),
+        resolvedFilePath: resolveSampleFilePath(samplePathPattern, sample.projectId, sample.classId, sample.fileName),
         sampleId: sample.id,
       });
     } catch (error) {
@@ -268,7 +270,7 @@ function ProjectLabelPage() {
     try {
       for (const sample of samplesToDelete) {
         await deleteSampleMutation.mutateAsync({
-          resolvedFilePath: resolveSampleFilePath(appSettings.samplePathPattern, sample.projectId, sample.classId, sample.fileName),
+          resolvedFilePath: resolveSampleFilePath(samplePathPattern, sample.projectId, sample.classId, sample.fileName),
           sampleId: sample.id,
         });
         deleted.push(sample);
@@ -402,7 +404,7 @@ function ProjectLabelPage() {
       const nextSamples = await saveCapturedSampleFrames({
         classId: cameraTargetState.classId,
         frames: session.frames,
-        pattern: appSettings.samplePathPattern,
+        pattern: samplePathPattern,
         projectId,
       });
       const optimisticSamples = addSamplesToClass(
@@ -453,7 +455,7 @@ function ProjectLabelPage() {
         );
         await Promise.allSettled(
           optimisticSamples.map(async (sample) => {
-            await deleteSampleFile(resolveSampleFilePath(appSettings.samplePathPattern, sample.projectId, sample.classId, sample.fileName));
+            await deleteSampleFile(resolveSampleFilePath(samplePathPattern, sample.projectId, sample.classId, sample.fileName));
           }),
         );
         throw error;
@@ -843,6 +845,7 @@ function ProjectLabelPage() {
                       loading={uploadingClassMap[item.id]?.isPending ?? false}
                       onDeleteSample={handleDeleteSample}
                       onDeleteSamples={handleDeleteSamples}
+                      samplePathPattern={samplePathPattern}
                       samples={item.samples}
                     />
                     {!item.samples.length ? (

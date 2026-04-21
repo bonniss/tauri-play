@@ -6,7 +6,6 @@ import { activateProject, updateProject } from "~/lib/db/domain/projects"
 import { createSample } from "~/lib/db/domain/samples"
 import { genSampleId } from "~/lib/project/id-generator"
 import { saveUploadedSampleFile } from "~/lib/project/sample-storage"
-import { useAppProvider } from "~/components/layout/AppProvider"
 import ProjectActionButton from "./ProjectActionButton"
 import { useProjectOne } from "./ProjectOneProvider"
 
@@ -45,9 +44,9 @@ const UploadSamplesButton: FunctionComponent<UploadSamplesButtonProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const queryClient = useQueryClient()
-  const { appSettings } = useAppProvider()
   const {
     projectId,
+    projectSettings,
     projectStatus,
     seedClass,
     removeClass,
@@ -90,7 +89,7 @@ const UploadSamplesButton: FunctionComponent<UploadSamplesButtonProps> = ({
             const { fileName, metadata } = await saveUploadedSampleFile({
               classId: seededClass.id,
               file,
-              pattern: appSettings.samplePathPattern,
+              pattern: projectSettings.samplePathPattern,
               projectId,
               sampleId,
             })

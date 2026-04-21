@@ -147,6 +147,7 @@
         "error": "Import failed: {{message}}"
       },
       "export": {
+        "loading": "Exporting project…",
         "success": "Saved to: {{zipPath}}",
         "error": "Export failed: {{message}}"
       },

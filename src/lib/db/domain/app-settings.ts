@@ -1,8 +1,6 @@
 import { type } from 'arktype';
 import { getKysely } from '../kysely';
-
-const DEFAULT_SAMPLE_PATH_PATTERN =
-  'projects/{projectId}/samples/{classId}/{fileName}';
+import { DEFAULT_SAMPLE_PATH_PATTERN } from '~/lib/project/sample-path';
 
 const REQUIRED_PLACEHOLDERS = ['{projectId}', '{classId}', '{fileName}'] as const;
 
