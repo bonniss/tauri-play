@@ -69,16 +69,23 @@
       "tagline": "Cách nhanh và thú vị để trải nghiệm machine learning — không code, không cloud, không cần chuyên môn."
     },
     "howItWorks": {
-      "title": "Cách hoạt động",
+      "title": "Sử dụng thế nào",
       "label": {
-        "description": "Thu thập ảnh cho từng thứ bạn muốn máy nhận diện. Chụp bằng camera hoặc tải lên từ thiết bị."
+        "description": "Thu thập ảnh cho từng thứ muốn nhận diện bằng cách chụp ảnh hoặc thêm ảnh có sẵn."
       },
       "train": {
-        "description": "Nhấn Huấn luyện. Model của bạn sẵn sàng trong vài giây — không code, không cloud, không chờ đợi."
+        "description": "Cho máy \"học\" hình ảnh đã cung cấp — không cần code, không cần mạng."
       },
       "play": {
-        "description": "Trỏ camera hoặc tải ảnh lên để xem model nhận diện mọi thứ theo thời gian thực."
-      }
+        "description": "Trỏ camera hoặc tải ảnh lên để xem máy nhận diện mọi thứ theo thời gian thực."
+      },
+      "sample": {
+        "class1": "Súp lơ xanh",
+        "class2": "Súp lơ trắng"
+      },
+      "sampleCta": "Thử phân biệt súp lơ ngay",
+      "sampleCtaLoading": "Đang tải…",
+      "sampleCtaError": "Không thể tải dự án mẫu."
     },
     "cta": {
       "title": "Sẵn sàng dạy máy tính của bạn?"

@@ -1,71 +1,343 @@
-import { IconCamera, IconPlayerPlay, IconTag } from "@tabler/icons-react"
-import { FunctionComponent } from "react"
-import { useAppProvider } from "../layout/AppProvider"
+import { Button } from '@mantine/core';
+import { IconPlayerPlay } from '@tabler/icons-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
+import { FunctionComponent, startTransition } from 'react';
+import { toast } from 'sonner';
+import { importProject } from '~/lib/project/project-import';
+import { IconDataLabel, IconDataTrain } from '../icon/semantic';
+import { useAppProvider } from '../layout/AppProvider';
 
-type HowItWorksStep = {
-  descriptionKey: string
-  icon: React.ElementType
-  step: number
-  titleKey: string
+// ─── Step 1: Collect ────────────────────────────────────────────────────────
+
+const COLLECT_CLASS_DATA = [
+  {
+    key: 'class1' as const,
+    dot: 'bg-emerald-500',
+    count: 28,
+    images: [
+      '/example/broccoli.webp',
+      '/example/broccoli-2.webp',
+      '/example/broccoli-2.webp',
+      '/example/broccoli.webp',
+    ],
+  },
+  {
+    key: 'class2' as const,
+    dot: 'bg-zinc-400',
+    count: 24,
+    images: [
+      '/example/cauliflower.webp',
+      '/example/cauliflower-2.webp',
+      '/example/cauliflower-2.webp',
+      '/example/cauliflower.webp',
+    ],
+  },
+] as const;
+
+function CollectVisual({ class1, class2 }: { class1: string; class2: string }) {
+  const labels = { class1, class2 };
+  return (
+    <div className="overflow-hidden rounded-2xl border border-zinc-100 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900/60">
+      <div className="grid grid-cols-2 gap-2.5">
+        {COLLECT_CLASS_DATA.map((cls) => {
+          const label = labels[cls.key];
+          return (
+            <div key={cls.key} className="space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <span className={`size-2 shrink-0 rounded-full ${cls.dot}`} />
+                <span className="truncate text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                  {label}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-1">
+                {cls.images.map((src, i) => (
+                  <div
+                    key={i}
+                    className="aspect-square overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800"
+                  >
+                    <img
+                      src={src}
+                      alt={label}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      style={{ transitionDelay: `${i * 50}ms` }}
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className="text-right font-mono text-xs text-zinc-400">
+                {cls.count} ảnh
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
-const STEPS: HowItWorksStep[] = [
+// ─── Step 2: Train ───────────────────────────────────────────────────────────
+
+const TRAIN_METRICS = [
   {
-    step: 1,
-    icon: IconTag,
-    titleKey: "project.nav.label",
-    descriptionKey: "home.howItWorks.label.description",
+    label: 'Accuracy',
+    value: '97.4%',
+    color: 'text-emerald-600 dark:text-emerald-400',
+    delay: '',
   },
   {
-    step: 2,
-    icon: IconCamera,
-    titleKey: "project.nav.train",
-    descriptionKey: "home.howItWorks.train.description",
+    label: 'Loss',
+    value: '0.082',
+    color: 'text-zinc-500 dark:text-zinc-400',
+    delay: 'delay-75',
   },
   {
-    step: 3,
-    icon: IconPlayerPlay,
-    titleKey: "project.nav.play",
-    descriptionKey: "home.howItWorks.play.description",
+    label: 'Val Acc',
+    value: '95.1%',
+    color: 'text-sky-600 dark:text-sky-400',
+    delay: 'delay-150',
   },
-]
+  {
+    label: 'Val Loss',
+    value: '0.124',
+    color: 'text-zinc-500 dark:text-zinc-400',
+    delay: 'delay-[225ms]',
+  },
+] as const;
+
+function TrainVisual() {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-zinc-100 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
+      <div className="space-y-3.5">
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-zinc-500">Epochs</span>
+            <span className="font-mono text-xs text-zinc-600 dark:text-zinc-400">
+              20 / 20
+            </span>
+          </div>
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+            <div className="h-full w-0 rounded-full bg-emerald-500 transition-all duration-[900ms] ease-out group-hover:w-full" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-1.5">
+          {TRAIN_METRICS.map((m) => (
+            <div
+              key={m.label}
+              className={`rounded-lg bg-zinc-50 p-2 opacity-40 transition-opacity duration-300 group-hover:opacity-100 dark:bg-zinc-800/60 ${m.delay}`}
+            >
+              <div className="text-xs text-zinc-400">{m.label}</div>
+              <div className={`font-mono text-sm font-semibold ${m.color}`}>
+                {m.value}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-1.5 opacity-0 transition-opacity duration-300 delay-300 group-hover:opacity-100">
+          <div className="size-1.5 rounded-full bg-emerald-500" />
+          <span className="text-xs text-zinc-400">Model saved</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Step 3: Demo ────────────────────────────────────────────────────────────
+
+const DEMO_RESULT_DATA = [
+  {
+    key: 'class1' as const,
+    pct: 96,
+    barClass: 'bg-emerald-500',
+    barHover: 'group-hover:w-[96%]',
+    textColor: 'text-emerald-600 dark:text-emerald-400',
+    delay: '',
+  },
+  {
+    key: 'class2' as const,
+    pct: 4,
+    barClass: 'bg-zinc-400',
+    barHover: 'group-hover:w-[4%]',
+    textColor: 'text-zinc-500',
+    delay: 'delay-75',
+  },
+] as const;
+
+function DemoVisual({ class1, class2 }: { class1: string; class2: string }) {
+  const labels = { class1, class2 };
+  return (
+    <div className="overflow-hidden rounded-2xl border border-zinc-100 bg-white dark:border-zinc-800 dark:bg-zinc-900/60">
+      <div className="relative overflow-hidden">
+        <img
+          src="/example/broccoli-plate.jpg"
+          alt="Broccoli prediction demo"
+          className="h-32 w-full object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+        <div className="absolute bottom-2 left-3">
+          <span className="rounded-md bg-black/40 px-2 py-0.5 text-xs text-white/80 backdrop-blur-sm">
+            broccoli-plate.jpg
+          </span>
+        </div>
+      </div>
+
+      <div className="space-y-2.5 p-3">
+        {DEMO_RESULT_DATA.map((r) => {
+          const label = labels[r.key];
+          return (
+            <div key={r.key}>
+              <div className="mb-1 flex items-baseline justify-between">
+                <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                  {label}
+                </span>
+                <span className={`font-mono text-xs font-medium ${r.textColor}`}>
+                  {r.pct}%
+                </span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                <div
+                  className={`h-full w-0 rounded-full ${r.barClass} ${r.barHover} transition-all duration-700 ease-out ${r.delay}`}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Step card wrapper ───────────────────────────────────────────────────────
+
+function StepCard({
+  children,
+  connector,
+  description,
+  icon: Icon,
+  step,
+  title,
+}: {
+  children: React.ReactNode;
+  connector: boolean;
+  description: string;
+  icon: React.ElementType;
+  step: number;
+  title: string;
+}) {
+  return (
+    <div className="group flex flex-col gap-2">
+      <div className="flex items-center gap-4">
+        <span className="select-none text-5xl font-bold tracking-tight text-zinc-200 dark:text-zinc-700">
+          {String(step).padStart(2, '0')}
+        </span>
+        {connector && (
+          <div className="hidden h-px flex-1 bg-zinc-200 dark:bg-zinc-700 sm:block" />
+        )}
+      </div>
+
+      {children}
+
+      <div className="flex items-center gap-2">
+        <Icon className="size-5 text-zinc-400 dark:text-zinc-500" />
+        <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+          {title}
+        </h3>
+      </div>
+      <p className="text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
+        {description}
+      </p>
+    </div>
+  );
+}
+
+// ─── Main component ──────────────────────────────────────────────────────────
 
 const HomeHowItWorks: FunctionComponent = () => {
-  const { t } = useAppProvider()
+  const { t } = useAppProvider();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const class1 = t('home.howItWorks.sample.class1');
+  const class2 = t('home.howItWorks.sample.class2');
+
+  const sampleMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/example/example-project.zip');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const file = new File([blob], 'example-project.zip', {
+        type: 'application/zip',
+      });
+      return importProject(file);
+    },
+    onSuccess: async (projectId) => {
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
+      startTransition(() => {
+        void navigate({
+          to: '/projects/$projectId/label',
+          params: { projectId },
+        });
+      });
+    },
+    onError: (err) => {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : t('home.howItWorks.sampleCtaError'),
+      );
+    },
+  });
 
   return (
     <section className="mx-auto w-full max-w-6xl px-6 md:px-10">
-      {/* <h3 className="mb-8 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-        {t("home.howItWorks.title")}
-      </h3> */}
       <div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
-        {STEPS.map((step, index) => {
-          const Icon = step.icon
-          return (
-            <div key={step.titleKey} className="flex flex-col gap-4">
-              <div className="flex items-center gap-4">
-                <span className="select-none text-5xl font-bold tracking-tight text-zinc-200 dark:text-zinc-700">
-                  {String(step.step).padStart(2, "0")}
-                </span>
-                {index < STEPS.length - 1 && (
-                  <div className="hidden h-px flex-1 bg-zinc-200 dark:bg-zinc-700 sm:block" />
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Icon className="size-5 text-zinc-400 dark:text-zinc-500" />
-                <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                  {t(step.titleKey)}
-                </h3>
-              </div>
-              <p className="text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
-                {t(step.descriptionKey)}
-              </p>
-            </div>
-          )
-        })}
+        <StepCard
+          step={1}
+          connector
+          icon={IconDataLabel}
+          title={t('project.nav.label')}
+          description={t('home.howItWorks.label.description')}
+        >
+          <CollectVisual class1={class1} class2={class2} />
+        </StepCard>
+
+        <StepCard
+          step={2}
+          connector
+          icon={IconDataTrain}
+          title={t('project.nav.train')}
+          description={t('home.howItWorks.train.description')}
+        >
+          <TrainVisual />
+        </StepCard>
+
+        <StepCard
+          step={3}
+          connector={false}
+          icon={IconPlayerPlay}
+          title={t('project.nav.play')}
+          description={t('home.howItWorks.play.description')}
+        >
+          <DemoVisual class1={class1} class2={class2} />
+        </StepCard>
+      </div>
+
+      <div className="mt-10 flex justify-center">
+        <Button
+          loading={sampleMutation.isPending}
+          onClick={() => sampleMutation.mutate()}
+          size="md"
+          variant="default"
+        >
+          {sampleMutation.isPending
+            ? t('home.howItWorks.sampleCtaLoading')
+            : t('home.howItWorks.sampleCta')}
+        </Button>
       </div>
     </section>
-  )
-}
+  );
+};
 
-export default HomeHowItWorks
+export default HomeHowItWorks;

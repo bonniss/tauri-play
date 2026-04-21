@@ -69,16 +69,23 @@
       "tagline": "A fast, fun way to experience machine learning — no coding, no cloud, no expertise required."
     },
     "howItWorks": {
-      "title": "How it works",
+      "title": "Get started in three steps",
       "label": {
-        "description": "Collect photos for each thing you want the computer to recognize. Use your camera or upload images from your device."
+        "description": "Collect photos of each thing you want to recognize — snap them with your camera or add images you already have."
       },
       "train": {
-        "description": "Click train. Your model is ready in seconds — no code, no cloud, no waiting."
+        "description": "Let the machine learn from what you collected — no code, no internet, no waiting."
       },
       "play": {
-        "description": "Point your camera or upload a photo to see your model recognize things in real time."
-      }
+        "description": "Point your camera or drop a photo and watch it recognize things in real time."
+      },
+      "sample": {
+        "class1": "Broccoli",
+        "class2": "Cauliflower"
+      },
+      "sampleCta": "Try it — broccoli vs. cauliflower",
+      "sampleCtaLoading": "Loading sample…",
+      "sampleCtaError": "Could not load sample project."
     },
     "cta": {
       "title": "Ready to teach your computer?"
