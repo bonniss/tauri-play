@@ -1,5 +1,5 @@
 import { Button } from '@mantine/core';
-import { IconPlayerPlay } from '@tabler/icons-react';
+import { IconArrowRight, IconPlayerPlay } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { FunctionComponent, startTransition } from 'react';
@@ -227,24 +227,34 @@ function StepCard({
   title: string;
 }) {
   return (
-    <div className="group flex flex-col gap-2">
-      <div className="flex items-center gap-4">
-        <span className="select-none text-5xl font-bold tracking-tight text-zinc-200 dark:text-zinc-700">
+    <div className="group flex flex-col gap-3">
+      <div className="flex items-center gap-3">
+        <span className="select-none text-5xl font-bold tracking-tight text-zinc-200 transition-colors duration-300 group-hover:text-zinc-300 dark:text-zinc-700 dark:group-hover:text-zinc-600">
           {String(step).padStart(2, '0')}
         </span>
-        {connector && (
-          <div className="hidden h-px flex-1 bg-zinc-200 dark:bg-zinc-700 sm:block" />
-        )}
-      </div>
-
-      {children}
-
-      <div className="flex items-center gap-2">
-        <Icon className="size-5 text-zinc-400 dark:text-zinc-500" />
+        <div className="flex size-9 items-center justify-center rounded-xl bg-zinc-100 text-zinc-500 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:bg-zinc-900 group-hover:text-white dark:bg-zinc-900 dark:text-zinc-400 dark:group-hover:bg-white dark:group-hover:text-zinc-900">
+          <Icon className="size-5" />
+        </div>
         <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
           {title}
         </h3>
       </div>
+
+      <div className="relative">
+        <div className="transition-transform duration-300 group-hover:-translate-y-1">
+          {children}
+        </div>
+        {connector && (
+          <div className="absolute left-full top-1/2 hidden h-3 w-10 -translate-y-1/2 items-center sm:flex lg:w-12">
+            <div className="relative h-px w-full bg-zinc-200 dark:bg-zinc-700">
+              <div className="absolute inset-y-0 left-0 w-0 bg-gradient-to-r from-emerald-400 via-sky-400 to-amber-400 shadow-[0_0_14px_rgba(56,189,248,0.45)] transition-all duration-700 ease-out group-hover:w-full dark:from-emerald-700 dark:via-sky-700 dark:to-amber-700" />
+              <div className="absolute -left-0.5 top-1/2 size-2 -translate-y-1/2 rounded-full bg-zinc-300 transition-colors duration-300 group-hover:bg-emerald-400 dark:bg-zinc-600 dark:group-hover:bg-emerald-700" />
+              <div className="absolute -right-0.5 top-1/2 size-2 -translate-y-1/2 rounded-full bg-zinc-300 transition-all duration-500 group-hover:scale-110 group-hover:bg-amber-400 dark:bg-zinc-600 dark:group-hover:bg-amber-700" />
+            </div>
+          </div>
+        )}
+      </div>
+
       <p className="text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
         {description}
       </p>
@@ -292,7 +302,7 @@ const HomeHowItWorks: FunctionComponent = () => {
 
   return (
     <section className="mx-auto w-full max-w-6xl px-6 md:px-10">
-      <div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-10 sm:grid-cols-3 sm:gap-8">
         <StepCard
           step={1}
           connector
@@ -328,8 +338,12 @@ const HomeHowItWorks: FunctionComponent = () => {
         <Button
           loading={sampleMutation.isPending}
           onClick={() => sampleMutation.mutate()}
-          size="md"
-          variant="default"
+          size="lg"
+          radius="xl"
+          variant="filled"
+          color="dark"
+          rightSection={<IconArrowRight className="size-4" />}
+          className="min-w-56 shadow-[0_18px_40px_-20px_rgba(24,24,27,0.55)] transition-transform duration-200 hover:-translate-y-0.5"
         >
           {sampleMutation.isPending
             ? t('home.howItWorks.sampleCtaLoading')
