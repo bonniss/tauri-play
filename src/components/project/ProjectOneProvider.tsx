@@ -12,6 +12,7 @@ import {
   getLatestProjectTrainLog,
   getProjectModel,
 } from '~/lib/db/domain/models';
+import { getAppSettings } from '~/lib/db/domain/app-settings';
 import {
   getProjectWorkspace,
   ProjectRecord,
@@ -78,6 +79,22 @@ type ProjectOneSampleDraft = Pick<
   order?: number;
 };
 
+async function migrateProjectSamplePath(project: ProjectRecord): Promise<ProjectRecord> {
+  let raw: Record<string, unknown> = {};
+  try { raw = JSON.parse(project.settings ?? '{}'); } catch { /* ignore */ }
+
+  if (raw.samplePathPattern) return project;
+
+  const appSettings = await getAppSettings();
+  const parsed = parseProjectSettings(project.settings);
+  const nextSettings = stringifyProjectSettings({
+    ...parsed,
+    samplePathPattern: appSettings.samplePathPattern,
+  });
+  await updateProject({ projectId: project.id, settings: nextSettings });
+  return { ...project, settings: nextSettings };
+}
+
 export const [useProjectOne, ProjectOneProvider] = createProvider(
   (defaultValue?: { projectId: string }) => {
     const projectId = defaultValue?.projectId;
@@ -99,7 +116,8 @@ export const [useProjectOne, ProjectOneProvider] = createProvider(
       if (projectId) {
         (async () => {
           const workspace = await getProjectWorkspace(projectId);
-          setProject(workspace.project);
+          const project = await migrateProjectSamplePath(workspace.project);
+          setProject(project);
           setClasses(
             workspace.classes.map((cls) => ({
               id: cls.id,
