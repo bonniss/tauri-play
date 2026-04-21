@@ -90,7 +90,7 @@ export const DEFAULT_PROJECT_PLAY_SETTINGS: ProjectPlaySettings = {
   autoPredictOnUpload: true,
   confidenceThreshold: 0,
   liveAspectRatio: "16:9",
-  livePredictInterval: 700,
+  livePredictInterval: 300,
   mode: "upload",
   showAllClasses: true,
   showConfidenceScores: true,

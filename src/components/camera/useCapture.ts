@@ -14,10 +14,10 @@ const HOLD_THRESHOLD_MS = 400
 
 const DEFAULT_SETTINGS: CaptureSettings = {
   cropRect: null,
-  fps: 4,
+  fps: 24,
   mirrorCamera: false,
-  recDelay: 500,
-  recDuration: 2000,
+  recDelay: 2000,
+  recDuration: 5000,
 }
 
 interface UseCaptureOptions {
