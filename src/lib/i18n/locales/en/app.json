@@ -92,7 +92,9 @@
     },
     "faqTitle": "Frequently Asked Questions",
     "cta": {
-      "title": "Ready to teach your computer?"
+      "eyebrow": "One curious idea is enough",
+      "title": "Turn a small spark of curiosity into something your computer can actually learn.",
+      "description": "Pick a simple idea, gather a few examples, and let PlantML turn it into a playful machine learning experiment in minutes."
     }
   },
   "common": {

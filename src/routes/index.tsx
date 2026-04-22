@@ -12,7 +12,7 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   return (
-    <div className="flex flex-col gap-16 pb-24">
+    <div className="flex flex-col gap-16">
       <HomeHero />
       <HomeLiveDemo />
       <HomeUsage />
