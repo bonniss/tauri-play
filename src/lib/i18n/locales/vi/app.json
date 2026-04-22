@@ -334,12 +334,19 @@
       },
       "form": {
         "validationSplit": "Validation split",
+        "validationSplitDescription": "Tỷ lệ ảnh dùng để validation. Giá trị cao hơn cho ước tính độ chính xác đáng tin cậy hơn nhưng để lại ít ảnh hơn để huấn luyện.",
         "epochs": "Epochs",
+        "epochsDescription": "Số lần duyệt toàn bộ dữ liệu huấn luyện. Nhiều epoch hơn có thể cải thiện độ chính xác nhưng tăng thời gian huấn luyện.",
         "batchSize": "Batch size",
+        "batchSizeDescription": "Số ảnh xử lý mỗi lần cập nhật gradient. Batch lớn hơn nhanh hơn nhưng tốn nhiều bộ nhớ hơn.",
         "learningRate": "Learning rate",
+        "learningRateDescription": "Bước nhảy của mỗi lần cập nhật trọng số. Giá trị thấp hơn huấn luyện chậm hơn nhưng ổn định hơn.",
         "imageSize": "Image size",
+        "imageSizeDescription": "Độ phân giải đầu vào tính bằng pixel (rộng × cao). Kích thước lớn hơn nắm bắt nhiều chi tiết hơn nhưng xử lý chậm hơn.",
         "earlyStopping": "Early stopping",
-        "earlyStoppingPatience": "Early stopping patience"
+        "earlyStoppingDescription": "Tự động dừng huấn luyện khi độ chính xác validation không còn cải thiện.",
+        "earlyStoppingPatience": "Early stopping patience",
+        "earlyStoppingPatienceDescription": "Số epoch chờ mà không có cải thiện trước khi dừng."
       },
       "timeline": {
         "setup": "Chuẩn bị môi trường",

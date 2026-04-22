@@ -334,12 +334,19 @@
       },
       "form": {
         "validationSplit": "Validation split",
+        "validationSplitDescription": "Fraction of images held out for validation. Higher values give more reliable accuracy estimates but leave fewer images for training.",
         "epochs": "Epochs",
+        "epochsDescription": "Number of full passes through the training data. More epochs can improve accuracy but increase training time.",
         "batchSize": "Batch size",
+        "batchSizeDescription": "Number of images processed per gradient update. Larger batches are faster but use more memory.",
         "learningRate": "Learning rate",
+        "learningRateDescription": "Step size for each weight update. Lower values train more slowly but are more stable.",
         "imageSize": "Image size",
+        "imageSizeDescription": "Input resolution in pixels (width × height). Larger sizes capture more detail but are slower to process.",
         "earlyStopping": "Early stopping",
-        "earlyStoppingPatience": "Early stopping patience"
+        "earlyStoppingDescription": "Stop training automatically when validation accuracy stops improving.",
+        "earlyStoppingPatience": "Early stopping patience",
+        "earlyStoppingPatienceDescription": "Number of epochs to wait without improvement before stopping."
       },
       "timeline": {
         "setup": "Setup",

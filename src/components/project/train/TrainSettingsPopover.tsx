@@ -22,7 +22,8 @@ function TrainSettingsPopover() {
       defineConfig<ProjectTrainSettingsFormValues>({
         validationSplit: {
           type: 'numeric',
-          label: t('project.train.form.validationSplit'),
+          label: 'project.train.form.validationSplit',
+          description: 'project.train.form.validationSplitDescription',
           props: {
             allowDecimal: true,
             decimalScale: 2,
@@ -33,17 +34,20 @@ function TrainSettingsPopover() {
         },
         epochs: {
           type: 'numeric',
-          label: t('project.train.form.epochs'),
+          label: 'project.train.form.epochs',
+          description: 'project.train.form.epochsDescription',
           props: { allowDecimal: false, min: 1 },
         },
         batchSize: {
           type: 'numeric',
-          label: t('project.train.form.batchSize'),
+          label: 'project.train.form.batchSize',
+          description: 'project.train.form.batchSizeDescription',
           props: { allowDecimal: false, min: 1 },
         },
         learningRate: {
           type: 'numeric',
-          label: t('project.train.form.learningRate'),
+          label: 'project.train.form.learningRate',
+          description: 'project.train.form.learningRateDescription',
           props: {
             allowDecimal: true,
             decimalScale: 4,
@@ -52,18 +56,16 @@ function TrainSettingsPopover() {
             step: 0.0005,
           },
         },
-        imageSize: {
-          type: 'numeric',
-          label: t('project.train.form.imageSize'),
-          props: { allowDecimal: false, min: 32, step: 32 },
-        },
+        imageSize: { type: 'hidden' },
         earlyStopping: {
           type: 'switch',
-          label: t('project.train.form.earlyStopping'),
+          label: 'project.train.form.earlyStopping',
+          description: 'project.train.form.earlyStoppingDescription',
         },
         earlyStoppingPatience: {
           type: 'numeric',
-          label: t('project.train.form.earlyStoppingPatience'),
+          label: 'project.train.form.earlyStoppingPatience',
+          description: 'project.train.form.earlyStoppingPatienceDescription',
           props: { allowDecimal: false, min: 1 },
         },
       }),
