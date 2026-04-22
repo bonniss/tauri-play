@@ -1,8 +1,10 @@
 {
-  "welcome": "Hello {{name}}",
+  "app": "PlantML",
   "header": {
     "home": "Home",
-    "projects": "Projects"
+    "projects": "Projects",
+    "gettingStarted": "Start here",
+    "faq": "FAQ"
   },
   "settings": {
     "theme": "Theme",
@@ -16,7 +18,7 @@
     "hero": {
       "title": "Teach your computer to see",
       "description": "Easy as growing a plant. Collect photos, train in seconds, and predict.<br> No code, no cloud.",
-      "cta": "New Project"
+      "cta": "Start now"
     },
     "features": {
       "title": "Features",
@@ -92,9 +94,8 @@
     },
     "faqTitle": "Frequently Asked Questions",
     "cta": {
-      "eyebrow": "One curious idea is enough",
-      "title": "Turn a small spark of curiosity into something your computer can actually learn.",
-      "description": "Pick a simple idea, gather a few examples, and let PlantML turn it into a playful machine learning experiment in minutes."
+      "title": "Ready to get started?",
+      "description": "Pick a few objects from your desk and teach your computer to tell them apart."
     }
   },
   "common": {

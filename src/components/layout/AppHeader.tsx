@@ -33,6 +33,15 @@ const AppHeader: FunctionComponent<AppHeaderProps> = () => {
         <div className="flex items-center gap-4">
           <Button
             component={Link}
+            hash="getting-started"
+            size="compact-sm"
+            variant="subtle"
+            to="/"
+          >
+            {t('header.gettingStarted')}
+          </Button>
+          <Button
+            component={Link}
             size="compact-sm"
             variant="subtle"
             to="/projects"
@@ -45,6 +54,15 @@ const AppHeader: FunctionComponent<AppHeaderProps> = () => {
               className={clsx('transition-all', isTop ? 'size-14' : 'size-10')}
             />
           </Link>
+          <Button
+            component={Link}
+            hash="faq"
+            size="compact-sm"
+            variant="subtle"
+            to="/"
+          >
+            {t('header.faq')}
+          </Button>
           <AppSettings />
         </div>
       </div>

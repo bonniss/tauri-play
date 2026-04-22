@@ -185,9 +185,10 @@ const HomeHero: FunctionComponent = () => {
       <div className="relative mx-auto grid w-full max-w-[1440px] items-center gap-10 px-6 md:px-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)]">
         <div className="space-y-5 lg:max-w-3xl">
           <div className="space-y-4">
-            <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-zinc-950 md:text-5xl dark:text-zinc-50">
+            <h1 className="text-4xl font-semibold">{t("app")}</h1>
+            <h2 className="max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl dark:text-zinc-50">
               {renderWithBreaks(t("home.hero.title"))}
-            </h1>
+            </h2>
             <p className="max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300">
               {renderWithBreaks(t("home.hero.description"))}
             </p>
@@ -196,10 +197,10 @@ const HomeHero: FunctionComponent = () => {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <Button
               component={Link}
-              search={{ create: true } as never}
+              hash="getting-started"
               rightSection={<IconArrowRight className="size-4" />}
               size="md"
-              to="/projects"
+              to="/"
             >
               {t("home.hero.cta")}
             </Button>

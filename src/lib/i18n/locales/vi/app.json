@@ -1,8 +1,10 @@
-{
-  "welcome": "Xin chào {{name}}",
+﻿{
+  "app": "PlantML",
   "header": {
     "home": "Trang chủ",
-    "projects": "Dự án"
+    "projects": "Dự án",
+    "gettingStarted": "Bắt đầu ở đây",
+    "faq": "FAQ"
   },
   "settings": {
     "theme": "Giao diện",
@@ -16,7 +18,7 @@
     "hero": {
       "title": "Dạy máy tính nhìn thế giới.",
       "description": "Dễ như trồng cây. Thu thập ảnh, huấn luyện, hoạt động ngay trong vài giây.<br> Không cần code, không cần mạng.",
-      "cta": "Dự án mới"
+      "cta": "Bắt đầu ngay"
     },
     "features": {
       "title": "Tính năng",
