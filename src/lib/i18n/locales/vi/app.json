@@ -5,7 +5,7 @@
     "projects": "Dự án"
   },
   "settings": {
-    "theme": "Chủ đề giao diện",
+    "theme": "Giao diện",
     "language": "Ngôn ngữ",
     "system": "Hệ thống",
     "appInfo": "Thông tin ứng dụng",
@@ -86,6 +86,10 @@
       "sampleCta": "Trải nghiệm ngay dự án mẫu",
       "sampleCtaLoading": "Đang tải…",
       "sampleCtaError": "Không thể tải dự án mẫu."
+    },
+    "liveDemo": {
+      "title": "Thấy machine learning hoạt động ngay",
+      "description": "Dạy máy học qua ví dụ và thấy kết quả ngay tức thì — trực quan và dễ tiếp cận."
     },
     "cta": {
       "title": "Sẵn sàng dạy máy tính của bạn?"

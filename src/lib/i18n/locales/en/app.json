@@ -87,6 +87,10 @@
       "sampleCtaLoading": "Loading sample…",
       "sampleCtaError": "Could not load sample project."
     },
+    "liveDemo": {
+      "title": "See machine learning in action",
+      "description": "Train a model with your own examples and see results instantly — visual, and easy to use."
+    },
     "cta": {
       "title": "Ready to teach your computer?"
     }
