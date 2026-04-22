@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router"
 import HomeCtaFooter from "~/components/home/HomeCtaFooter"
 import HomeFeatures from "~/components/home/HomeFeatures"
 import HomeHero from "~/components/home/HomeHero"
-import HomeHowItWorks from "~/components/home/HomeHowItWorks"
+import HomeUsage from "~/components/home/HomeUsage"
 import HomeLiveDemo from "~/components/home/HomeLiveDemo"
 import HomePlatform from "~/components/home/HomePlatform"
 
@@ -15,7 +15,7 @@ function HomePage() {
     <div className="flex flex-col gap-16 pb-24">
       <HomeHero />
       <HomeLiveDemo />
-      <HomeHowItWorks />
+      <HomeUsage />
       <HomePlatform />
       <HomeFeatures />
       <HomeCtaFooter />

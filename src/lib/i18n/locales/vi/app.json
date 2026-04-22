@@ -69,7 +69,7 @@
       "tagline": "Cách nhanh và thú vị để trải nghiệm machine learning — không code, không cloud, không cần chuyên môn."
     },
     "howItWorks": {
-      "title": "Sử dụng thế nào",
+      "title": "Trông hay đấy, dùng thế nào nhỉ?",
       "label": {
         "description": "Thu thập ảnh cho từng thứ muốn nhận diện bằng cách chụp ảnh hoặc thêm ảnh có sẵn."
       },
@@ -83,7 +83,7 @@
         "class1": "Súp lơ xanh",
         "class2": "Súp lơ trắng"
       },
-      "sampleCta": "Trải nghiệm ngay dự án mẫu",
+      "sampleCta": "Trải nghiệm ngay - phân biệt súp lơ",
       "sampleCtaLoading": "Đang tải…",
       "sampleCtaError": "Không thể tải dự án mẫu."
     },

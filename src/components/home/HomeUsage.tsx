@@ -1,47 +1,47 @@
-import { Button } from '@mantine/core';
-import { IconArrowRight, IconPlayerPlay } from '@tabler/icons-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from '@tanstack/react-router';
-import { FunctionComponent, startTransition } from 'react';
-import { toast } from 'sonner';
-import { importProject } from '~/lib/project/project-import';
-import { IconDataLabel, IconDataTrain } from '../icon/semantic';
-import { useAppProvider } from '../layout/AppProvider';
+import { Button } from "@mantine/core"
+import { IconArrowRight, IconPlayerPlay } from "@tabler/icons-react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useNavigate } from "@tanstack/react-router"
+import { FunctionComponent, startTransition } from "react"
+import { toast } from "sonner"
+import { importProject } from "~/lib/project/project-import"
+import { IconDataLabel, IconDataTrain } from "../icon/semantic"
+import { useAppProvider } from "../layout/AppProvider"
 
 // ─── Step 1: Collect ────────────────────────────────────────────────────────
 
 const COLLECT_CLASS_DATA = [
   {
-    key: 'class1' as const,
-    dot: 'bg-emerald-500',
+    key: "class1" as const,
+    dot: "bg-emerald-500",
     count: 28,
     images: [
-      '/example/broccoli.webp',
-      '/example/broccoli-2.webp',
-      '/example/broccoli-2.webp',
-      '/example/broccoli.webp',
+      "/example/broccoli.webp",
+      "/example/broccoli-2.webp",
+      "/example/broccoli-2.webp",
+      "/example/broccoli.webp",
     ],
   },
   {
-    key: 'class2' as const,
-    dot: 'bg-zinc-400',
+    key: "class2" as const,
+    dot: "bg-zinc-400",
     count: 24,
     images: [
-      '/example/cauliflower.webp',
-      '/example/cauliflower-2.webp',
-      '/example/cauliflower-2.webp',
-      '/example/cauliflower.webp',
+      "/example/cauliflower.webp",
+      "/example/cauliflower-2.webp",
+      "/example/cauliflower-2.webp",
+      "/example/cauliflower.webp",
     ],
   },
-] as const;
+] as const
 
 function CollectVisual({ class1, class2 }: { class1: string; class2: string }) {
-  const labels = { class1, class2 };
+  const labels = { class1, class2 }
   return (
     <div className="overflow-hidden rounded-2xl border border-zinc-100 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900/60">
       <div className="grid grid-cols-2 gap-2.5">
         {COLLECT_CLASS_DATA.map((cls) => {
-          const label = labels[cls.key];
+          const label = labels[cls.key]
           return (
             <div key={cls.key} className="space-y-1.5">
               <div className="flex items-center gap-1.5">
@@ -69,41 +69,41 @@ function CollectVisual({ class1, class2 }: { class1: string; class2: string }) {
                 {cls.count} ảnh
               </p>
             </div>
-          );
+          )
         })}
       </div>
     </div>
-  );
+  )
 }
 
 // ─── Step 2: Train ───────────────────────────────────────────────────────────
 
 const TRAIN_METRICS = [
   {
-    label: 'Accuracy',
-    value: '97.4%',
-    color: 'text-emerald-600 dark:text-emerald-400',
-    delay: '',
+    label: "Accuracy",
+    value: "97.4%",
+    color: "text-emerald-600 dark:text-emerald-400",
+    delay: "",
   },
   {
-    label: 'Loss',
-    value: '0.082',
-    color: 'text-zinc-500 dark:text-zinc-400',
-    delay: 'delay-75',
+    label: "Loss",
+    value: "0.082",
+    color: "text-zinc-500 dark:text-zinc-400",
+    delay: "delay-75",
   },
   {
-    label: 'Val Acc',
-    value: '95.1%',
-    color: 'text-sky-600 dark:text-sky-400',
-    delay: 'delay-150',
+    label: "Val Acc",
+    value: "95.1%",
+    color: "text-sky-600 dark:text-sky-400",
+    delay: "delay-150",
   },
   {
-    label: 'Val Loss',
-    value: '0.124',
-    color: 'text-zinc-500 dark:text-zinc-400',
-    delay: 'delay-[225ms]',
+    label: "Val Loss",
+    value: "0.124",
+    color: "text-zinc-500 dark:text-zinc-400",
+    delay: "delay-[225ms]",
   },
-] as const;
+] as const
 
 function TrainVisual() {
   return (
@@ -141,32 +141,32 @@ function TrainVisual() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 // ─── Step 3: Demo ────────────────────────────────────────────────────────────
 
 const DEMO_RESULT_DATA = [
   {
-    key: 'class1' as const,
+    key: "class1" as const,
     pct: 96,
-    barClass: 'bg-emerald-500',
-    barHover: 'group-hover:w-[96%]',
-    textColor: 'text-emerald-600 dark:text-emerald-400',
-    delay: '',
+    barClass: "bg-emerald-500",
+    barHover: "group-hover:w-[96%]",
+    textColor: "text-emerald-600 dark:text-emerald-400",
+    delay: "",
   },
   {
-    key: 'class2' as const,
+    key: "class2" as const,
     pct: 4,
-    barClass: 'bg-zinc-400',
-    barHover: 'group-hover:w-[4%]',
-    textColor: 'text-zinc-500',
-    delay: 'delay-75',
+    barClass: "bg-zinc-400",
+    barHover: "group-hover:w-[4%]",
+    textColor: "text-zinc-500",
+    delay: "delay-75",
   },
-] as const;
+] as const
 
 function DemoVisual({ class1, class2 }: { class1: string; class2: string }) {
-  const labels = { class1, class2 };
+  const labels = { class1, class2 }
   return (
     <div className="overflow-hidden rounded-2xl border border-zinc-100 bg-white dark:border-zinc-800 dark:bg-zinc-900/60">
       <div className="relative overflow-hidden">
@@ -185,7 +185,7 @@ function DemoVisual({ class1, class2 }: { class1: string; class2: string }) {
 
       <div className="space-y-2.5 p-3">
         {DEMO_RESULT_DATA.map((r) => {
-          const label = labels[r.key];
+          const label = labels[r.key]
           return (
             <div key={r.key}>
               <div className="mb-1 flex items-baseline justify-between">
@@ -213,11 +213,11 @@ function DemoVisual({ class1, class2 }: { class1: string; class2: string }) {
                 />
               </div>
             </div>
-          );
+          )
         })}
       </div>
     </div>
-  );
+  )
 }
 
 // ─── Step card wrapper ───────────────────────────────────────────────────────
@@ -230,18 +230,18 @@ function StepCard({
   step,
   title,
 }: {
-  children: React.ReactNode;
-  connector: boolean;
-  description: string;
-  icon: React.ElementType;
-  step: number;
-  title: string;
+  children: React.ReactNode
+  connector: boolean
+  description: string
+  icon: React.ElementType
+  step: number
+  title: string
 }) {
   return (
     <div className="group flex flex-col gap-3">
       <div className="flex items-center gap-3">
         <span className="select-none text-5xl font-bold tracking-tight text-zinc-200 transition-colors duration-300 group-hover:text-zinc-300 dark:text-zinc-700 dark:group-hover:text-zinc-600">
-          {String(step).padStart(2, '0')}
+          {String(step).padStart(2, "0")}
         </span>
         <div className="flex size-9 items-center justify-center rounded-xl bg-zinc-100 text-zinc-500 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:bg-zinc-900 group-hover:text-white dark:bg-zinc-900 dark:text-zinc-400 dark:group-hover:bg-white dark:group-hover:text-zinc-900">
           <Icon className="size-5" />
@@ -270,56 +270,59 @@ function StepCard({
         {description}
       </p>
     </div>
-  );
+  )
 }
 
 // ─── Main component ──────────────────────────────────────────────────────────
 
-const HomeHowItWorks: FunctionComponent = () => {
-  const { t } = useAppProvider();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
+const HomeUsage: FunctionComponent = () => {
+  const { t } = useAppProvider()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
-  const class1 = t('home.howItWorks.sample.class1');
-  const class2 = t('home.howItWorks.sample.class2');
+  const class1 = t("home.howItWorks.sample.class1")
+  const class2 = t("home.howItWorks.sample.class2")
 
   const sampleMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch('/example/example-project.zip');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const blob = await res.blob();
-      const file = new File([blob], 'example-project.zip', {
-        type: 'application/zip',
-      });
-      return importProject(file);
+      const res = await fetch("/example/example-project.zip")
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const blob = await res.blob()
+      const file = new File([blob], "example-project.zip", {
+        type: "application/zip",
+      })
+      return importProject(file)
     },
     onSuccess: async (projectId) => {
-      await queryClient.invalidateQueries({ queryKey: ['projects'] });
+      await queryClient.invalidateQueries({ queryKey: ["projects"] })
       startTransition(() => {
         void navigate({
-          to: '/projects/$projectId/label',
+          to: "/projects/$projectId/label",
           params: { projectId },
-        });
-      });
+        })
+      })
     },
     onError: (err) => {
       toast.error(
         err instanceof Error
           ? err.message
-          : t('home.howItWorks.sampleCtaError'),
-      );
+          : t("home.howItWorks.sampleCtaError"),
+      )
     },
-  });
+  })
 
   return (
     <section className="mx-auto w-full max-w-6xl px-6 md:px-10">
+      <h3 className="text-xl font-semibold text-center mb-6">
+        {t("home.howItWorks.title")}
+      </h3>
       <div className="grid grid-cols-1 gap-10 sm:grid-cols-3 sm:gap-8">
         <StepCard
           step={1}
           connector
           icon={IconDataLabel}
-          title={t('project.nav.label')}
-          description={t('home.howItWorks.label.description')}
+          title={t("project.nav.label")}
+          description={t("home.howItWorks.label.description")}
         >
           <CollectVisual class1={class1} class2={class2} />
         </StepCard>
@@ -328,8 +331,8 @@ const HomeHowItWorks: FunctionComponent = () => {
           step={2}
           connector
           icon={IconDataTrain}
-          title={t('project.nav.train')}
-          description={t('home.howItWorks.train.description')}
+          title={t("project.nav.train")}
+          description={t("home.howItWorks.train.description")}
         >
           <TrainVisual />
         </StepCard>
@@ -338,8 +341,8 @@ const HomeHowItWorks: FunctionComponent = () => {
           step={3}
           connector={false}
           icon={IconPlayerPlay}
-          title={t('project.nav.play')}
-          description={t('home.howItWorks.play.description')}
+          title={t("project.nav.play")}
+          description={t("home.howItWorks.play.description")}
         >
           <DemoVisual class1={class1} class2={class2} />
         </StepCard>
@@ -350,19 +353,20 @@ const HomeHowItWorks: FunctionComponent = () => {
           loading={sampleMutation.isPending}
           onClick={() => sampleMutation.mutate()}
           size="lg"
-          radius="xl"
-          variant="filled"
-          color="dark"
-          rightSection={<IconArrowRight className="size-4" />}
-          className="min-w-56 shadow-[0_18px_40px_-20px_rgba(24,24,27,0.55)] transition-transform duration-200 hover:-translate-y-0.5"
+          variant="outline"
+          color="green"
+          className="group"
+          rightSection={
+            <IconArrowRight className="size-6 transition-transform group-hover:translate-x-2" />
+          }
         >
           {sampleMutation.isPending
-            ? t('home.howItWorks.sampleCtaLoading')
-            : t('home.howItWorks.sampleCta')}
+            ? t("home.howItWorks.sampleCtaLoading")
+            : t("home.howItWorks.sampleCta")}
         </Button>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default HomeHowItWorks;
+export default HomeUsage
