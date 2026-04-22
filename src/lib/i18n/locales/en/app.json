@@ -19,8 +19,7 @@
       "cta": "New Project"
     },
     "features": {
-      "platformTitle": "Platform",
-      "coreTitle": "Features",
+      "title": "Features",
       "env": {
         "install": {
           "title": "Easy setup",

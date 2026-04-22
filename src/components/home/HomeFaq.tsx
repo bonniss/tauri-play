@@ -19,11 +19,9 @@ const HomeFaq: FunctionComponent = () => {
       id="faq"
       className="mx-auto w-full max-w-3xl scroll-mt-24 px-6 md:px-10"
     >
-      <div className="mb-6 text-center">
-        <h2 className="text-3xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
-          {t("home.faqTitle")}
-        </h2>
-      </div>
+      <h3 className="text-2xl font-semibold tracking-tight mb-6 text-center">
+        {t("home.faqTitle")}
+      </h3>
 
       <Paper>
         <Accordion chevronPosition="right" variant="contained" radius="lg">

@@ -142,11 +142,15 @@ function HomeFeatureCard({
 }
 
 const HomeFeatures: FunctionComponent = () => {
+  const { t } = useAppProvider()
   const { isVisible, ref } = useRevealOnScroll()
 
   return (
-    <section ref={ref} className="mx-auto w-full max-w-6xl px-6 md:px-10">
-      <div className="space-y-10">
+    <section id="features" ref={ref} className="mx-auto w-full max-w-6xl px-6 md:px-10">
+      <h3 className="text-2xl font-semibold tracking-tight mb-6 text-center">
+        {t("home.features.title")}
+      </h3>
+      <div className="space-y-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {PLATFORM_CARDS.map((card, index) => (
             <HomeFeatureCard

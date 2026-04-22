@@ -19,8 +19,7 @@
       "cta": "Dự án mới"
     },
     "features": {
-      "platformTitle": "Môi trường",
-      "coreTitle": "Tính năng",
+      "title": "Tính năng",
       "env": {
         "install": {
           "title": "Cài đặt dễ dàng",

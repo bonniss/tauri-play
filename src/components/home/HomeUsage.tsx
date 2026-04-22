@@ -313,8 +313,8 @@ const HomeUsage: FunctionComponent = () => {
   })
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-6 md:px-10">
-      <h3 className="text-xl font-semibold text-center mb-6">
+    <section id="getting-started" className="mx-auto w-full max-w-6xl px-6 md:px-10">
+      <h3 className="text-2xl font-semibold tracking-tight text-center mb-6">
         {t("home.howItWorks.title")}
       </h3>
       <div className="grid grid-cols-1 gap-10 sm:grid-cols-3 sm:gap-8">
