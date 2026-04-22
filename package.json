@@ -3,6 +3,11 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "author": {
+    "email": "duytrung.tcu@gmail.com",
+    "name": "Duy Trung",
+    "url": "https://nauda.dev"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsr generate && tsc && vite build",

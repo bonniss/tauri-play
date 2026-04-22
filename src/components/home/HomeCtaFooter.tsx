@@ -26,8 +26,6 @@ const HomeCtaFooter: FunctionComponent = () => {
 
       <div className="relative -mt-px bg-current pb-20">
         <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center gap-6 px-6 pt-6 text-center md:px-10 text-white/90">
-          <Logo animated className="size-32" />
-
           <div className="space-y-1">
             <h2 className="mx-auto max-w-2xl text-2xl font-semibold tracking-tight">
               {t("home.cta.title")}
@@ -36,7 +34,6 @@ const HomeCtaFooter: FunctionComponent = () => {
               {t("home.cta.description")}
             </p>
           </div>
-
           <Button
             size="xl"
             color="green.9"
@@ -47,6 +44,25 @@ const HomeCtaFooter: FunctionComponent = () => {
           >
             {t("home.hero.cta")}
           </Button>
+          <Logo animated className="size-32" />
+          <p className="text-sm text-white/50">
+            Made by{" "}
+            <a
+              href="https://nauda.dev"
+              target="_blank"
+              rel="noreferrer"
+              className="text-white/70 underline-offset-2 hover:text-white hover:underline"
+            >
+              Duy Trung
+            </a>
+            {" · "}
+            <a
+              href="mailto:duytrung.tcu@gmail.com"
+              className="text-white/70 underline-offset-2 hover:text-white hover:underline"
+            >
+              duytrung.tcu@gmail.com
+            </a>
+          </p>
         </div>
       </div>
     </section>
