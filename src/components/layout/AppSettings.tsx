@@ -3,7 +3,7 @@ import {
   Button,
   Group,
   Modal,
-  Radio,
+  Select,
   Text,
   TextInput,
   Tooltip,
@@ -63,35 +63,35 @@ const AppSettings: FunctionComponent<AppSettingsProps> = () => {
             <ColorSchemer size="sm" />
           </div>
 
-          <div className="space-y-3">
+          <div className="flex items-center justify-between gap-4">
             <Text fw={600} size="sm">{t('settings.language')}</Text>
-            <Radio.Group onChange={setLocale} value={locale}>
-              <div className="flex gap-4">
-                {[
-                  { flag: '/flags/us.svg', label: 'English', value: 'en' },
-                  { flag: '/flags/vn.svg', label: 'Tiếng Việt', value: 'vi' },
-                ].map((item) => (
-                  <Radio.Card
-                    checked={locale === item.value}
-                    key={item.value}
-                    p="xs"
-                    value={item.value}
-                  >
-                    <Group align="center" justify="space-between" wrap="nowrap">
-                      <Group align="center" gap="sm" wrap="nowrap">
-                        <img
-                          alt={item.label}
-                          className="h-6 w-6 rounded-xl"
-                          src={item.flag}
-                        />
-                        <span className="text-sm">{item.label}</span>
-                      </Group>
-                      <Radio.Indicator size="xs" checked={locale === item.value} />
-                    </Group>
-                  </Radio.Card>
-                ))}
-              </div>
-            </Radio.Group>
+            <Select
+              data={[
+                { value: 'en', label: 'English' },
+                { value: 'vi', label: 'Tiếng Việt' },
+                { value: 'ru', label: 'Русский' },
+              ]}
+              onChange={(v) => v && setLocale(v)}
+              value={locale}
+              renderOption={({ option }) => {
+                const flag: Record<string, string> = { en: '/flags/us.svg', vi: '/flags/vn.svg', ru: '/flags/ru.svg' };
+                return (
+                  <Group gap="xs" wrap="nowrap">
+                    <img alt={option.label} className="h-4 w-4 rounded-sm" src={flag[option.value]} />
+                    <span>{option.label}</span>
+                  </Group>
+                );
+              }}
+              leftSection={
+                <img
+                  alt={locale}
+                  className="h-4 w-4 rounded-sm"
+                  src={{ en: '/flags/us.svg', vi: '/flags/vn.svg', ru: '/flags/ru.svg' }[locale]}
+                />
+              }
+              allowDeselect={false}
+              w={160}
+            />
           </div>
 
           <SettingsSude label={t('settings.system')}>
