@@ -25,17 +25,14 @@ const HomeCtaFooter: FunctionComponent = () => {
       </svg>
 
       <div className="relative -mt-px bg-current pb-20">
-        <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center gap-6 px-6 pt-6 text-center md:px-10 md:pt-8 text-white">
-          <Logo
-            animated
-            className="size-28"
-          />
+        <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center gap-6 px-6 pt-6 text-center md:px-10 text-white/90">
+          <Logo animated className="size-32" />
 
-          <div className="space-y-2">
-            <h2 className="mx-auto max-w-2xl text-3xl font-semibold tracking-tight md:text-4xl">
+          <div className="space-y-1">
+            <h2 className="mx-auto max-w-2xl text-2xl font-semibold tracking-tight">
               {t("home.cta.title")}
             </h2>
-            <p className="mx-auto max-w-xl text-base leading-7 text-white/82 md:text-lg">
+            <p className="mx-auto max-w-xl text-base leading-7">
               {t("home.cta.description")}
             </p>
           </div>
