@@ -342,22 +342,15 @@
         "earlyStoppingPatience": "Early stopping patience"
       },
       "timeline": {
-        "tfjs": "TensorFlow.js",
-        "mobilenet": "MobileNet",
-        "split": "Train / Validation Split",
-        "samples": "Local Samples",
+        "setup": "Setup",
+        "data": "Prepare Data",
         "embeddings": "Embeddings",
         "head": "Classifier Head",
         "training": "Training",
         "saving": "Saving Model",
         "detail": {
-          "tfjs": "Initialize runtime and select the execution backend.",
-          "mobilenet": "Load pretrained backbone v{{version}} alpha {{alpha}}.",
-          "split": "Split each class into train and validation sets automatically.",
-          "samplesLoaded": "{{count}} images loaded",
-          "samplesDefault": "Images loaded",
-          "embeddings": "Convert images into 1280-d MobileNet feature vectors.",
-          "head": "Create a small dense classifier on top of the extracted features.",
+          "embeddings": "Extract 1280-d MobileNet feature vectors.",
+          "head": "Build a dense classifier on extracted features.",
           "trainingProgress": "Optimize the classifier head for {{current}}/{{total}} epochs.",
           "trainingDefault": "Optimize the classifier head on top of frozen MobileNet features.",
           "saving": "Write the trained model artifacts to the project workspace."

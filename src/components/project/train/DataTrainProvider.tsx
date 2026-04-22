@@ -44,10 +44,8 @@ type PreviewSplitClass = {
 };
 
 type FixedTimelineStepId =
-  | 'tfjs'
-  | 'mobilenet'
-  | 'split'
-  | 'samples'
+  | 'setup'
+  | 'data'
   | 'embeddings'
   | 'head'
   | 'training'
@@ -64,10 +62,8 @@ type FixedTimelineStep = {
 const TRAIN_LOG_FLUSH_DELAY_MS = 800;
 
 const FIXED_TIMELINE_STEP_ORDER: FixedTimelineStepId[] = [
-  'tfjs',
-  'mobilenet',
-  'split',
-  'samples',
+  'setup',
+  'data',
   'embeddings',
   'head',
   'training',
@@ -76,10 +72,8 @@ const FIXED_TIMELINE_STEP_ORDER: FixedTimelineStepId[] = [
 
 function getTimelineStepLabels(): Record<FixedTimelineStepId, string> {
   return {
-    tfjs: t('project.train.timeline.tfjs'),
-    mobilenet: t('project.train.timeline.mobilenet'),
-    split: t('project.train.timeline.split'),
-    samples: t('project.train.timeline.samples'),
+    setup: t('project.train.timeline.setup'),
+    data: t('project.train.timeline.data'),
     embeddings: t('project.train.timeline.embeddings'),
     head: t('project.train.timeline.head'),
     training: t('project.train.timeline.training'),
@@ -96,32 +90,20 @@ function getDefaultStepDetail(
     validationSamples?: number;
   },
 ) {
-  if (id === 'tfjs') {
-    return t('project.train.timeline.detail.tfjs');
+  if (id === 'setup') {
+    return `WebGL · MobileNet v${MOBILENET_VERSION} alpha ${MOBILENET_ALPHA}`;
   }
 
-  if (id === 'mobilenet') {
-    return t('project.train.timeline.detail.mobilenet', {
-      params: { version: MOBILENET_VERSION, alpha: MOBILENET_ALPHA },
-    });
-  }
-
-  if (id === 'split') {
-    return t('project.train.timeline.detail.split');
-  }
-
-  if (id === 'samples') {
+  if (id === 'data') {
     const trainSamples = context?.trainSamples ?? 0;
     const validationSamples = context?.validationSamples ?? 0;
-    const totalSamples = trainSamples + validationSamples;
+    const total = trainSamples + validationSamples;
 
-    if (totalSamples > 0) {
-      return t('project.train.timeline.detail.samplesLoaded', {
-        params: { count: totalSamples },
-      });
+    if (total > 0) {
+      return `${total} images · ${trainSamples} train, ${validationSamples} val`;
     }
 
-    return t('project.train.timeline.detail.samplesDefault');
+    return null;
   }
 
   if (id === 'embeddings') {
@@ -335,7 +317,7 @@ function getTimelineStepIdFromEvent(
   event: ModelTrainLogEvent,
 ): FixedTimelineStepId | null {
   if (event.type === 'split') {
-    return 'split';
+    return 'data';
   }
 
   if (event.type === 'epoch') {
@@ -344,19 +326,15 @@ function getTimelineStepIdFromEvent(
 
   const message = event.message.toLowerCase();
 
-  if (message.includes('tensorflow.js')) {
-    return 'tfjs';
-  }
-
-  if (message.includes('mobilenet')) {
-    return 'mobilenet';
+  if (message.includes('tensorflow.js') || message.includes('mobilenet')) {
+    return 'setup';
   }
 
   if (
     message.includes('training images') ||
     message.includes('local samples')
   ) {
-    return 'samples';
+    return 'data';
   }
 
   if (message.includes('embedding')) {
@@ -388,40 +366,42 @@ function getTimelineStepDetail({
   plannedEpochs: number;
 }) {
   if (event.type === 'split') {
-    return `${event.trainSamples} train / ${event.validationSamples} validation`;
+    const total = event.trainSamples + event.validationSamples;
+    return `${total} images · ${event.trainSamples} train, ${event.validationSamples} val`;
   }
 
   if (event.type === 'epoch') {
     return `${latestEpochNumber}/${plannedEpochs} epochs`;
   }
 
-  if (event.message.toLowerCase().includes('tensorflow.js')) {
+  const message = event.message.toLowerCase();
+
+  if (message.includes('tensorflow.js')) {
     const backend = event.meta?.backend;
     return typeof backend === 'string' ? backend : null;
   }
 
-  if (event.message.toLowerCase().includes('mobilenet')) {
-    const version = event.meta?.version;
-    const alpha = event.meta?.alpha;
-
-    if (version != null && alpha != null) {
-      return `v${String(version)} alpha ${String(alpha)}`;
-    }
-
-    return `v${MOBILENET_VERSION} alpha ${MOBILENET_ALPHA}`;
+  if (message.includes('mobilenet')) {
+    const version = event.meta?.version ?? MOBILENET_VERSION;
+    const alpha = event.meta?.alpha ?? MOBILENET_ALPHA;
+    return `MobileNet v${String(version)} alpha ${String(alpha)}`;
   }
 
-  if (event.message.toLowerCase().includes('embedding')) {
+  if (message.includes('embedding')) {
     const inputShape = event.meta?.inputShape;
-    return typeof inputShape === 'string' ? inputShape : null;
+    return typeof inputShape === 'string'
+      ? `1280-d vectors · ${inputShape}`
+      : '1280-d feature vectors';
   }
 
-  if (event.message.toLowerCase().includes('classifier head')) {
+  if (message.includes('classifier head')) {
     const learningRate = event.meta?.learningRate;
-    return learningRate != null ? `lr ${String(learningRate)}` : null;
+    return learningRate != null
+      ? `Dense classifier · lr ${String(learningRate)}`
+      : 'Dense classifier';
   }
 
-  if (event.message.toLowerCase().includes('model saved')) {
+  if (message.includes('model saved')) {
     const artifactPath = event.meta?.artifactPath;
     return typeof artifactPath === 'string' ? artifactPath : null;
   }
@@ -448,8 +428,8 @@ function buildFixedTimelineSteps({
 }): FixedTimelineStep[] {
   const fallbackSteps = FIXED_TIMELINE_STEP_ORDER.map((id) => ({
     detail:
-      id === 'mobilenet'
-        ? `v${MOBILENET_VERSION} alpha ${MOBILENET_ALPHA}`
+      id === 'setup'
+        ? `WebGL · MobileNet v${MOBILENET_VERSION} alpha ${MOBILENET_ALPHA}`
         : null,
     elapsedLabel: null,
     id,
@@ -488,6 +468,25 @@ function buildFixedTimelineSteps({
     }
   }
 
+  // Enrich setup step: combine backend (from tfjs event) + MobileNet info (from mobilenet event)
+  if (milestoneMap.has('setup')) {
+    const mobilenetEvent = displayedTrainLog.events.find(
+      (e) => e.type === 'phase' && e.message.toLowerCase().includes('mobilenet'),
+    );
+    if (mobilenetEvent) {
+      const version = mobilenetEvent.meta?.version ?? MOBILENET_VERSION;
+      const alpha = mobilenetEvent.meta?.alpha ?? MOBILENET_ALPHA;
+      const mobilenetDetail = `MobileNet v${String(version)} alpha ${String(alpha)}`;
+      const existing = milestoneMap.get('setup')!;
+      milestoneMap.set('setup', {
+        ...existing,
+        detail: existing.detail
+          ? `${existing.detail} · ${mobilenetDetail}`
+          : mobilenetDetail,
+      });
+    }
+  }
+
   if (latestEpoch && milestoneMap.has('training')) {
     const currentTrainingStep = milestoneMap.get('training');
 
@@ -519,7 +518,9 @@ function buildFixedTimelineSteps({
 
     let status: FixedTimelineStep['status'] = 'pending';
 
-    if (milestone) {
+    if (displayedTrainLog.status === 'completed') {
+      status = 'completed';
+    } else if (milestone) {
       const isLastReached = id === lastReachedStepId;
 
       if (displayedTrainLog.status === 'failed' && isLastReached) {

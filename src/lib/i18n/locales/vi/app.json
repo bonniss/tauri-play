@@ -342,22 +342,15 @@
         "earlyStoppingPatience": "Early stopping patience"
       },
       "timeline": {
-        "tfjs": "TensorFlow.js",
-        "mobilenet": "MobileNet",
-        "split": "Chia tập Huấn luyện / Validation",
-        "samples": "Tải Sample",
+        "setup": "Chuẩn bị môi trường",
+        "data": "Chuẩn bị dữ liệu",
         "embeddings": "Embeddings",
         "head": "Classifier Head",
         "training": "Huấn luyện",
         "saving": "Lưu Model",
         "detail": {
-          "tfjs": "Khởi tạo runtime và chọn backend thực thi.",
-          "mobilenet": "Tải backbone v{{version}} alpha {{alpha}} đã pretrain.",
-          "split": "Tự động chia mỗi class thành tập huấn luyện và validation.",
-          "samplesLoaded": "Đã tải {{count}} ảnh",
-          "samplesDefault": "Đã tải ảnh",
-          "embeddings": "Chuyển ảnh thành vector đặc trưng 1280 chiều của MobileNet.",
-          "head": "Tạo classifier nhỏ trên các đặc trưng đã trích xuất.",
+          "embeddings": "Trích xuất vector đặc trưng 1280 chiều của MobileNet.",
+          "head": "Xây classifier trên các đặc trưng đã trích xuất.",
           "trainingProgress": "Tối ưu classifier head qua {{current}}/{{total}} epochs.",
           "trainingDefault": "Tối ưu classifier head trên đặc trưng MobileNet đã đóng băng.",
           "saving": "Ghi artifact Model vào thư mục dự án."
