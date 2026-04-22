@@ -415,6 +415,7 @@ function buildFixedTimelineSteps({
   latestEpochNumber,
   now,
   plannedEpochs,
+  savingArtifactPath,
   stepLabels,
 }: {
   displayedTrainLog:
@@ -424,6 +425,7 @@ function buildFixedTimelineSteps({
   latestEpochNumber: number;
   now: number;
   plannedEpochs: number;
+  savingArtifactPath: string | null;
   stepLabels: Record<FixedTimelineStepId, string>;
 }): FixedTimelineStep[] {
   const fallbackSteps = FIXED_TIMELINE_STEP_ORDER.map((id) => ({
@@ -466,6 +468,27 @@ function buildFixedTimelineSteps({
         }),
       });
     }
+  }
+
+  // Enrich saving step: use "Model saved" event directly (bypasses first-occurrence-wins)
+  const modelSavedEvent = displayedTrainLog.events.find(
+    (e) => e.type === 'phase' && e.message.toLowerCase().includes('model saved'),
+  );
+  if (modelSavedEvent?.type === 'phase') {
+    const artifactPath =
+      typeof modelSavedEvent.meta?.artifactPath === 'string'
+        ? modelSavedEvent.meta.artifactPath
+        : null;
+    milestoneMap.set('saving', {
+      at: milestoneMap.get('saving')?.at ?? modelSavedEvent.at,
+      detail: artifactPath,
+    });
+  } else if (displayedTrainLog.status === 'completed' && savingArtifactPath) {
+    // Fallback when "Model saved" event wasn't persisted to DB but training completed
+    milestoneMap.set('saving', {
+      at: displayedTrainLog.endedAt ?? new Date(now).toISOString(),
+      detail: savingArtifactPath,
+    });
   }
 
   // Enrich setup step: combine backend (from tfjs event) + MobileNet info (from mobilenet event)
@@ -1030,6 +1053,7 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
         latestEpochNumber,
         now,
         plannedEpochs,
+        savingArtifactPath: projectModel?.artifactPath ?? null,
         stepLabels: getTimelineStepLabels(),
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1040,6 +1064,7 @@ export const [useDataTrain, DataTrainProvider] = createProvider(() => {
       now,
       plannedEpochs,
       locale,
+      projectModel?.artifactPath,
     ],
   );
   const hasTrainData =
