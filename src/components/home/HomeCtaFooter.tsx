@@ -9,7 +9,7 @@ const HomeCtaFooter: FunctionComponent = () => {
   const { t } = useAppProvider()
 
   return (
-    <section className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden text-slate-800 -mt-20">
+    <section className="relative left-1/2 w-[calc(100vw-4px)]  -translate-x-1/2 overflow-hidden text-slate-800 -mt-20">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 1440 320"
@@ -35,7 +35,7 @@ const HomeCtaFooter: FunctionComponent = () => {
             <h2 className="mx-auto max-w-2xl text-3xl font-semibold tracking-tight md:text-4xl">
               {t("home.cta.title")}
             </h2>
-            <p className="mx-auto max-w-2xl text-base leading-7 text-white/82 md:text-lg">
+            <p className="mx-auto max-w-xl text-base leading-7 text-white/82 md:text-lg">
               {t("home.cta.description")}
             </p>
           </div>

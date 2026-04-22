@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import HomeCtaFooter from "~/components/home/HomeCtaFooter"
-import HomeFeatures from "~/components/home/HomeFeatures"
 import HomeFaq from "~/components/home/HomeFaq"
+import HomeFeatures from "~/components/home/HomeFeatures"
 import HomeHero from "~/components/home/HomeHero"
 import HomeLiveDemo from "~/components/home/HomeLiveDemo"
 import HomeUsage from "~/components/home/HomeUsage"
