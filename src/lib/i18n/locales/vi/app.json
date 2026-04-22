@@ -378,5 +378,39 @@
         "embedHint": "Sau đó load model bằng tf.loadLayersModel(\"model.json\")."
       }
     }
-  }
+  },
+  "faq": [
+    {
+      "q": "PlantML là gì?",
+      "a": "**PlantML** là một ứng dụng desktop cho phép bạn tạo và huấn luyện các model nhận diện hình ảnh bằng chính dữ liệu của mình — nhanh chóng, đơn giản, và hoàn toàn trên thiết bị của bạn."
+    },
+    {
+      "q": "Ứng dụng này dành cho ai?",
+      "a": "Giáo viên, học sinh, nhà sáng tạo, maker, và bất kỳ ai có một ý tưởng muốn khám phá.\n\n*Không cần kinh nghiệm về machine learning*."
+    },
+    {
+      "q": "Tôi có thể huấn luyện với dữ liệu gì?",
+      "a": "Bạn có thể huấn luyện các model phân loại hình ảnh bằng:\n\n- Ảnh chụp từ camera  \n- Ảnh tải lên từ thiết bị  \n\nTrong tương lai có thể sẽ hỗ trợ thêm nhiều loại đầu vào khác."
+    },
+    {
+      "q": "Vì sao model của tôi không hoạt động như mong đợi?",
+      "a": "Các model machine learning phụ thuộc rất nhiều vào dữ liệu bạn cung cấp. Nếu kết quả chưa như mong đợi, hãy thử:\n\n- **Thay đổi bối cảnh**  \n  Huấn luyện với nhiều nền ảnh, điều kiện ánh sáng, và góc chụp khác nhau.\n\n- **Cải thiện chất lượng dữ liệu**  \n  Dùng các ảnh rõ nét, nhất quán cho từng class.\n\n- **Cân bằng bộ dữ liệu**  \n  Đảm bảo mỗi class có số lượng ví dụ tương đương nhau.\n\n- **Tránh các ví dụ dễ gây nhầm lẫn**  \n  Nếu hai class quá giống nhau, model có thể khó phân biệt.\n\nThử nghiệm và lặp lại là một phần tự nhiên của quá trình này — chỉ một thay đổi nhỏ trong dữ liệu cũng có thể tạo ra khác biệt lớn."
+    },
+    {
+      "q": "Tôi cần bao nhiêu ảnh?",
+      "a": "Bạn có thể bắt đầu với chỉ khoảng 10 ảnh cho mỗi class.\n\nThông thường, dữ liệu nhiều hơn sẽ cho kết quả tốt hơn, đặc biệt khi ảnh có sự đa dạng về ánh sáng, góc chụp, và nền."
+    },
+    {
+      "q": "Sau khi huấn luyện model xong thì sao?",
+      "a": "Bạn có thể kiểm tra model ngay trong ứng dụng bằng:\n\n- Ảnh tải lên  \n- Camera trực tiếp  \n\nBạn cũng có thể xuất model đã huấn luyện để dùng trong các ứng dụng khác."
+    },
+    {
+      "q": "Tôi có thể dùng model ngoài PlantML không?",
+      "a": "Có.\n\nBạn có thể xuất model của mình (ví dụ ở định dạng TensorFlow.js) và dùng nó trong ứng dụng, website, hoặc dự án riêng của bạn."
+    },
+    {
+      "q": "Ứng dụng có cần internet hay tài khoản không?",
+      "a": "Không.\n\nPlantML chạy hoàn toàn offline.\n\nKhông cần đăng ký, không cần cloud, không tải dữ liệu lên — mọi thứ đều nằm trên thiết bị của bạn."
+    }
+  ]
 }

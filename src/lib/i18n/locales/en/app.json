@@ -382,11 +382,11 @@
   "faq": [
     {
       "q": "What is PlantML?",
-      "a": "PlantML is a desktop app that lets you create and train image recognition models using your own data — quickly, simply, and entirely on your device."
+      "a": "**PlantML** is a desktop app that lets you create and train image recognition models using your own data — quickly, simply, and entirely on your device."
     },
     {
       "q": "Who is it for?",
-      "a": "Educators, students, creators, and makers of all kinds — anyone with an idea they want to explore.\n\nNo machine learning experience required."
+      "a": "Educators, students, creators, and makers of all kinds — anyone with an idea they want to explore.\n\n*No machine learning experience required*."
     },
     {
       "q": "What can I train with it?",
@@ -398,7 +398,7 @@
     },
     {
       "q": "How many images do I need?",
-      "a": "You can start with as few as 20–30 images per class.\n\nMore data usually leads to better results, especially if your images vary in lighting, angles, and backgrounds."
+      "a": "You can start with as few as 10 images per class.\n\nMore data usually leads to better results, especially if your images vary in lighting, angles, and backgrounds."
     },
     {
       "q": "What happens after I train a model?",
