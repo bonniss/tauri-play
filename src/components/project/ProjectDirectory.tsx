@@ -10,16 +10,20 @@ import {
   Stack,
   Text,
   TextInput,
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+} from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import {
   IconChevronLeft,
   IconChevronRight,
   IconChevronsLeft,
-  IconChevronsRight, IconUpload
-} from "@tabler/icons-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+  IconChevronsRight,
+  IconFolderPlus,
+  IconSearch,
+  IconSearchOff,
+  IconUpload,
+} from '@tabler/icons-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import {
   startTransition,
   useDeferredValue,
@@ -27,58 +31,59 @@ import {
   useMemo,
   useRef,
   useState,
-} from "react";
-import { toast } from "sonner";
-import { Form, defineConfig } from "~/components/form";
-import ProjectCard from "~/components/project/ProjectCard";
-import { listProjectClassSampleCounts } from "~/lib/db/domain/classes";
+} from 'react';
+import { toast } from 'sonner';
+import { Form, defineConfig } from '~/components/form';
+import ProjectCard from '~/components/project/ProjectCard';
+import MarkdownViewer from '~/components/shared/MarkdownViewer';
+import { listProjectClassSampleCounts } from '~/lib/db/domain/classes';
 import {
   createProject,
   deleteProject,
   listProjects,
   updateProject,
-} from "~/lib/db/domain/projects";
-import { listProjectSamplePreviews } from "~/lib/db/domain/samples";
-import { genProjectId } from "~/lib/project/id-generator";
+} from '~/lib/db/domain/projects';
+import { listProjectSamplePreviews } from '~/lib/db/domain/samples';
+import { genProjectId } from '~/lib/project/id-generator';
 import {
   ANIMAL_ICON_OPTIONS,
   generateRandomProjectIdentity,
-} from "~/lib/project/name";
-import { exportProject } from "~/lib/project/project-export";
-import { importProject } from "~/lib/project/project-import";
-import { resolveSampleFilePath } from "~/lib/project/sample-path";
+} from '~/lib/project/name';
+import { exportProject } from '~/lib/project/project-export';
+import { importProject } from '~/lib/project/project-import';
+import { resolveSampleFilePath } from '~/lib/project/sample-path';
 import {
   DEFAULT_PROJECT_SETTINGS,
   parseProjectSettings,
   stringifyProjectSettings,
-} from "~/lib/project/settings";
-import { useAppProvider } from "../layout/AppProvider";
+} from '~/lib/project/settings';
+import { useAppProvider } from '../layout/AppProvider';
 
-const PAGE_SIZE = 12
+const PAGE_SIZE = 12;
 
 const createProjectForm = defineConfig<{
-  description: string
-  name: string
-  icon: string
+  description: string;
+  name: string;
+  icon: string;
 }>({
   name: {
-    type: "text",
-    label: "common.name",
-    description: "project.create.name",
+    type: 'text',
+    label: 'common.name',
+    description: 'project.create.name',
     rules: {
       required: true,
       minLength: 1,
       maxLength: 200,
     },
     props: {
-      size: "lg",
+      size: 'lg',
       autoFocus: true,
     },
   },
   icon: {
-    type: "inline",
-    label: "common.icon",
-    description: "project.create.icon",
+    type: 'inline',
+    label: 'common.icon',
+    description: 'project.create.icon',
     render: ({ value, onChange, label, description }) => {
       return (
         <Input.Wrapper label={label} description={description}>
@@ -86,10 +91,10 @@ const createProjectForm = defineConfig<{
             {ANIMAL_ICON_OPTIONS.map((option) => (
               <ActionIcon
                 size="input-md"
-                variant={value === option.icon ? "light" : "default"}
+                variant={value === option.icon ? 'light' : 'default'}
                 key={`${option.value}-${option.icon}`}
                 onClick={() => {
-                  onChange?.(option.icon)
+                  onChange?.(option.icon);
                 }}
                 title={option.label}
               >
@@ -98,53 +103,53 @@ const createProjectForm = defineConfig<{
             ))}
           </div>
         </Input.Wrapper>
-      )
+      );
     },
   },
   description: {
-    type: "longText",
-    label: "common.description",
-    description: "project.create.description",
+    type: 'longText',
+    label: 'common.description',
+    description: 'project.create.description',
     rules: {
       maxLength: 5000,
     },
     props: {
-      preview: "edit",
+      preview: 'edit',
     },
   },
-})
+});
 
 interface ProjectDirectoryProps {
-  createRequested?: boolean
+  createRequested?: boolean;
 }
 
 function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
-  const { appSettings, t } = useAppProvider()
+  const { appSettings, t } = useAppProvider();
 
-  const [search, setSearch] = useState("")
-  const [page, setPage] = useState(1)
-  const [createRequestDismissed, setCreateRequestDismissed] = useState(false)
-  const [createProjectOpened, createProjectHandlers] = useDisclosure(false)
-  const [deleteProjectName, setDeleteProjectName] = useState("")
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [createRequestDismissed, setCreateRequestDismissed] = useState(false);
+  const [createProjectOpened, createProjectHandlers] = useDisclosure(false);
+  const [deleteProjectName, setDeleteProjectName] = useState('');
   const [projectPendingDelete, setProjectPendingDelete] = useState<
     Awaited<ReturnType<typeof listProjects>>[number] | null
-  >(null)
-  const deferredSearch = useDeferredValue(search)
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
+  >(null);
+  const deferredSearch = useDeferredValue(search);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const projectsQuery = useQuery({
-    queryKey: ["projects", deferredSearch],
+    queryKey: ['projects', deferredSearch],
     queryFn: () => listProjects({ search: deferredSearch }),
-  })
+  });
   const createProjectMutation = useMutation({
     mutationFn: async ({
       description,
       name,
       icon,
     }: {
-      description: string
-      icon: string
-      name: string
+      description: string;
+      icon: string;
+      name: string;
     }) => {
       return createProject({
         id: genProjectId(),
@@ -155,208 +160,208 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
           icon,
           samplePathPattern: appSettings.samplePathPattern,
         }),
-        status: "draft",
-      })
+        status: 'draft',
+      });
     },
     onSuccess: async (projectId) => {
-      createProjectHandlers.close()
-      await queryClient.invalidateQueries({ queryKey: ["projects"] })
+      createProjectHandlers.close();
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
 
       startTransition(() => {
         void navigate({
-          to: "/projects/$projectId/label",
+          to: '/projects/$projectId/label',
           params: { projectId },
-        })
-      })
+        });
+      });
     },
-  })
+  });
   const deleteProjectMutation = useMutation({
     mutationFn: async (projectId: string) => {
-      await deleteProject(projectId)
+      await deleteProject(projectId);
     },
     onSuccess: async () => {
-      setProjectPendingDelete(null)
-      setDeleteProjectName("")
-      await queryClient.invalidateQueries({ queryKey: ["projects"] })
+      setProjectPendingDelete(null);
+      setDeleteProjectName('');
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
-  })
+  });
   const projectPreviewSamplesQuery = useQuery({
     enabled: !!projectsQuery.data?.length,
     queryKey: [
-      "project-sample-previews",
-      projectsQuery.data?.map((item) => item.id).join(","),
+      'project-sample-previews',
+      projectsQuery.data?.map((item) => item.id).join(','),
     ],
     queryFn: async () =>
       listProjectSamplePreviews(
         projectsQuery.data?.map((item) => item.id) ?? [],
       ),
-  })
+  });
   const projectClassCountsQuery = useQuery({
     enabled: !!projectsQuery.data?.length,
     queryKey: [
-      "project-class-counts",
-      projectsQuery.data?.map((item) => item.id).join(","),
+      'project-class-counts',
+      projectsQuery.data?.map((item) => item.id).join(','),
     ],
     queryFn: () =>
       listProjectClassSampleCounts(
         projectsQuery.data?.map((item) => item.id) ?? [],
       ),
-  })
+  });
   const projectPreviewSampleMap = useMemo(() => {
     const grouped = new Map<
       string,
       Awaited<ReturnType<typeof listProjectSamplePreviews>>
-    >()
+    >();
 
     projectPreviewSamplesQuery.data?.forEach((item) => {
-      const list = grouped.get(item.projectId) ?? []
-      list.push(item)
-      grouped.set(item.projectId, list)
-    })
+      const list = grouped.get(item.projectId) ?? [];
+      list.push(item);
+      grouped.set(item.projectId, list);
+    });
 
-    return grouped
-  }, [projectPreviewSamplesQuery.data])
+    return grouped;
+  }, [projectPreviewSamplesQuery.data]);
   const projectClassCountMap = useMemo(() => {
-    const grouped = new Map<string, number[]>()
+    const grouped = new Map<string, number[]>();
 
     projectClassCountsQuery.data?.forEach((item) => {
-      const list = grouped.get(item.projectId) ?? []
-      list.push(item.sampleCount)
-      grouped.set(item.projectId, list)
-    })
+      const list = grouped.get(item.projectId) ?? [];
+      list.push(item.sampleCount);
+      grouped.set(item.projectId, list);
+    });
 
-    return grouped
-  }, [projectClassCountsQuery.data])
+    return grouped;
+  }, [projectClassCountsQuery.data]);
   const sortedProjects = useMemo(() => {
-    const items = [...(projectsQuery.data ?? [])]
+    const items = [...(projectsQuery.data ?? [])];
 
     items.sort((left, right) => {
-      const leftSettings = parseProjectSettings(left.settings)
-      const rightSettings = parseProjectSettings(right.settings)
+      const leftSettings = parseProjectSettings(left.settings);
+      const rightSettings = parseProjectSettings(right.settings);
 
       if (leftSettings.favorite !== rightSettings.favorite) {
-        return leftSettings.favorite ? -1 : 1
+        return leftSettings.favorite ? -1 : 1;
       }
 
       return (
         new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
-      )
-    })
+      );
+    });
 
-    return items
-  }, [projectsQuery.data])
-  const totalPages = Math.max(1, Math.ceil(sortedProjects.length / PAGE_SIZE))
-  const safePage = Math.min(page, totalPages)
+    return items;
+  }, [projectsQuery.data]);
+  const totalPages = Math.max(1, Math.ceil(sortedProjects.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
   const pagedProjects = useMemo(() => {
-    const start = (safePage - 1) * PAGE_SIZE
-    return sortedProjects.slice(start, start + PAGE_SIZE)
-  }, [safePage, sortedProjects])
+    const start = (safePage - 1) * PAGE_SIZE;
+    return sortedProjects.slice(start, start + PAGE_SIZE);
+  }, [safePage, sortedProjects]);
   const rangeStart =
-    sortedProjects.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1
-  const rangeEnd = Math.min(safePage * PAGE_SIZE, sortedProjects.length)
-  const importFileRef = useRef<HTMLInputElement>(null)
+    sortedProjects.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(safePage * PAGE_SIZE, sortedProjects.length);
+  const importFileRef = useRef<HTMLInputElement>(null);
   const importProjectMutation = useMutation({
     mutationFn: async (file: File) => importProject(file),
     onSuccess: async (newProjectId) => {
-      toast.success(t("project.directory.import.success"))
-      await queryClient.invalidateQueries({ queryKey: ["projects"] })
+      toast.success(t('project.directory.import.success'));
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
       startTransition(() => {
         void navigate({
-          to: "/projects/$projectId/label",
+          to: '/projects/$projectId/label',
           params: { projectId: newProjectId },
-        })
-      })
+        });
+      });
     },
     onError: (error) => {
       toast.error(
-        t("project.directory.import.error", {
+        t('project.directory.import.error', {
           params: {
             message: error instanceof Error ? error.message : String(error),
           },
         }),
-      )
+      );
     },
-  })
+  });
   const exportProjectMutation = useMutation({
     mutationFn: async (projectId: string) => {
-      const toastId = toast.loading(t("project.directory.export.loading"))
+      const toastId = toast.loading(t('project.directory.export.loading'));
       try {
-        const zipPath = await exportProject(projectId)
+        const zipPath = await exportProject(projectId);
         toast.success(
-          t("project.directory.export.success", { params: { zipPath } }),
+          t('project.directory.export.success', { params: { zipPath } }),
           { id: toastId },
-        )
-        return zipPath
+        );
+        return zipPath;
       } catch (error) {
         toast.error(
-          t("project.directory.export.error", {
+          t('project.directory.export.error', {
             params: {
               message: error instanceof Error ? error.message : String(error),
             },
           }),
           { id: toastId },
-        )
-        throw error
+        );
+        throw error;
       }
     },
-  })
+  });
   const updateProjectSettingsMutation = useMutation({
     mutationFn: async ({
       projectId,
       settings,
     }: {
-      projectId: string
-      settings: string
+      projectId: string;
+      settings: string;
     }) => {
       await updateProject({
         projectId,
         settings,
-      })
+      });
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["projects"] })
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
-  })
+  });
 
   useEffect(() => {
-    setPage(1)
-  }, [deferredSearch])
+    setPage(1);
+  }, [deferredSearch]);
 
   useEffect(() => {
     if (!projectPendingDelete) {
-      setDeleteProjectName("")
+      setDeleteProjectName('');
     }
-  }, [projectPendingDelete])
+  }, [projectPendingDelete]);
 
   useEffect(() => {
     if (createRequested && !createRequestDismissed) {
-      createProjectHandlers.open()
+      createProjectHandlers.open();
     }
     if (!createRequested) {
-      setCreateRequestDismissed(false)
+      setCreateRequestDismissed(false);
     }
-  }, [createProjectHandlers, createRequestDismissed, createRequested])
+  }, [createProjectHandlers, createRequestDismissed, createRequested]);
 
   useEffect(() => {
     if (page > totalPages) {
-      setPage(totalPages)
+      setPage(totalPages);
     }
-  }, [page, totalPages])
+  }, [page, totalPages]);
 
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-6 py-4">
       <Modal
         size="lg"
         onClose={() => {
-          createProjectHandlers.close()
+          createProjectHandlers.close();
 
           if (createRequested) {
-            setCreateRequestDismissed(true)
+            setCreateRequestDismissed(true);
             void navigate({
-              to: "/projects",
+              to: '/projects',
               search: { create: false },
               replace: true,
-            })
+            });
           }
         }}
         opened={createProjectOpened}
@@ -370,34 +375,34 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
           )}
           config={createProjectForm}
           defaultValues={{
-            description: "",
+            description: '',
             ...generateRandomProjectIdentity(),
           }}
           onSubmit={async (formData) => {
-            await createProjectMutation.mutateAsync(formData)
+            await createProjectMutation.mutateAsync(formData);
           }}
         >
           <div className="mt-4 flex justify-end gap-3">
             <Button
               onClick={() => {
-                createProjectHandlers.close()
+                createProjectHandlers.close();
 
                 if (createRequested) {
-                  setCreateRequestDismissed(true)
+                  setCreateRequestDismissed(true);
                   void navigate({
-                    to: "/projects",
+                    to: '/projects',
                     search: { create: false },
                     replace: true,
-                  })
+                  });
                 }
               }}
               type="button"
               variant="default"
             >
-              {t("common.cancel")}
+              {t('common.cancel')}
             </Button>
             <Button loading={createProjectMutation.isPending} type="submit">
-              {t("project.directory.createAction")}
+              {t('project.directory.createAction')}
             </Button>
           </div>
         </Form>
@@ -407,37 +412,37 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
         centered
         trapFocus
         onClose={() => {
-          setProjectPendingDelete(null)
+          setProjectPendingDelete(null);
         }}
         opened={projectPendingDelete != null}
-        title={t("project.directory.deleteTitle")}
+        title={t('project.directory.deleteTitle')}
       >
         <Stack gap="md">
           <Text c="dimmed" size="sm">
             {projectPendingDelete
-              ? t("project.confirmDelete", {
+              ? t('project.confirmDelete', {
                   params: {
                     name: projectPendingDelete.name,
                   },
                 })
-              : ""}
+              : ''}
           </Text>
           <TextInput
             data-autofocus
             onChange={(event) =>
               setDeleteProjectName(event.currentTarget.value)
             }
-            placeholder={projectPendingDelete?.name ?? ""}
+            placeholder={projectPendingDelete?.name ?? ''}
             value={deleteProjectName}
           />
           <div className="flex justify-end gap-3">
             <Button
               onClick={() => {
-                setProjectPendingDelete(null)
+                setProjectPendingDelete(null);
               }}
               variant="default"
             >
-              {t("common.cancel")}
+              {t('common.cancel')}
             </Button>
             <Button
               color="red"
@@ -445,13 +450,13 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
               loading={deleteProjectMutation.isPending}
               onClick={() => {
                 if (!projectPendingDelete) {
-                  return
+                  return;
                 }
 
-                deleteProjectMutation.mutate(projectPendingDelete.id)
+                deleteProjectMutation.mutate(projectPendingDelete.id);
               }}
             >
-              {t("project.directory.deleteAction")}
+              {t('project.directory.deleteAction')}
             </Button>
           </div>
         </Stack>
@@ -459,13 +464,14 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">
-          {t("header.projects")}
+          {t('header.projects')}
         </h1>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <TextInput
+            leftSection={<IconSearch className="size-4" />}
             className="w-full sm:w-56"
             onChange={(event) => setSearch(event.currentTarget.value)}
-            placeholder={t("project.directory.searchPlaceholder")}
+            placeholder={t('project.directory.searchPlaceholder')}
             value={search}
           />
           <Button
@@ -474,29 +480,29 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
             onClick={() => importFileRef.current?.click()}
             variant="default"
           >
-            {t("project.directory.importAction")}
+            {t('project.directory.importAction')}
           </Button>
           <input
             ref={importFileRef}
             accept=".zip"
-            aria-label={t("project.directory.importAriaLabel")}
+            aria-label={t('project.directory.importAriaLabel')}
             className="hidden"
             type="file"
             onChange={(e) => {
-              const file = e.currentTarget.files?.[0]
+              const file = e.currentTarget.files?.[0];
               if (file) {
-                importProjectMutation.mutate(file)
+                importProjectMutation.mutate(file);
               }
-              e.currentTarget.value = ""
+              e.currentTarget.value = '';
             }}
           />
           <Button
             onClick={() => {
-              setCreateRequestDismissed(false)
-              createProjectHandlers.open()
+              setCreateRequestDismissed(false);
+              createProjectHandlers.open();
             }}
           >
-            {t("project.directory.newAction")}
+            {t('project.directory.newAction')}
           </Button>
         </div>
       </div>
@@ -504,12 +510,12 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
       {createProjectMutation.error ? (
         <Alert
           color="red"
-          title={t("project.directory.createErrorTitle")}
+          title={t('project.directory.createErrorTitle')}
           variant="light"
         >
           {createProjectMutation.error instanceof Error
             ? createProjectMutation.error.message
-            : t("project.directory.createErrorFallback")}
+            : t('project.directory.createErrorFallback')}
         </Alert>
       ) : null}
 
@@ -522,12 +528,12 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
       {projectsQuery.error ? (
         <Alert
           color="red"
-          title={t("project.directory.loadErrorTitle")}
+          title={t('project.directory.loadErrorTitle')}
           variant="light"
         >
           {projectsQuery.error instanceof Error
             ? projectsQuery.error.message
-            : t("project.directory.loadErrorFallback")}
+            : t('project.directory.loadErrorFallback')}
         </Alert>
       ) : null}
 
@@ -535,17 +541,17 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
         <>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {pagedProjects.map((project) => {
-              const projectSettings = parseProjectSettings(project.settings)
+              const projectSettings = parseProjectSettings(project.settings);
               const classSampleCounts =
-                projectClassCountMap.get(project.id) ?? []
+                projectClassCountMap.get(project.id) ?? [];
               const canTrain =
                 project.classCount >= projectSettings.label.minClasses &&
                 classSampleCounts.length >= projectSettings.label.minClasses &&
                 classSampleCounts.every(
                   (sampleCount) =>
                     sampleCount >= projectSettings.label.minSamplesPerClass,
-                )
-              const canPlay = project.hasModel
+                );
+              const canPlay = project.hasModel;
 
               return (
                 <ProjectCard
@@ -560,20 +566,20 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
                   }
                   key={project.id}
                   onDelete={() => {
-                    setProjectPendingDelete(project)
+                    setProjectPendingDelete(project);
                   }}
                   isExporting={
                     exportProjectMutation.isPending &&
                     exportProjectMutation.variables === project.id
                   }
                   onExport={() => {
-                    exportProjectMutation.mutate(project.id)
+                    exportProjectMutation.mutate(project.id);
                   }}
                   onOpen={() => {
                     void navigate({
-                      to: "/projects/$projectId/label",
+                      to: '/projects/$projectId/label',
                       params: { projectId: project.id },
-                    })
+                    });
                   }}
                   onToggleFavorite={async () => {
                     await updateProjectSettingsMutation.mutateAsync({
@@ -582,7 +588,7 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
                         ...projectSettings,
                         favorite: !projectSettings.favorite,
                       }),
-                    })
+                    });
                   }}
                   project={project}
                   sampleFilePaths={
@@ -599,13 +605,13 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
                       ) ?? []
                   }
                 />
-              )
+              );
             })}
           </div>
 
           <div className="flex flex-col gap-3 border-t border-zinc-200 pt-4 dark:border-zinc-800 sm:flex-row sm:items-center sm:justify-between">
             <Text c="dimmed" size="sm">
-              {t("common.pagination.hint", {
+              {t('common.pagination.hint', {
                 params: {
                   from: rangeStart,
                   to: rangeEnd,
@@ -622,7 +628,7 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
                 onClick={() => setPage(1)}
                 variant="default"
               >
-                {t("common.pagination.first")}
+                {t('common.pagination.first')}
               </Button>
               <Button
                 disabled={safePage === 1}
@@ -630,7 +636,7 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
                 onClick={() => setPage((current) => Math.max(1, current - 1))}
                 variant="default"
               >
-                {t("common.pagination.previous")}
+                {t('common.pagination.previous')}
               </Button>
               <Button
                 disabled={safePage === totalPages}
@@ -640,7 +646,7 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
                 rightSection={<IconChevronRight className="size-4" />}
                 variant="default"
               >
-                {t("common.pagination.next")}
+                {t('common.pagination.next')}
               </Button>
               <Button
                 disabled={safePage === totalPages}
@@ -648,7 +654,7 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
                 rightSection={<IconChevronsRight className="size-4" />}
                 variant="default"
               >
-                {t("common.pagination.last")}
+                {t('common.pagination.last')}
               </Button>
             </Group>
           </div>
@@ -658,23 +664,54 @@ function ProjectDirectory({ createRequested = false }: ProjectDirectoryProps) {
       {!projectsQuery.isLoading &&
       !projectsQuery.error &&
       !pagedProjects.length ? (
-        <Paper className="p-8 text-center" radius="lg" withBorder>
-          <Stack gap="xs">
-            <Text fw={600}>
-              {deferredSearch
-                ? t("project.directory.emptySearchTitle")
-                : t("project.directory.emptyTitle")}
-            </Text>
-            <Text c="dimmed" size="sm">
-              {deferredSearch
-                ? t("project.directory.emptySearchDescription")
-                : t("project.directory.emptyDescription")}
-            </Text>
+        <Paper
+          className="relative overflow-hidden rounded-[2rem] border border-zinc-200/80 bg-gradient-to-br from-white via-zinc-50 to-emerald-50/40 p-8 text-center dark:border-zinc-800 dark:from-zinc-950 dark:via-zinc-950 dark:to-emerald-950/20"
+          radius="lg"
+          withBorder
+        >
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.14),transparent_70%)] dark:bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.18),transparent_70%)]" />
+          <Stack align="center" gap="md">
+            <div className="relative flex h-28 w-40 items-center justify-center">
+              <div className="absolute inset-x-4 bottom-4 h-10 rounded-full bg-zinc-200/70 blur-2xl dark:bg-zinc-800/80" />
+              <div className="absolute left-3 top-8 h-14 w-14 rounded-2xl border border-zinc-200 bg-white/90 p-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/90">
+                <div className="h-full w-full rounded-xl bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-700" />
+              </div>
+              <div className="absolute right-4 top-3 flex h-16 w-16 items-center justify-center rounded-[1.4rem] border border-emerald-200 bg-emerald-50 text-emerald-600 shadow-sm dark:border-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-400">
+                {deferredSearch ? (
+                  <IconSearchOff className="size-8" />
+                ) : (
+                  <IconFolderPlus className="size-8" />
+                )}
+              </div>
+            </div>
+
+            <Stack align="center" gap={6}>
+              <Text fw={700} size="lg">
+                {deferredSearch
+                  ? t('project.directory.emptySearchTitle')
+                  : t('project.directory.emptyTitle')}
+              </Text>
+              <MarkdownViewer className="max-w-sm text-left text-sm leading-relaxed">
+                {deferredSearch
+                  ? t('project.directory.emptySearchDescription')
+                  : t('project.directory.emptyDescription')}
+              </MarkdownViewer>
+            </Stack>
+
+            {deferredSearch ? (
+              <Button
+                onClick={() => setSearch('')}
+                radius="xl"
+                variant="default"
+              >
+                {t('project.directory.clearSearch')}
+              </Button>
+            ) : null}
           </Stack>
         </Paper>
       ) : null}
     </section>
-  )
+  );
 }
 
-export default ProjectDirectory
+export default ProjectDirectory;
