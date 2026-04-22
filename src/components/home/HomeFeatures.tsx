@@ -1,3 +1,4 @@
+import { Paper } from "@mantine/core"
 import {
   IconAdjustments,
   IconBolt,
@@ -8,7 +9,7 @@ import {
 } from "@tabler/icons-react"
 import { FunctionComponent } from "react"
 import { useAppProvider } from "../layout/AppProvider"
-import { Paper } from "@mantine/core"
+import HomePlatform from "./HomePlatform"
 
 type FeatureCard = {
   bgClass: string
@@ -68,10 +69,11 @@ const HomeFeatures: FunctionComponent = () => {
 
   return (
     <section className="mx-auto w-full max-w-6xl px-6 md:px-10">
-      <h3 className="mb-4 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+      <h3 className="mb-4 text-center text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
         {t("home.features.coreTitle")}
       </h3>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <HomePlatform />
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {FEATURE_CARDS.map((card) => {
           const Icon = card.icon
           return (
@@ -83,7 +85,7 @@ const HomeFeatures: FunctionComponent = () => {
               <div
                 className={`flex size-10 items-center justify-center rounded-xl ${card.bgClass}`}
               >
-                <Icon className={`size-5 ${card.iconClass}`} />
+                <Icon className={`size-7 ${card.iconClass}`} />
               </div>
               <div className="space-y-1">
                 <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">

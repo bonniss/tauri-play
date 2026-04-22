@@ -293,6 +293,7 @@ const HomeUsage: FunctionComponent = () => {
       })
       return importProject(file)
     },
+
     onSuccess: async (projectId) => {
       await queryClient.invalidateQueries({ queryKey: ["projects"] })
       startTransition(() => {

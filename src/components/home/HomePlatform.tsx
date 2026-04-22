@@ -51,7 +51,7 @@ const HomePlatform: FunctionComponent = () => {
   const { t } = useAppProvider()
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-6 md:px-10">
+    <section className="mx-auto w-full max-w-6xl">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {PLATFORM_CARDS.map((card) => {
           const Icon = card.icon

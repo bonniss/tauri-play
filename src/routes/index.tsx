@@ -16,7 +16,6 @@ function HomePage() {
       <HomeHero />
       <HomeLiveDemo />
       <HomeUsage />
-      <HomePlatform />
       <HomeFeatures />
       <HomeCtaFooter />
     </div>
