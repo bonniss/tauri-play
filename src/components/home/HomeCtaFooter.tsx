@@ -3,6 +3,7 @@ import { IconArrowRight } from "@tabler/icons-react"
 import { Link } from "@tanstack/react-router"
 import { FunctionComponent } from "react"
 import { useAppProvider } from "../layout/AppProvider"
+import MarkdownViewer from "../shared/MarkdownViewer"
 import Logo from "../shared/logo/Logo"
 
 const HomeCtaFooter: FunctionComponent = () => {
@@ -45,24 +46,9 @@ const HomeCtaFooter: FunctionComponent = () => {
             {t("home.hero.cta")}
           </Button>
           <Logo animated className="size-32" />
-          <p className="text-sm text-white/50">
-            Made by{" "}
-            <a
-              href="https://nauda.dev"
-              target="_blank"
-              rel="noreferrer"
-              className="text-white/70 underline-offset-2 hover:text-white hover:underline"
-            >
-              Duy Trung
-            </a>
-            {" · "}
-            <a
-              href="mailto:duytrung.tcu@gmail.com"
-              className="text-white/70 underline-offset-2 hover:text-white hover:underline"
-            >
-              duytrung.tcu@gmail.com
-            </a>
-          </p>
+          <MarkdownViewer className="prose-sm prose-invert prose-a:text-white/70 prose-a:no-underline hover:prose-a:text-white hover:prose-a:underline prose-p:text-white/50 prose-p:m-0">
+            {t("home.cta.author")}
+          </MarkdownViewer>
         </div>
       </div>
     </section>

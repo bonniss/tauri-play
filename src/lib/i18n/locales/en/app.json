@@ -95,7 +95,8 @@
     "faqTitle": "Frequently Asked Questions",
     "cta": {
       "title": "Ready to get started?",
-      "description": "Pick a few objects from your desk and teach your computer to tell them apart."
+      "description": "Pick a few objects from your desk and teach your computer to tell them apart.",
+      "author": "Made by [Duy Trung](https://nauda.dev) · [duytrung.tcu@gmail.com](mailto:duytrung.tcu@gmail.com)"
     }
   },
   "common": {
@@ -397,7 +398,7 @@
     },
     {
       "q": "Who is it for?",
-      "a": "Educators, students, creators, and makers of all kinds — anyone with an idea they want to explore.\n\n*No machine learning experience required*."
+      "a": "Educators, students, creators, and developers of all kinds — anyone with an idea they want to explore.\n\n*No machine learning or coding experience required*."
     },
     {
       "q": "What can I train with it?",

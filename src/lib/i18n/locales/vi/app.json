@@ -95,7 +95,8 @@
     "faqTitle": "Câu hỏi thường gặp",
     "cta": {
       "title": "Sẵn sàng để bắt đầu rồi?",
-      "description": "Nhặt vài đồ vật trên bàn làm việc và dạy máy tính phân biệt ngay."
+      "description": "Nhặt vài đồ vật trên bàn làm việc và dạy máy tính phân biệt ngay.",
+      "author": "Phát triển bởi [Duy Trung](https://nauda.dev) · [duytrung.tcu@gmail.com](mailto:duytrung.tcu@gmail.com)"
     }
   },
   "common": {
@@ -397,7 +398,7 @@
     },
     {
       "q": "Ứng dụng này dành cho ai?",
-      "a": "Giáo viên, học sinh, nhà sáng tạo, maker, và bất kỳ ai có một ý tưởng muốn khám phá.\n\n*Không cần kinh nghiệm về machine learning*."
+      "a": "Giáo viên, học sinh, nhà sáng tạo, lập trình viên, và bất kỳ ai có một ý tưởng muốn khám phá.\n\n*Không yêu cầu kinh nghiệm về machine learning và lập trình*."
     },
     {
       "q": "Tôi có thể huấn luyện với dữ liệu gì?",

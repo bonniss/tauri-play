@@ -115,7 +115,7 @@ function HomeFeatureCard({
     <Paper
       withBorder
       className={[
-        "flex flex-col gap-3 p-6 transition duration-700 ease-out motion-reduce:transform-none motion-reduce:transition-none",
+        "flex flex-col gap-3 p-6 transition duration-700 ease-out motion-reduce:transform-none motion-reduce:transition-none hover:shadow-lg",
         isVisible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0",
       ].join(" ")}
       style={
@@ -146,7 +146,11 @@ const HomeFeatures: FunctionComponent = () => {
   const { isVisible, ref } = useRevealOnScroll()
 
   return (
-    <section id="features" ref={ref} className="mx-auto w-full max-w-6xl px-6 md:px-10">
+    <section
+      id="features"
+      ref={ref}
+      className="mx-auto w-full max-w-6xl px-6 md:px-10"
+    >
       <h3 className="text-2xl font-semibold tracking-tight mb-6 text-center">
         {t("home.features.title")}
       </h3>

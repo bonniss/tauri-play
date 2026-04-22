@@ -19,7 +19,17 @@ const MarkdownViewer: FunctionComponent<MarkdownViewerProps> = ({
       className={clsx('prose dark:prose-invert', className)}
       data-color-mode={colorScheme}
     >
-      <Markdown>{children || ''}</Markdown>
+      <Markdown
+        components={{
+          a: ({ href, children }) => (
+            <a href={href} target="_blank" rel="noreferrer">
+              {children}
+            </a>
+          ),
+        }}
+      >
+        {children || ''}
+      </Markdown>
     </div>
   );
 };
