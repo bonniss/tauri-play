@@ -67,8 +67,8 @@ const AppSettings: FunctionComponent<AppSettingsProps> = () => {
             <Text fw={600} size="sm">{t('settings.language')}</Text>
             <Select
               data={[
-                { value: 'en', label: 'English' },
                 { value: 'vi', label: 'Tiếng Việt' },
+                { value: 'en', label: 'English' },
                 { value: 'ru', label: 'Русский' },
               ]}
               onChange={(v) => v && setLocale(v)}
