@@ -3,15 +3,19 @@ import {
   IconAdjustments,
   IconBolt,
   IconCamera,
+  IconDevices,
   IconInfinity,
+  IconPackage,
   IconPlayerPlay,
   IconShare,
+  IconUserOff,
+  IconWifiOff,
 } from "@tabler/icons-react"
-import { FunctionComponent } from "react"
+import { CSSProperties, FunctionComponent } from "react"
 import { useAppProvider } from "../layout/AppProvider"
-import HomePlatform from "./HomePlatform"
+import useRevealOnScroll from "./useRevealOnScroll"
 
-type FeatureCard = {
+type InfoCard = {
   bgClass: string
   descriptionKey: string
   icon: React.ElementType
@@ -19,7 +23,38 @@ type FeatureCard = {
   titleKey: string
 }
 
-const FEATURE_CARDS: FeatureCard[] = [
+const PLATFORM_CARDS: InfoCard[] = [
+  {
+    icon: IconPackage,
+    titleKey: "home.features.env.install.title",
+    descriptionKey: "home.features.env.install.description",
+    iconClass: "text-teal-600 dark:text-teal-400",
+    bgClass: "bg-teal-50 dark:bg-teal-950/40",
+  },
+  {
+    icon: IconDevices,
+    titleKey: "home.features.env.crossPlatform.title",
+    descriptionKey: "home.features.env.crossPlatform.description",
+    iconClass: "text-blue-600 dark:text-blue-400",
+    bgClass: "bg-blue-50 dark:bg-blue-950/40",
+  },
+  {
+    icon: IconWifiOff,
+    titleKey: "home.features.env.offline.title",
+    descriptionKey: "home.features.env.offline.description",
+    iconClass: "text-green-600 dark:text-green-400",
+    bgClass: "bg-green-50 dark:bg-green-950/40",
+  },
+  {
+    icon: IconUserOff,
+    titleKey: "home.features.env.noAccount.title",
+    descriptionKey: "home.features.env.noAccount.description",
+    iconClass: "text-orange-600 dark:text-orange-400",
+    bgClass: "bg-orange-50 dark:bg-orange-950/40",
+  },
+]
+
+const FEATURE_CARDS: InfoCard[] = [
   {
     icon: IconBolt,
     titleKey: "home.features.fast.title",
@@ -64,40 +99,76 @@ const FEATURE_CARDS: FeatureCard[] = [
   },
 ]
 
-const HomeFeatures: FunctionComponent = () => {
+function HomeFeatureCard({
+  card,
+  index,
+  isVisible,
+}: {
+  card: InfoCard
+  index: number
+  isVisible: boolean
+}) {
   const { t } = useAppProvider()
+  const Icon = card.icon
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-6 md:px-10">
-      <h3 className="mb-4 text-center text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-        {t("home.features.coreTitle")}
-      </h3>
-      <HomePlatform />
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {FEATURE_CARDS.map((card) => {
-          const Icon = card.icon
-          return (
-            <Paper
+    <Paper
+      withBorder
+      className={[
+        "flex flex-col gap-3 p-6 transition duration-700 ease-out motion-reduce:transform-none motion-reduce:transition-none",
+        isVisible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0",
+      ].join(" ")}
+      style={
+        {
+          transitionDelay: isVisible ? `${index * 90}ms` : "0ms",
+        } satisfies CSSProperties
+      }
+    >
+      <div
+        className={`flex size-10 items-center justify-center rounded-xl ${card.bgClass}`}
+      >
+        <Icon className={`size-7 ${card.iconClass}`} />
+      </div>
+      <div className="space-y-1">
+        <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">
+          {t(card.titleKey)}
+        </h3>
+        <p className="text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
+          {t(card.descriptionKey)}
+        </p>
+      </div>
+    </Paper>
+  )
+}
+
+const HomeFeatures: FunctionComponent = () => {
+  const { t } = useAppProvider()
+  const { isVisible, ref } = useRevealOnScroll()
+
+  return (
+    <section ref={ref} className="mx-auto w-full max-w-6xl px-6 md:px-10">
+      <div className="space-y-10">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {PLATFORM_CARDS.map((card, index) => (
+            <HomeFeatureCard
               key={card.titleKey}
-              withBorder
-              className="flex flex-col gap-3 p-6"
-            >
-              <div
-                className={`flex size-10 items-center justify-center rounded-xl ${card.bgClass}`}
-              >
-                <Icon className={`size-7 ${card.iconClass}`} />
-              </div>
-              <div className="space-y-1">
-                <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">
-                  {t(card.titleKey)}
-                </h3>
-                <p className="text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
-                  {t(card.descriptionKey)}
-                </p>
-              </div>
-            </Paper>
-          )
-        })}
+              card={card}
+              index={index}
+              isVisible={isVisible}
+            />
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {FEATURE_CARDS.map((card, index) => (
+            <HomeFeatureCard
+              key={card.titleKey}
+              card={card}
+              index={PLATFORM_CARDS.length + index}
+              isVisible={isVisible}
+            />
+          ))}
+        </div>
       </div>
     </section>
   )

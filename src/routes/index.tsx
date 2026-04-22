@@ -2,9 +2,8 @@ import { createFileRoute } from "@tanstack/react-router"
 import HomeCtaFooter from "~/components/home/HomeCtaFooter"
 import HomeFeatures from "~/components/home/HomeFeatures"
 import HomeHero from "~/components/home/HomeHero"
-import HomeUsage from "~/components/home/HomeUsage"
 import HomeLiveDemo from "~/components/home/HomeLiveDemo"
-import HomePlatform from "~/components/home/HomePlatform"
+import HomeUsage from "~/components/home/HomeUsage"
 
 export const Route = createFileRoute("/")({
   component: HomePage,
