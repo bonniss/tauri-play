@@ -351,6 +351,14 @@
       "timeline": {
         "setup": "Chuẩn bị môi trường",
         "data": "Chuẩn bị dữ liệu",
+        "info": {
+          "setup": "**TensorFlow.js** khởi tạo backend WebGL để chạy các phép tính tensor trên GPU.\n\n**MobileNet v2** — được pretrain trên hàng triệu ảnh ImageNet — được tải vào bộ nhớ. Nó đóng vai trò backbone thị giác: có thể mô tả bất kỳ ảnh nào thành một tập đặc trưng gọn, mà không cần train lại trên dữ liệu của bạn.",
+          "data": "Ảnh của bạn được chia thành hai tập:\n\n- **Train** — dùng để tối ưu model\n- **Validation** — giữ lại để đo xem model tổng quát hóa tốt đến đâu với ảnh chưa thấy\n\n*Validation split* cao hơn cho ước tính độ chính xác đáng tin cậy hơn, nhưng để lại ít ảnh hơn để huấn luyện.",
+          "embeddings": "Mỗi ảnh được đưa qua MobileNet backbone (đã đóng băng) để tạo ra một **vector 1280 chiều** gọi là embedding.\n\nHãy coi đó như dấu vân tay số: các ảnh giống nhau sẽ nằm gần nhau trong không gian 1280 chiều này. Bước này thường chậm nhất — mỗi ảnh train được xử lý một lần.",
+          "head": "Một **classifier nhỏ** (dense layer) được xây trên đầu các embedding. Đây là layer duy nhất được train từ đầu.\n\nMobileNet backbone bị đóng băng — trọng số của nó không thay đổi. Đây là **transfer learning**: mượn kiến thức thị giác của MobileNet và chỉ dạy thêm layer quyết định cuối cùng để nhận ra các class của bạn.",
+          "training": "Classifier head được tối ưu qua nhiều **epoch** bằng gradient descent.\n\nMỗi epoch, model xem toàn bộ ảnh train, tính loss, rồi điều chỉnh trọng số để giảm loss. **Validation accuracy** sau mỗi epoch cho thấy model tổng quát hóa tốt đến đâu — nếu không cải thiện, *Early stopping* sẽ dừng tự động.",
+          "saving": "Model đã train được ghi xuống đĩa theo **định dạng TensorFlow.js**: file `model.json` mô tả kiến trúc cộng với các file trọng số nhị phân.\n\nĐây chính xác là thứ bạn nhận được khi nhấn **Export Model** — chạy được trên mọi trình duyệt hoặc Node.js, không cần server GPU."
+        },
         "embeddings": "Embeddings",
         "head": "Classifier Head",
         "training": "Huấn luyện",

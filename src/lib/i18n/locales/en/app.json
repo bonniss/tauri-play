@@ -351,6 +351,14 @@
       "timeline": {
         "setup": "Setup",
         "data": "Prepare Data",
+        "info": {
+          "setup": "**TensorFlow.js** initializes the WebGL backend to run tensor operations on the GPU.\n\n**MobileNet v2** — pretrained on millions of ImageNet images — is loaded into memory. It acts as the visual backbone: it can describe any image as a compact set of features, without needing to be retrained on your data.",
+          "data": "Your images are split into two sets:\n\n- **Train** — used to optimize the model\n- **Validation** — held out to measure how well the model generalizes to unseen images\n\nA higher *Validation split* gives a more reliable accuracy estimate, but leaves fewer images for training.",
+          "embeddings": "Each image is passed through the frozen MobileNet backbone, producing a **1280-dimensional vector** called an embedding.\n\nThink of it as a numerical fingerprint: similar images cluster together in this 1280-d space. This step is usually the slowest — every training image is processed once.",
+          "head": "A small **dense classifier** is stacked on top of the embeddings. This is the only layer trained from scratch.\n\nThe MobileNet backbone stays frozen — its weights don't change. This is **transfer learning**: borrowing MobileNet's visual knowledge and teaching only the final decision layer to recognize your classes.",
+          "training": "The classifier head is optimized over multiple **epochs** using gradient descent.\n\nEach epoch, the model sees every training image, computes a loss, and adjusts its weights to reduce it. **Validation accuracy** after each epoch shows how well it generalizes — if it plateaus, *Early stopping* will halt training automatically.",
+          "saving": "The trained model is written to disk in **TensorFlow.js format**: a `model.json` file describing the architecture plus binary weight files.\n\nThis is exactly what you get when you click **Export Model** — it runs in any browser or Node.js environment, no GPU server required."
+        },
         "embeddings": "Embeddings",
         "head": "Classifier Head",
         "training": "Training",
