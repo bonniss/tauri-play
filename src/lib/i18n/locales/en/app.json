@@ -91,6 +91,7 @@
       "title": "See machine learning in action",
       "description": "Train a model with your own examples and see results instantly — visual, and easy to use."
     },
+    "faqTitle": "Frequently Asked Questions",
     "cta": {
       "title": "Ready to teach your computer?"
     }
@@ -377,5 +378,39 @@
         "embedHint": "Then load your model with tf.loadLayersModel(\"model.json\")."
       }
     }
-  }
+  },
+  "faq": [
+    {
+      "q": "What is PlantML?",
+      "a": "PlantML is a desktop app that lets you create and train image recognition models using your own data — quickly, simply, and entirely on your device."
+    },
+    {
+      "q": "Who is it for?",
+      "a": "Educators, students, creators, and makers of all kinds — anyone with an idea they want to explore.\n\nNo machine learning experience required."
+    },
+    {
+      "q": "What can I train with it?",
+      "a": "You can train image classification models using:\n\n- Photos captured from your camera  \n- Images uploaded from your device  \n\nMore input types may be supported in the future."
+    },
+    {
+      "q": "Why isn’t my model working as expected?",
+      "a": "Machine learning models depend heavily on the data you provide. If results aren’t what you expect, try:\n\n- **Changing environments**  \n  Train with different backgrounds, lighting conditions, and angles.\n\n- **Improving data quality**  \n  Use clear, consistent images for each class.\n\n- **Balancing your dataset**  \n  Make sure each class has a similar number of examples.\n\n- **Avoiding confusing examples**  \n  If two classes look similar, the model may struggle to distinguish them.\n\nExperimenting and iterating is part of the process — small changes in your data can make a big difference."
+    },
+    {
+      "q": "How many images do I need?",
+      "a": "You can start with as few as 20–30 images per class.\n\nMore data usually leads to better results, especially if your images vary in lighting, angles, and backgrounds."
+    },
+    {
+      "q": "What happens after I train a model?",
+      "a": "You can immediately test your model within the app using:\n\n- Image uploads  \n- Live camera input  \n\nYou can also export your trained model for use in other applications."
+    },
+    {
+      "q": "Can I use my model outside PlantML?",
+      "a": "Yes.\n\nYou can export your model (for example, in TensorFlow.js format) and use it in your own apps, websites, or projects."
+    },
+    {
+      "q": "Does it require internet or an account?",
+      "a": "No.\n\nPlantML runs entirely offline.\n\nNo sign-up, no cloud, no data uploads — everything stays on your device."
+    }
+  ]
 }

@@ -142,7 +142,6 @@ function HomeFeatureCard({
 }
 
 const HomeFeatures: FunctionComponent = () => {
-  const { t } = useAppProvider()
   const { isVisible, ref } = useRevealOnScroll()
 
   return (

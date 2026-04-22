@@ -7,11 +7,7 @@ const HomeLiveDemo: FunctionComponent = () => {
 
   return (
     <section className="mx-auto w-full max-w-6xl px-6 md:px-10">
-      <Paper
-        className="overflow-hidden rounded-[28px] border-zinc-200/80 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.95),rgba(244,244,245,0.96)_42%,rgba(255,255,255,0.98))] p-4 shadow-[0_24px_80px_-48px_rgba(24,24,27,0.45)] dark:border-zinc-800 dark:bg-[radial-gradient(circle_at_top_left,rgba(39,39,42,0.92),rgba(24,24,27,0.96)_42%,rgba(9,9,11,0.98))] md:p-6"
-        radius="xl"
-        withBorder
-      >
+      <Paper>
         <div className="grid items-center gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,560px)] lg:gap-10">
           <div className="max-w-xl space-y-4 px-2 py-2 md:px-4">
             <h2 className="text-3xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50 md:text-4xl">
