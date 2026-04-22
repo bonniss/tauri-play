@@ -23,45 +23,45 @@
       "coreTitle": "Features",
       "env": {
         "install": {
-          "title": "Easy to install",
-          "description": "Desktop app. Install and run — no terminal, no extra dependencies."
-        },
-        "noAccount": {
-          "title": "No account required",
-          "description": "You own the machine, you own the app. No sign-up, no email, no subscription."
+          "title": "Easy setup",
+          "description": "Install and start using it right away — no Python, no terminal."
         },
         "offline": {
-          "title": "100% offline",
-          "description": "No internet needed to train or run predictions. Ever."
+          "title": "No internet required",
+          "description": "Everything runs offline. Your data stays on your device."
+        },
+        "noAccount": {
+          "title": "No account needed",
+          "description": "No sign-up, no email required."
         },
         "crossPlatform": {
           "title": "Cross-platform",
-          "description": "Works on Windows, macOS, and Linux."
+          "description": "Runs on Windows, macOS, and Linux."
         }
       },
       "fast": {
         "title": "Fast training",
-        "description": "Results in seconds from just a few dozen images. Small CPU and memory footprint."
+        "description": "Get results in seconds with just a few dozen images. Uses minimal CPU and memory."
       },
       "unlimited": {
-        "title": "Unlimited projects",
-        "description": "As many projects, classes, and samples as your disk allows. No artificial caps."
+        "title": "Apps within the app",
+        "description": "Each project is its own app. The number of projects is only limited by your disk space."
       },
       "defaults": {
-        "title": "Sensible defaults",
-        "description": "Works great out of the box. Easy to customize epochs, batch size, and more when needed."
+        "title": "Smart defaults",
+        "description": "Works great out of the box. Easily customize epochs, batch size, and more when needed."
       },
       "flexibleInput": {
-        "title": "Flexible input",
-        "description": "Collect images from your camera or upload an existing dataset — mix both freely."
+        "title": "Easy data collection",
+        "description": "Capture images directly from your camera or use existing images."
       },
       "easyPlay": {
-        "title": "Intuitive Demo",
-        "description": "Test your model live with a clean, real-time interface. Upload or use your camera."
+        "title": "Interactive testing",
+        "description": "Test your trained model instantly with a simple, easy-to-use interface."
       },
       "easyShare": {
         "title": "Easy sharing",
-        "description": "Share a demo of your project or export your trained model to use in other apps."
+        "description": "Export your trained model for use in other apps or share your project across devices."
       }
     },
     "intro": {

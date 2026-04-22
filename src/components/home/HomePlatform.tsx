@@ -1,3 +1,4 @@
+import { Paper } from "@mantine/core"
 import {
   IconDevices,
   IconPackage,
@@ -6,7 +7,6 @@ import {
 } from "@tabler/icons-react"
 import { FunctionComponent } from "react"
 import { useAppProvider } from "../layout/AppProvider"
-import { Paper } from "@mantine/core"
 
 type PlatformCard = {
   bgClass: string
@@ -25,11 +25,11 @@ const PLATFORM_CARDS: PlatformCard[] = [
     bgClass: "bg-teal-50 dark:bg-teal-950/40",
   },
   {
-    icon: IconUserOff,
-    titleKey: "home.features.env.noAccount.title",
-    descriptionKey: "home.features.env.noAccount.description",
-    iconClass: "text-orange-600 dark:text-orange-400",
-    bgClass: "bg-orange-50 dark:bg-orange-950/40",
+    icon: IconDevices,
+    titleKey: "home.features.env.crossPlatform.title",
+    descriptionKey: "home.features.env.crossPlatform.description",
+    iconClass: "text-blue-600 dark:text-blue-400",
+    bgClass: "bg-blue-50 dark:bg-blue-950/40",
   },
   {
     icon: IconWifiOff,
@@ -39,11 +39,11 @@ const PLATFORM_CARDS: PlatformCard[] = [
     bgClass: "bg-green-50 dark:bg-green-950/40",
   },
   {
-    icon: IconDevices,
-    titleKey: "home.features.env.crossPlatform.title",
-    descriptionKey: "home.features.env.crossPlatform.description",
-    iconClass: "text-blue-600 dark:text-blue-400",
-    bgClass: "bg-blue-50 dark:bg-blue-950/40",
+    icon: IconUserOff,
+    titleKey: "home.features.env.noAccount.title",
+    descriptionKey: "home.features.env.noAccount.description",
+    iconClass: "text-orange-600 dark:text-orange-400",
+    bgClass: "bg-orange-50 dark:bg-orange-950/40",
   },
 ]
 

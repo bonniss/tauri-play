@@ -23,45 +23,45 @@
       "coreTitle": "Tính năng",
       "env": {
         "install": {
-          "title": "Dễ cài đặt",
-          "description": "Desktop app. Cài là chạy — không cần terminal, không cần cài thêm gì."
+          "title": "Cài đặt dễ dàng",
+          "description": "Cài xong là dùng — không Python, không terminal."
+        },
+        "offline": {
+          "title": "Không cần mạng",
+          "description": "Mọi tác vụ đều chạy offline. Dữ liệu luôn ở trên máy của bạn."
         },
         "noAccount": {
           "title": "Không cần tài khoản",
-          "description": "Chủ máy cũng là chủ app. Không đăng ký, không email, không gói phí."
-        },
-        "offline": {
-          "title": "100% offline",
-          "description": "Không cần internet để huấn luyện hay chạy dự đoán."
+          "description": "Không cần đăng ký, không cần email."
         },
         "crossPlatform": {
           "title": "Đa nền tảng",
-          "description": "Chạy trên Windows, macOS và Linux."
+          "description": "Hoạt động trên Windows, macOS và Linux."
         }
       },
       "fast": {
         "title": "Huấn luyện nhanh",
-        "description": "Kết quả trong vài giây từ vài chục ảnh. Ít tốn CPU và bộ nhớ."
+        "description": "Cho kết quả chỉ sau vài giây với vài chục ảnh. Tiêu tốn ít CPU và bộ nhớ."
       },
       "unlimited": {
-        "title": "Vô hạn dự án",
-        "description": "Bao nhiêu dự án, class, ảnh tuỳ thích. Chỉ giới hạn bởi ổ đĩa."
+        "title": "Ứng dụng trong ứng dụng",
+        "description": "Mỗi dự án là một ứng dụng riêng. Số lượng dự án chỉ bị giới hạn bởi dung lượng ổ đĩa."
       },
       "defaults": {
         "title": "Mặc định thông minh",
-        "description": "Hoạt động tốt ngay khi mở. Dễ tuỳ chỉnh epochs, batch size và nhiều hơn khi cần."
+        "description": "Dùng tốt ngay từ đầu. Dễ dàng tùy chỉnh epochs, batch size và nhiều thứ khác khi cần."
       },
       "flexibleInput": {
-        "title": "Linh hoạt đầu vào",
-        "description": "Thu thập ảnh từ camera hoặc tải lên dataset có sẵn — có thể kết hợp cả hai."
+        "title": "Thu thập dữ liệu dễ dàng",
+        "description": "Chụp ảnh trực tiếp từ camera hoặc sử dụng ảnh có sẵn."
       },
       "easyPlay": {
         "title": "Thử nghiệm trực quan",
-        "description": "Thử model trực tiếp với giao diện đơn giản, hiện đại. Tải lên hoặc dùng camera."
+        "description": "Kiểm tra kết quả huấn luyện ngay lập tức với giao diện đơn giản, dễ sử dụng."
       },
       "easyShare": {
-        "title": "Dễ chia sẻ",
-        "description": "Chia sẻ demo dự án hoặc xuất model đã huấn luyện để dùng trong ứng dụng khác."
+        "title": "Chia sẻ dễ dàng",
+        "description": "Xuất model để dùng trong ứng dụng khác hoặc chia sẻ dự án cho máy khác."
       }
     },
     "intro": {
